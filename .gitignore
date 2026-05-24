@@ -1,48 +1,11 @@
-# Prerequisites
-*.d
+# Custom GCC version
+/gcc-16.1.0
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
+# Custom clang-format version
+/llvm.sh
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
-*.ilk
-
-# Debugger Files
-*.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-*.so.*
-
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
-
-# Build directories
-build/
-Build/
-build-*/
+# Build directory
+/out
 
 # CMake generated files
 CMakeFiles/
