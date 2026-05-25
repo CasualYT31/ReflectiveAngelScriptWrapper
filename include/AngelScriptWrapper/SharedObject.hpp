@@ -1,36 +1,50 @@
 /**
- * @file OwnedObject.hpp
- * A wrapper for a generic AngelScript object that takes ownership of the object it is given.
+ * @file SharedObject.hpp
+ * A wrapper for a generic AngelScript object.
  */
 
 #pragma once
 
 #include <AngelScriptWrapper/IsReferenceCounted.hpp>
 #include <AngelScriptWrapper/Object.hpp>
+#include <AngelScriptWrapper/OwnedObject.hpp>
 #include <utility>
 
 namespace as {
 /**
  * A wrapper around an AngelScript object that manages its reference counter for you.
  */
-template <IsReferenceCounted T> struct OwnedObject : public Object<T> {
+template <IsReferenceCounted T> struct SharedObject : public Object<T> {
     /**
      * Initializes the wrapper with no object.
      */
-    OwnedObject() = default;
+    SharedObject() = default;
 
     /**
      * Initializes the wrapper with an existing AngelScript object.
-     * The wrapper assumes ownership of the object, and so it will NOT increment the object's reference counter.
+     * Since the pointer is copied into this wrapper, the wrapper does not assume ownership of the object, and so it
+     * will increment the object's reference counter.
      * @param o The object to hold a reference of.
      */
-    inline OwnedObject(T* const o) : m_ptr(o) {}
+    inline SharedObject(T* const o) : m_ptr(o) {
+        if (m_ptr) { m_ptr->AddRef(); }
+    }
 
     /**
-     * You can't copy an OwnedObject wrapper.
-     * If you need to copy this wrapper object, you must copy it into an Object wrapper instead.
+     * Copies the AngelScript object pointer and increments its reference counter.
+     * @param w The wrapper object to copy.
      */
-    OwnedObject(OwnedObject<T> const&) = delete;
+    inline SharedObject(SharedObject<T> const& w) : m_ptr(w.m_ptr) {
+        if (m_ptr) { m_ptr->AddRef(); }
+    }
+
+    /**
+     * Copies an AngelScript object pointer from an owning wrapper and increments its reference counter.
+     * @param w The wrapper object to copy.
+     */
+    inline SharedObject(OwnedObject<T> const& w) : m_ptr(&*w) {
+        if (m_ptr) { m_ptr->AddRef(); }
+    }
 
     /**
      * Moves the AngelScript object pointer and increments its reference counter.
@@ -39,37 +53,56 @@ template <IsReferenceCounted T> struct OwnedObject : public Object<T> {
      * the reference counter to fall down by one, which will cause crashes in your program.
      * @param w The wrapper object to move.
      */
-    inline OwnedObject(OwnedObject<T>&& w) noexcept : m_ptr(std::move(w.m_ptr)) {
+    inline SharedObject(SharedObject<T>&& w) noexcept : m_ptr(std::move(w.m_ptr)) {
         if (m_ptr) { m_ptr->AddRef(); }
     }
 
     /**
-     * Releases this wrapper's current pointer, then assigns a new object to the wrapper.
-     * The reference counter of o is NOT incremented as the wrapper assumes ownership of it.
+     * Releases this wrapper's current pointer, then assigns a new object to the wrapper, before incrementing its
+     * reference counter.
+     * The reference counter of o is incremented as the wrapper does not assume ownership of it.
      * @param o The object pointer to assign to this wrapper.
      * @return This wrapper object.
      */
-    inline OwnedObject<T>& operator=(T* const o) {
+    inline SharedObject<T>& operator=(T* const o) {
         if (m_ptr) { m_ptr->Release(); }
         m_ptr = o;
+        if (m_ptr) { m_ptr->AddRef(); }
         return *this;
     }
 
     /**
-     * You cannot copy an OwnedObject wrapper into another one.
-     * If you wish to copy an OwnedObject, you must copy it into an Object instead.
+     * Releases this wrapper's current pointer, then copies another pointer into this wrapper.
+     * @param w The wrapper object to copy into this one.
+     * @return This wrapper object.
      */
-    OwnedObject<T>& operator=(OwnedObject<T> const&) = delete;
+    inline SharedObject<T>& operator=(SharedObject<T> const& w) {
+        if (m_ptr) { m_ptr->Release(); }
+        m_ptr = w.m_ptr;
+        if (m_ptr) { m_ptr->AddRef(); }
+        return *this;
+    }
+
+    /**
+     * Releases this wrapper's current pointer, then copies another pointer into this wrapper.
+     * @param w The wrapper object to copy into this one.
+     * @return This wrapper object.
+     */
+    inline SharedObject<T>& operator=(OwnedObject<T> const& w) {
+        if (m_ptr) { m_ptr->Release(); }
+        m_ptr = &*w;
+        if (m_ptr) { m_ptr->AddRef(); }
+        return *this;
+    }
 
     /**
      * Releases this wrapper's current pointer, then moves another pointer into this wrapper.
      * @param w The wrapper object to move into this one.
      * @return This wrapper object.
      */
-    inline OwnedObject<T>& operator=(OwnedObject<T>&& w) noexcept {
+    inline SharedObject<T>& operator=(SharedObject<T>&& w) noexcept {
         if (m_ptr) { m_ptr->Release(); }
         m_ptr = std::move(w.m_ptr);
-        // We're technically creating a new reference to the object despite the move semantics.
         if (m_ptr) { m_ptr->AddRef(); }
         return *this;
     }
@@ -77,7 +110,7 @@ template <IsReferenceCounted T> struct OwnedObject : public Object<T> {
     /**
      * Releases the reference to the AngelScript object.
      */
-    inline ~OwnedObject() noexcept {
+    inline ~SharedObject() noexcept {
         if (m_ptr) { m_ptr->Release(); }
     }
 

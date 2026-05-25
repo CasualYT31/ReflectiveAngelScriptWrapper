@@ -5,20 +5,19 @@
 
 #pragma once
 
-#include "Object.hpp"
-
 #include <angelscript.h>
+#include <AngelScriptWrapper/OwnedObject.hpp>
 
 namespace as {
 // /**
 //  * A wrapper around an asIScriptEngine instance.
 //  */
-// class AngelScriptEngine {
+// class Engine {
 // public:
 //     /**
 //      * Initializes a new asIScriptEngine instance inside a wrapper object.
 //      */
-//     AngelScriptEngine();
+//     Engine();
 
 // /**
 //  * Initializes an engine wrapper with an existing asIScriptEngine instance.
@@ -26,22 +25,22 @@ namespace as {
 //  *          in this way, then the engine will not be released and it is the responsibility of the caller to release
 //  *          the engine that it provides here.
 //  */
-// AngelScriptEngine(::asIScriptEngine* const engine) noexcept : m_engine(engine), m_ownsEngine(false) {}
+// Engine(::asIScriptEngine* const engine) noexcept : m_engine(engine), m_ownsEngine(false) {}
 
-// AngelScriptEngine(AngelScriptEngine const& wrapper) {}
+// Engine(Engine const& wrapper) {}
 
 // /**
 //  * Move constructor for an AngelScript engine wrapper.
 //  * @param wrapper The wrapper object to move.
 //  */
-// AngelScriptEngine(AngelScriptEngine&& wrapper) noexcept
+// Engine(Engine&& wrapper) noexcept
 //     : m_engine(std::move(wrapper.m_engine)),
 //       m_ownsEngine(std::move(wrapper.m_ownsEngine)) {}
 
 // /**
 //  * Destroys the asIScriptEngine instance, but only if it was created by this wrapper.
 //  */
-// ~AngelScriptEngine() noexcept;
+// ~Engine() noexcept;
 
 // /**
 //  * Grants access to the underlying scripting engine instance.
@@ -50,13 +49,13 @@ namespace as {
 //  * @return Pointer to the scripting engine.
 //  */
 // inline ::asIScriptEngine* engine() const noexcept {
-//     return m_engine;
+//     return &*m_engine;
 // }
 
 // private:
 //     /**
 //      * Points to the AngelScript engine instance this wrapper interfaces with.
 //      */
-//     Object<::asIScriptEngine> m_engine;
+//     OwnedObject<::asIScriptEngine> m_engine;
 // };
 } // namespace as

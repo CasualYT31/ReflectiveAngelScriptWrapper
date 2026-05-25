@@ -32,8 +32,8 @@ target_link_libraries(${PROJECT_NAME}
 target_sources(${PROJECT_NAME} PRIVATE
     "src/Engine.cpp"
     "src/IsReferenceCounted.cpp"
-    "src/Object.cpp"
     "src/OwnedObject.cpp"
+    "src/SharedObject.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

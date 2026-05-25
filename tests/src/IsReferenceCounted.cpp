@@ -2,7 +2,7 @@
 
 #include <angelscript.h>
 #include <AngelScriptWrapper/IsReferenceCounted.hpp>
-#include <AngelScriptWrapper/Object.hpp>
+#include <AngelScriptWrapper/SharedObject.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 
 static_assert(as::IsReferenceCounted<::asIScriptEngine>);
@@ -10,4 +10,4 @@ static_assert(as::IsReferenceCounted<::asIScriptObject>);
 static_assert(as::IsReferenceCounted<as::ScriptTestObject>);
 
 static_assert(!as::IsReferenceCounted<int>);
-static_assert(!as::IsReferenceCounted<as::Object<::asIScriptEngine>>);
+static_assert(!as::IsReferenceCounted<as::SharedObject<::asIScriptEngine>>);

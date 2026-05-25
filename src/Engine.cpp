@@ -1,11 +1,11 @@
 #include <AngelScriptWrapper/Engine.hpp>
 
 namespace as {
-// AngelScriptEngine::AngelScriptEngine() {
+// Engine::Engine() {
 //     m_engine = asCreateScriptEngine();
 // }
 
-// AngelScriptEngine::~AngelScriptEngine() noexcept {
+// Engine::~Engine() noexcept {
 //     if (!m_engine) { return; }
 
 // if (!m_engine->Release()) {

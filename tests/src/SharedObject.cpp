@@ -1,19 +1,19 @@
-#include <AngelScriptWrapper/Object.hpp>
+#include <AngelScriptWrapper/SharedObject.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 #include <gtest/gtest.h>
 
-TEST(AngelScriptObject, DefaultConstructor) {
-    as::Object<as::ScriptTestObject> object;
+TEST(AngelScriptSharedObject, DefaultConstructor) {
+    as::SharedObject<as::ScriptTestObject> object;
     EXPECT_FALSE(object);
     EXPECT_FALSE(object.operator->());
 }
 
-TEST(AngelScriptObject, PointerConstructor) {
+TEST(AngelScriptSharedObject, PointerConstructor) {
     as::ScriptTestObject counter;
     EXPECT_EQ(counter.counter, 1);
 
     {
-        as::Object object(&counter);
+        as::SharedObject object(&counter);
         ASSERT_TRUE(object);
         ASSERT_EQ(object.operator->(), &counter);
         EXPECT_EQ(counter.counter, 2);
@@ -24,12 +24,12 @@ TEST(AngelScriptObject, PointerConstructor) {
     EXPECT_EQ(counter.counter, 1);
 }
 
-TEST(AngelScriptObject, CopyConstructor) {
+TEST(AngelScriptSharedObject, CopyConstructor) {
     as::ScriptTestObject counter;
     EXPECT_EQ(counter.counter, 1);
 
     {
-        as::Object original(&counter);
+        as::SharedObject original(&counter);
         ASSERT_TRUE(original);
         ASSERT_EQ(original.operator->(), &counter);
         EXPECT_EQ(counter.counter, 2);
@@ -37,7 +37,7 @@ TEST(AngelScriptObject, CopyConstructor) {
         EXPECT_EQ((*original).counter, 2);
 
         {
-            as::Object copy(original);
+            as::SharedObject copy(original);
             ASSERT_TRUE(copy);
             ASSERT_EQ(copy.operator->(), &counter);
             ASSERT_EQ(copy.operator->(), original.operator->());
@@ -58,7 +58,7 @@ TEST(AngelScriptObject, CopyConstructor) {
     EXPECT_EQ(counter.counter, 1);
 }
 
-TEST(AngelScriptObject, CopyOwnerConstructor) {
+TEST(AngelScriptSharedObject, CopyOwnerConstructor) {
     as::ScriptTestObject counter;
     EXPECT_EQ(counter.counter, 1);
 
@@ -71,7 +71,7 @@ TEST(AngelScriptObject, CopyOwnerConstructor) {
         EXPECT_EQ((*original).counter, 1);
 
         {
-            as::Object copy(original);
+            as::SharedObject copy(original);
             ASSERT_TRUE(copy);
             ASSERT_EQ(copy.operator->(), &counter);
             ASSERT_EQ(copy.operator->(), original.operator->());
@@ -92,12 +92,12 @@ TEST(AngelScriptObject, CopyOwnerConstructor) {
     EXPECT_EQ(counter.counter, 0);
 }
 
-TEST(AngelScriptObject, MoveConstructor) {
+TEST(AngelScriptSharedObject, MoveConstructor) {
     as::ScriptTestObject counter;
     EXPECT_EQ(counter.counter, 1);
 
     {
-        as::Object original(&counter);
+        as::SharedObject original(&counter);
         ASSERT_TRUE(original);
         ASSERT_EQ(original.operator->(), &counter);
         EXPECT_EQ(counter.counter, 2);
@@ -105,7 +105,7 @@ TEST(AngelScriptObject, MoveConstructor) {
         EXPECT_EQ((*original).counter, 2);
 
         {
-            as::Object moved(std::move(original));
+            as::SharedObject moved(std::move(original));
             ASSERT_TRUE(moved);
             ASSERT_EQ(moved.operator->(), &counter);
             ASSERT_EQ(moved.operator->(), original.operator->());
@@ -126,13 +126,13 @@ TEST(AngelScriptObject, MoveConstructor) {
     EXPECT_EQ(counter.counter, 1);
 }
 
-TEST(AngelScriptObject, PointerAssignment) {
+TEST(AngelScriptSharedObject, PointerAssignment) {
     as::ScriptTestObject counter1, counter2;
     EXPECT_EQ(counter1.counter, 1);
     EXPECT_EQ(counter2.counter, 1);
 
     {
-        as::Object object(&counter1);
+        as::SharedObject object(&counter1);
         ASSERT_TRUE(object);
         ASSERT_EQ(object.operator->(), &counter1);
         EXPECT_EQ(counter1.counter, 2);
@@ -164,13 +164,13 @@ TEST(AngelScriptObject, PointerAssignment) {
     EXPECT_EQ(counter2.counter, 1);
 }
 
-TEST(AngelScriptObject, CopyAssignment) {
+TEST(AngelScriptSharedObject, CopyAssignment) {
     as::ScriptTestObject counter1, counter2;
     EXPECT_EQ(counter1.counter, 1);
     EXPECT_EQ(counter2.counter, 1);
 
     {
-        as::Object one(&counter1);
+        as::SharedObject one(&counter1);
         ASSERT_TRUE(one);
         ASSERT_EQ(one.operator->(), &counter1);
         EXPECT_EQ(counter1.counter, 2);
@@ -178,7 +178,7 @@ TEST(AngelScriptObject, CopyAssignment) {
         EXPECT_EQ(one->counter, 2);
         EXPECT_EQ((*one).counter, 2);
 
-        as::Object two(&counter2);
+        as::SharedObject two(&counter2);
         ASSERT_TRUE(two);
         ASSERT_EQ(two.operator->(), &counter2);
         EXPECT_EQ(counter1.counter, 2);
@@ -206,7 +206,7 @@ TEST(AngelScriptObject, CopyAssignment) {
         EXPECT_EQ(two->counter, 3);
         EXPECT_EQ((*two).counter, 3);
 
-        two = as::Object<as::ScriptTestObject>();
+        two = as::SharedObject<as::ScriptTestObject>();
         ASSERT_TRUE(one);
         EXPECT_FALSE(two);
         EXPECT_EQ(counter1.counter, 1);
@@ -229,13 +229,13 @@ TEST(AngelScriptObject, CopyAssignment) {
     EXPECT_EQ(counter2.counter, 1);
 }
 
-TEST(AngelScriptObject, CopyOwnerAssignment) {
+TEST(AngelScriptSharedObject, CopyOwnerAssignment) {
     as::ScriptTestObject counter1, counter2;
     EXPECT_EQ(counter1.counter, 1);
     EXPECT_EQ(counter2.counter, 1);
 
     {
-        as::Object one(&counter1);
+        as::SharedObject one(&counter1);
         ASSERT_TRUE(one);
         ASSERT_EQ(one.operator->(), &counter1);
         EXPECT_EQ(counter1.counter, 2);
@@ -278,13 +278,13 @@ TEST(AngelScriptObject, CopyOwnerAssignment) {
     EXPECT_EQ(counter2.counter, 0);
 }
 
-TEST(AngelScriptObject, MoveAssignment) {
+TEST(AngelScriptSharedObject, MoveAssignment) {
     as::ScriptTestObject counter1, counter2;
     EXPECT_EQ(counter1.counter, 1);
     EXPECT_EQ(counter2.counter, 1);
 
     {
-        as::Object one(&counter1);
+        as::SharedObject one(&counter1);
         ASSERT_TRUE(one);
         ASSERT_EQ(one.operator->(), &counter1);
         EXPECT_EQ(counter1.counter, 2);
@@ -292,7 +292,7 @@ TEST(AngelScriptObject, MoveAssignment) {
         EXPECT_EQ(one->counter, 2);
         EXPECT_EQ((*one).counter, 2);
 
-        as::Object two(&counter2);
+        as::SharedObject two(&counter2);
         ASSERT_TRUE(two);
         ASSERT_EQ(two.operator->(), &counter2);
         EXPECT_EQ(counter1.counter, 2);
@@ -320,7 +320,7 @@ TEST(AngelScriptObject, MoveAssignment) {
         EXPECT_EQ(two->counter, 3);
         EXPECT_EQ((*two).counter, 3);
 
-        two = std::move(as::Object<as::ScriptTestObject>());
+        two = std::move(as::SharedObject<as::ScriptTestObject>());
         ASSERT_TRUE(one);
         EXPECT_FALSE(two);
         EXPECT_EQ(counter1.counter, 1);
