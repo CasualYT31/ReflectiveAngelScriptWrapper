@@ -31,7 +31,7 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
-    "src/AngelScriptEngine.cpp"
+    "src/Engine.cpp"
     # AngelScript add-on sources go here.
 )
 

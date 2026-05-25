@@ -19,6 +19,7 @@ enable_testing()
 add_executable(${PROJECT_NAME})
 
 target_include_directories(${PROJECT_NAME} PRIVATE
+    "${PROJECT_SOURCE_DIR}/include"
     ${ReflectiveAngelScriptWrapper_INCLUDE_DIRS}
 )
 
@@ -29,7 +30,10 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
-    "src/AngelScriptEngine.cpp"
+    "src/Engine.cpp"
+    "src/IsReferenceCounted.cpp"
+    "src/Object.cpp"
+    "src/OwnedObject.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html
