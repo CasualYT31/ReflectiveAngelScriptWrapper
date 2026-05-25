@@ -12,6 +12,7 @@
 namespace as {
 /**
  * A wrapper around an AngelScript object that manages its reference counter for you.
+ * @tparam T The type of AngelScript object to store.
  */
 template <IsReferenceCounted T> struct OwnedObject : public Object<T> {
     /**

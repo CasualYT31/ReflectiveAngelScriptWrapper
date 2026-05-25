@@ -1,18 +1,13 @@
 #include <AngelScriptWrapper/Engine.hpp>
+#include <AngelScriptWrapper/OwnedObject.hpp>
+#include <AngelScriptWrapper/SharedObject.hpp>
 
 namespace as {
-// Engine::Engine() {
-//     m_engine = asCreateScriptEngine();
-// }
+Engine::Engine() {
+    m_engine = std::make_unique<OwnedObject<::asIScriptEngine>>(asCreateScriptEngine());
+}
 
-// Engine::~Engine() noexcept {
-//     if (!m_engine) { return; }
-
-// if (!m_engine->Release()) {
-//     // No more references are held to this object, so we can shut it down and release it.
-//     m_engine->ShutDownAndRelease();
-// }
-
-// if (m_engine) { m_engine->ShutDownAndRelease(); }
-// }
+Engine::Engine(::asIScriptEngine* const engine) {
+    m_engine = std::make_unique<SharedObject<::asIScriptEngine>>(engine);
+}
 } // namespace as

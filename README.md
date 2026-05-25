@@ -29,11 +29,11 @@ You will need to separately build GCC 16.1.0 and install it at the root of this 
 
 ## Examples
 
-### `Object` and `OwnedObject`
+### `SharedObject` and `OwnedObject`
 
 These are convenience classes that wrap around AngelScript objects. They handle reference counting for you in much the same way `std::shared_ptr` and `std::unique_ptr` do.
 
-The main difference between the two is `OwnedObject` assumes ownership of the objects you give it, meaning it won't increment the object's reference counter, whilst `Object` does not assume ownership and so it will increment the object's reference counter when it receives the object.
+The main difference between the two is `OwnedObject` assumes ownership of the objects you give it, meaning it won't increment the object's reference counter, whilst `SharedObject` does not assume ownership and so it will increment the object's reference counter when it receives the object.
 
 Here are equivalent examples showcasing the differences between these classes:
 
@@ -42,7 +42,7 @@ Here are equivalent examples showcasing the differences between these classes:
     const auto pEngine = ::asCreateScriptEngine();
     // The engine's reference counter is 1.
 
-    as::Object engine(pEngine);
+    as::SharedObject engine(pEngine);
     // The engine's reference counter is now 2!
 
     pEngine->Release();
@@ -50,7 +50,7 @@ Here are equivalent examples showcasing the differences between these classes:
     // pEngine should no longer be used.
 
     const auto count = engine->GetGlobalFunctionCount();
-    // Notice that the Object wrapped still holds a reference!
+    // Notice that the SharedObject wrapped still holds a reference!
 }
 
 // That reference has now been dropped and the engine has been destructed.
@@ -66,4 +66,26 @@ Here are equivalent examples showcasing the differences between these classes:
 
 // engine's destructor decrements the reference counter, which triggers the
 // underlying asCScriptEngine destructor since the counter has reached 0.
+```
+
+The `Object` wrapper classes perfectly illustrate the two approaches you can take when working with this library: either you retain as much control over the lifetime of AngelScript's as possible, or you can surrender that control to RAII classes.
+
+### `Engine`
+
+Likewise, there are two ways you can create an Engine wrapper/helper object:
+
+```cpp
+// Either keep the scripting engine entirely encapsulated...
+as::Engine engine;
+// ...with the occasional access when required for advanced operations.
+engine.engine()->GarbageCollect();
+// The wrapper will release the scripting engine when it's destructed.
+
+// Or create the scripting engine yourself...
+::asIScriptEngine* const pEngine = ::asCreateScriptEngine();
+// ...and provide it to a wrapper whenever it makes sense to do so.
+as::Engine engine(pEngine);
+// The wrapper will release its reference to the engine when it's destructed...
+pEngine->Release();
+// ...meaning you will need to manage the engine's release yourself.
 ```
