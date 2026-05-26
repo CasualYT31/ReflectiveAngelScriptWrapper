@@ -30,8 +30,8 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
+    "src/Concepts.cpp"
     "src/Engine.cpp"
-    "src/IsReferenceCounted.cpp"
     "src/OwnedObject.cpp"
     "src/SharedObject.cpp"
 )

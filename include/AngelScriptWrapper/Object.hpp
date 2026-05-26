@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include <AngelScriptWrapper/IsReferenceCounted.hpp>
+#include <AngelScriptWrapper/Concepts.hpp>
 
 namespace as {
 /**
