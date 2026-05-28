@@ -23,6 +23,12 @@ int Engine::RegisterGlobalProperty(std::string name, T* const value, const bool 
 template <std::meta::info Alias, typename T>
     requires(!IsConst<T>)
 int Engine::RegisterGlobalProperty(std::string name, T* const value) {
+    // Unfortunately we can't statically validate that the subtype is correct,
+    // but this will at least catch incorrect base types.
+    static_assert(
+        std::meta::dealias(Alias) == ^^T || std::meta::dealias(Alias) == std::meta::dealias(^^const T),
+        "The AngelScript Specialization's base type you gave does not match the type of the value given!"
+    );
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     name = GetTypeDecl<Alias>() + " " + name;
     return Ptr()->RegisterGlobalProperty(name.c_str(), value);
