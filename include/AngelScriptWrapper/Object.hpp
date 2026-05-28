@@ -12,7 +12,9 @@ namespace as {
  * Interface that all AngelScript object wrapper classes must implement.
  * @tparam T The type of AngelScript object to store.
  */
-template <IsReferenceCounted T> struct Object {
+template <typename T>
+    requires IsReferenceCounted<T>
+struct Object {
     virtual ~Object() = default;
 
     /**

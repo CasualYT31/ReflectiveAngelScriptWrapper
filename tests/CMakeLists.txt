@@ -21,19 +21,32 @@ add_executable(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${PROJECT_SOURCE_DIR}/include"
     ${ReflectiveAngelScriptWrapper_INCLUDE_DIRS}
+    ${angelscript_SOURCE_DIR}/add_on/scriptarray/
+    ${angelscript_SOURCE_DIR}/add_on/scripthelper/
+    ${angelscript_SOURCE_DIR}/add_on/scriptstdstring/
 )
 
 target_link_libraries(${PROJECT_NAME}
     gtest
-    gtest_main
+    gmock_main
     ReflectiveAngelScriptWrapper
 )
 
 target_sources(${PROJECT_NAME} PRIVATE
+    # Static tests go here for immediate feedback:
     "src/Concepts.cpp"
-    "src/Engine.cpp"
+    "src/TypeDecl.cpp"
+
+    # AngelScript add ons used during testing:
+    ${angelscript_SOURCE_DIR}/add_on/scriptarray/scriptarray.cpp
+    ${angelscript_SOURCE_DIR}/add_on/scripthelper/scripthelper.cpp
+    ${angelscript_SOURCE_DIR}/add_on/scriptstdstring/scriptstdstring.cpp
+
+    # Unit tests:
     "src/OwnedObject.cpp"
     "src/SharedObject.cpp"
+    "src/engine/EngineConstruction.cpp"
+    "src/engine/EngineGlobalProperties.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

@@ -4,11 +4,11 @@
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 #include <cstdint>
 
-static_assert(as::IsReferenceCounted<::asIScriptEngine>);
-static_assert(as::IsReferenceCounted<::asIScriptObject>);
+static_assert(as::IsReferenceCounted<AS_NAMESPACE_QUALIFIER asIScriptEngine>);
+static_assert(as::IsReferenceCounted<AS_NAMESPACE_QUALIFIER asIScriptObject>);
 static_assert(as::IsReferenceCounted<as::ScriptTestObject>);
 static_assert(!as::IsReferenceCounted<int>);
-static_assert(!as::IsReferenceCounted<as::SharedObject<::asIScriptEngine>>);
+static_assert(!as::IsReferenceCounted<as::SharedObject<AS_NAMESPACE_QUALIFIER asIScriptEngine>>);
 
 static_assert(as::IsArithmetic<std::int8_t>);
 static_assert(as::IsArithmetic<std::uint8_t>);
@@ -51,3 +51,20 @@ static_assert(as::IsConst<const int>);
 static_assert(!as::IsConst<int>);
 static_assert(as::IsConst<const int* const>);
 static_assert(!as::IsConst<const int*>);
+
+static_assert(!as::IsPointer<const int>);
+static_assert(!as::IsPointer<int>);
+static_assert(as::IsPointer<const int* const>);
+static_assert(as::IsPointer<const int*>);
+
+struct TypeA {};
+
+struct TypeB {
+    static constexpr std::string GetTypeDecl() {
+        return "";
+    }
+};
+
+static_assert(!as::HasCustomTypeDecl<int>);
+static_assert(!as::HasCustomTypeDecl<::TypeA>);
+static_assert(as::HasCustomTypeDecl<::TypeB>);

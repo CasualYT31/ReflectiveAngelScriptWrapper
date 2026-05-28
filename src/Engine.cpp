@@ -4,10 +4,11 @@
 
 namespace as {
 Engine::Engine() {
-    m_engine = std::make_unique<OwnedObject<::asIScriptEngine>>(asCreateScriptEngine());
+    m_engine =
+        std::make_unique<OwnedObject<AS_NAMESPACE_QUALIFIER asIScriptEngine>>(AS_NAMESPACE_QUALIFIER asCreateScriptEngine());
 }
 
-Engine::Engine(::asIScriptEngine* const engine) {
-    m_engine = std::make_unique<SharedObject<::asIScriptEngine>>(engine);
+Engine::Engine(AS_NAMESPACE_QUALIFIER asIScriptEngine* const engine) {
+    m_engine = std::make_unique<SharedObject<AS_NAMESPACE_QUALIFIER asIScriptEngine>>(engine);
 }
 } // namespace as
