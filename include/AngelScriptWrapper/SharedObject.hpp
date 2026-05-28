@@ -45,7 +45,7 @@ struct SharedObject : public Object<T> {
      * Copies an AngelScript object pointer from an owning wrapper and increments its reference counter.
      * @param w The wrapper object to copy.
      */
-    inline SharedObject(OwnedObject<T> const& w) : m_ptr(&*w) {
+    inline SharedObject(OwnedObject<T> const& w) : m_ptr(w.Ptr()) {
         if (m_ptr) { m_ptr->AddRef(); }
     }
 
@@ -93,7 +93,7 @@ struct SharedObject : public Object<T> {
      */
     inline SharedObject<T>& operator=(OwnedObject<T> const& w) {
         if (m_ptr) { m_ptr->Release(); }
-        m_ptr = &*w;
+        m_ptr = w.Ptr();
         if (m_ptr) { m_ptr->AddRef(); }
         return *this;
     }
@@ -138,6 +138,14 @@ struct SharedObject : public Object<T> {
      * @return True if this wrapper holds a pointer to an object, false if not.
      */
     inline operator bool() const final {
+        return m_ptr;
+    }
+
+    /**
+     * Access the raw pointer to the AngelScript object that is managed by this wrapper.
+     * @return The underlying AngelScript object's pointer.
+     */
+    inline T* Ptr() const final {
         return m_ptr;
     }
 

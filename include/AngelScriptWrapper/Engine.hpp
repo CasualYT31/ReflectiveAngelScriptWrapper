@@ -38,7 +38,7 @@ struct Engine {
      * @return Pointer to the scripting engine.
      */
     inline AS_NAMESPACE_QUALIFIER asIScriptEngine* Ptr() const noexcept {
-        return &**m_engine;
+        return m_engine->Ptr();
     }
 
     /**

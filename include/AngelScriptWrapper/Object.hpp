@@ -34,5 +34,11 @@ struct Object {
      * @return False if the wrapper holds nullptr, true otherwise.
      */
     virtual operator bool() const = 0;
+
+    /**
+     * An object wrapper must grant access to the underlying AngelScript object pointer.
+     * @return The AngelScript object's raw pointer.
+     */
+    virtual T* Ptr() const = 0;
 };
 } // namespace as

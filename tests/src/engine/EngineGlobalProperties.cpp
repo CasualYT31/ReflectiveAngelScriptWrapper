@@ -594,10 +594,10 @@ TEST(AngelScriptEngineGlobalProperties, ArrayType) {
     auto p = as::StringArray::T::Create(arrayType, 3);
     ASSERT_TRUE(p);
     as::OwnedObject<as::StringArray::T> array(p);
-    ASSERT_TRUE(&*array);
+    ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringArray::T>("arr", &*array), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringArray::T>("arr", array.Ptr()), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -645,10 +645,10 @@ TEST(AngelScriptEngineGlobalProperties, ConstArrayType) {
     auto p = as::StringArray::T::Create(arrayType, 3);
     ASSERT_TRUE(p);
     as::OwnedObject<as::StringArray::T> array(p);
-    ASSERT_TRUE(&*array);
+    ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringConstArray::T>("arr", &*array), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringConstArray::T>("arr", array.Ptr()), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -696,7 +696,7 @@ TEST(AngelScriptEngineGlobalProperties, ArrayHandleType) {
     auto p = as::StringArray::T::Create(arrayType, 3);
     ASSERT_TRUE(p);
     as::OwnedObject<as::StringArray::T> array(p);
-    ASSERT_TRUE(&*array);
+    ASSERT_TRUE(array.Ptr());
     AS_NAMESPACE_QUALIFIER CScriptArray* prop = nullptr;
 
     // Register global property.
@@ -710,7 +710,7 @@ TEST(AngelScriptEngineGlobalProperties, ArrayHandleType) {
     EXPECT_TRUE(isNull);
 
     // Updating global property in C++ must update it in AngelScript.
-    prop = &*array;
+    prop = array.Ptr();
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -733,10 +733,10 @@ TEST(AngelScriptEngineGlobalProperties, ArrayTypeConstSubtype) {
     auto p = as::ConstStringArray::T::Create(arrayType, 3);
     ASSERT_TRUE(p);
     as::OwnedObject<as::ConstStringArray::T> array(p);
-    ASSERT_TRUE(&*array);
+    ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::ConstStringArray::T>("arr", &*array), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^as::ConstStringArray::T>("arr", array.Ptr()), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;

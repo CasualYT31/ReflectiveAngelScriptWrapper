@@ -108,6 +108,14 @@ struct OwnedObject : public Object<T> {
         return m_ptr;
     }
 
+    /**
+     * Access the raw pointer to the AngelScript object that is managed by this wrapper.
+     * @return The underlying AngelScript object's pointer.
+     */
+    inline T* Ptr() const final {
+        return m_ptr;
+    }
+
 private:
     /**
      * The AngelScript object to manage the reference counter of.
