@@ -90,7 +90,7 @@ pEngine->Release();
 // ...meaning you will need to manage the engine's release yourself.
 ```
 
-#### `GetTypeDecl()`
+### `GetTypeDecl()`
 
 The fundamental building block of this wrapper is the `GetTypeDecl()` template function and its specializations. `Engine` uses this template function to deduce what the AngelScript equivalent typename is (in `constexpr std::string` form) for a given C++ typename. This library defines specializations for all of the primitive types, and also all of the types registered by add ons. It can also detect const qualifiers and whether or not a typename is a pointer, and include "const" and "@" symbols where required. If a C++ typename doesn't have a specialization for this function, `std::meta` will be used to deduce the typename's identifier and stringize it directly. See [TypeDecl.tpp](/include/AngelScriptWrapper/TypeDecl.tpp) for `GetTypeDecl()` specialization examples.
 
@@ -142,7 +142,7 @@ static_assert(as::GetTypeDecl<^^StringArray::T>() == "array<string>");
 
 AngelScript template types introduce a few more quirks that will be detailed as and when they apply.
 
-### Engine::RegisterGlobalProperty()
+### `Engine::RegisterGlobalProperty()`
 
 A less impressive use case for the `Engine` wrapper is the ability to register global properties without needing to handwrite the property declaration string. The following pairs of statements are identical:
 
