@@ -10,6 +10,43 @@ static_assert(as::IsReferenceCounted<as::ScriptTestObject>);
 static_assert(!as::IsReferenceCounted<int>);
 static_assert(!as::IsReferenceCounted<as::SharedObject<AS_NAMESPACE_QUALIFIER asIScriptEngine>>);
 
+struct InvalidReturn {
+    static inline InvalidReturn Factory() {
+        return {};
+    }
+};
+
+struct NotStatic {
+    inline NotStatic* Factory() {
+        return nullptr;
+    }
+};
+
+struct InvalidName {
+    static inline InvalidName* FactorY() {
+        return nullptr;
+    }
+};
+
+struct HasFactory {
+    static inline HasFactory* Factory() {
+        return nullptr;
+    }
+};
+
+struct HasFactoryWithParams {
+    static inline HasFactoryWithParams* Factory(int num) {
+        return nullptr;
+    }
+};
+
+static_assert(!as::HasFactoryFunction<std::string>);
+static_assert(!as::HasFactoryFunction<InvalidReturn>);
+static_assert(!as::HasFactoryFunction<NotStatic>);
+static_assert(!as::HasFactoryFunction<InvalidName>);
+static_assert(as::HasFactoryFunction<HasFactory>);
+static_assert(as::HasFactoryFunction<HasFactoryWithParams>);
+
 static_assert(as::IsArithmetic<std::int8_t>);
 static_assert(as::IsArithmetic<std::uint8_t>);
 static_assert(as::IsArithmetic<std::int16_t>);

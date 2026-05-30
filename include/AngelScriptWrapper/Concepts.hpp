@@ -6,6 +6,7 @@
 #pragma once
 
 #include <concepts>
+#include <meta>
 #include <string>
 #include <type_traits>
 
@@ -19,6 +20,23 @@ concept IsReferenceCounted = requires(T t) {
     t.AddRef();
     t.Release();
 };
+
+/**
+ * A concept for AngelScript types that correctly implement the factory behavior.
+ * @tparam T The type to test.
+ */
+template <typename T>
+concept HasFactoryFunction = [] consteval {
+    template for (constexpr auto member :
+                  std::define_static_array(std::meta::members_of(^^T, std::meta::access_context::current()))) {
+        if constexpr (std::meta::has_identifier(member) && std::string(std::meta::identifier_of(member)) == "Factory"
+                      && std::meta::is_static_member(member) && std::meta::is_function(member)
+                      && std::meta::return_type_of(member) == ^^T*) {
+            return true;
+        }
+    }
+    return false;
+}();
 
 /**
  * A concept for arithmetic types.
