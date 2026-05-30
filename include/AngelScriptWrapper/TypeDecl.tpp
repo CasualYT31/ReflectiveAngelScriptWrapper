@@ -9,18 +9,18 @@
 
 BEGIN_AS_NAMESPACE
 
-class CDateTime;
-class Complex;
-class CScriptAny;
-class CScriptArray;
-class CScriptDictionary;
-class CScriptDictValue;
-class CScriptFile;
-class CScriptFileSystem;
-class CScriptGrid;
-class CScriptHandle;
-class CScriptSocket;
-class CScriptWeakRef;
+class[[= as::ValueType]] CDateTime;
+class[[= as::ValueType]] Complex;
+class[[= as::RefType]] CScriptAny;
+class[[= as::RefType]] CScriptArray;
+class[[= as::RefType]] CScriptDictionary;
+class[[= as::ValueType]] CScriptDictValue;
+class[[= as::RefType]] CScriptFile;
+class[[= as::RefType]] CScriptFileSystem;
+class[[= as::RefType]] CScriptGrid;
+class[[= as::ValueType]] CScriptHandle;
+class[[= as::RefType]] CScriptSocket;
+class[[= as::ValueType]] CScriptWeakRef;
 
 END_AS_NAMESPACE
 
@@ -142,13 +142,13 @@ constexpr std::string GetTypeDecl() {
 template <typename T>
     requires IsPointer<T>
 constexpr std::string GetTypeDecl() {
-    return GetTypeDecl<std::remove_pointer_t<T>>() + "@";
+    return GetTypeDecl<std::remove_pointer_t<T>>() + GetRefType<T>();
 }
 
 template <typename T>
     requires IsConst<T> && IsPointer<T>
 constexpr std::string GetTypeDecl() {
-    return GetTypeDecl<std::remove_pointer_t<std::remove_const_t<T>>>() + "@ const";
+    return GetTypeDecl<std::remove_pointer_t<std::remove_const_t<T>>>() + GetRefType<T, true>();
 }
 
 template <std::meta::info Alias> constexpr std::string GetTypeDecl() {
@@ -180,6 +180,20 @@ template <std::meta::info Alias> constexpr std::string GetTypeDecl() {
             "you provided an invalid type alias to GetTypeDecl(), make sure you provide the ^^Specialize<B, T>::T type alias"
         );
         return "";
+    }
+}
+
+template <typename T, bool C> constexpr std::string GetRefType() {
+    if constexpr (std::meta::annotations_of_with_type(std::meta::dealias(^^remove_all_pointers_t<T>), ^^decltype(RefType))
+                      .size()
+                  > 0) {
+        if constexpr (C) {
+            return "@ const";
+        } else {
+            return "@";
+        }
+    } else {
+        return "&";
     }
 }
 } // namespace as

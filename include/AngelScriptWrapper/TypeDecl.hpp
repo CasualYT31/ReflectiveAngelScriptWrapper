@@ -12,7 +12,6 @@
 #include <type_traits>
 
 namespace as {
-// TODO: We will need separate logic for function declarations.
 /**
  * Statically computes the equivalent AngelScript type declaration for a given C++ type.
  * This function will automatically handle const qualifiers and handles for you. Primitive types have their own
@@ -71,6 +70,28 @@ template <typename T> constexpr std::string GetTypeDecl();
  * @sa as::Specialize
  */
 template <std::meta::info Alias> constexpr std::string GetTypeDecl();
+
+/**
+ * Annotation attached to classes to denote that they are reference types.
+ */
+inline constexpr struct {
+} RefType{};
+
+/**
+ * Annotation attached to classes to denote that they are value types.
+ * This will be the default type if RefType is not specified.
+ */
+inline constexpr struct {
+} ValueType{};
+
+/**
+ * Determines if a given typename should use a handle or a reference.
+ * @tparam T The type to test. This function will test the underlying type, i.e. you could pass T* here, as well.
+ * @tparam C If the type is a RefType, set this flag to true to make the handle constant. Does nothing if the type is a
+ *         value type.
+ * @return "@" or "@ const" if the given type has been annotated with RefType, "&" otherwise.
+ */
+template <typename T, bool C = false> constexpr std::string GetRefType();
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>

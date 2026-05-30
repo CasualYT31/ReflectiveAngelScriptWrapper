@@ -31,7 +31,7 @@ static_assert(as::GetTypeDecl<const double>() == "const double");
 static_assert(as::GetTypeDecl<const std::string>() == "const string");
 static_assert(as::GetTypeDecl<const as::ScriptTestObject>() == "const ScriptTestObject");
 
-static_assert(as::GetTypeDecl<as::ScriptTestObject*>() == "ScriptTestObject@");
+static_assert(as::GetTypeDecl<as::ScriptTestObject*>() == "ScriptTestObject@", as::GetTypeDecl<as::ScriptTestObject*>());
 static_assert(as::GetTypeDecl<as::ScriptTestObject**>() == "ScriptTestObject@@");
 static_assert(as::GetTypeDecl<const as::ScriptTestObject*>() == "const ScriptTestObject@");
 static_assert(as::GetTypeDecl<const as::ScriptTestObject* const>() == "const ScriptTestObject@ const");
@@ -61,26 +61,24 @@ using StringArrayHandleHandle = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArr
 static_assert(as::GetTypeDecl<as::StringArray::T>() == "array");
 static_assert(as::GetTypeDecl<^^as::StringArray::T>() == "array<string>");
 static_assert(as::GetTypeDecl<^^as::ConstStringArray::T>() == "array<const string>");
-static_assert(as::GetTypeDecl<^^StringHandleArray::T>() == "array<string@>");
-static_assert(as::GetTypeDecl<^^ConstStringHandleArray::T>() == "array<const string@>");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleArray::T>() == "array<const string@ const>");
+static_assert(as::GetTypeDecl<^^StringHandleArray::T>() == "array<string&>");
+static_assert(as::GetTypeDecl<^^ConstStringHandleArray::T>() == "array<const string&>");
+static_assert(as::GetTypeDecl<^^ConstStringConstHandleArray::T>() == "array<const string&>");
 static_assert(as::GetTypeDecl<^^as::StringConstArray::T>() == "const array<string>");
 static_assert(as::GetTypeDecl<^^ConstStringConstArray::T>() == "const array<const string>");
-static_assert(as::GetTypeDecl<^^StringHandleConstArray::T>() == "const array<string@>");
-static_assert(as::GetTypeDecl<^^ConstStringHandleConstArray::T>() == "const array<const string@>");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleConstArray::T>() == "const array<const string@ const>");
+static_assert(as::GetTypeDecl<^^StringHandleConstArray::T>() == "const array<string&>");
+static_assert(as::GetTypeDecl<^^ConstStringHandleConstArray::T>() == "const array<const string&>");
+static_assert(as::GetTypeDecl<^^ConstStringConstHandleConstArray::T>() == "const array<const string&>");
 static_assert(as::GetTypeDecl<^^as::StringArrayHandle::T>() == "array<string>@");
 static_assert(as::GetTypeDecl<^^ConstStringArrayHandle::T>() == "array<const string>@");
-static_assert(as::GetTypeDecl<^^StringHandleArrayHandle::T>() == "array<string@>@");
-static_assert(as::GetTypeDecl<^^ConstStringHandleArrayHandle::T>() == "array<const string@>@");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleArrayHandle::T>() == "array<const string@ const>@");
+static_assert(as::GetTypeDecl<^^StringHandleArrayHandle::T>() == "array<string&>@");
+static_assert(as::GetTypeDecl<^^ConstStringHandleArrayHandle::T>() == "array<const string&>@");
+static_assert(as::GetTypeDecl<^^ConstStringConstHandleArrayHandle::T>() == "array<const string&>@");
 static_assert(as::GetTypeDecl<^^StringConstArrayConstHandle::T>() == "const array<string>@ const");
 static_assert(as::GetTypeDecl<^^ConstStringConstArrayConstHandle::T>() == "const array<const string>@ const");
-static_assert(as::GetTypeDecl<^^StringHandleConstArrayConstHandle::T>() == "const array<string@>@ const");
-static_assert(as::GetTypeDecl<^^ConstStringHandleConstArrayConstHandle::T>() == "const array<const string@>@ const");
-static_assert(
-    as::GetTypeDecl<^^ConstStringConstHandleConstArrayConstHandle::T>() == "const array<const string@ const>@ const"
-);
+static_assert(as::GetTypeDecl<^^StringHandleConstArrayConstHandle::T>() == "const array<string&>@ const");
+static_assert(as::GetTypeDecl<^^ConstStringHandleConstArrayConstHandle::T>() == "const array<const string&>@ const");
+static_assert(as::GetTypeDecl<^^ConstStringConstHandleConstArrayConstHandle::T>() == "const array<const string&>@ const");
 
 static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CDateTime>() == "datetime");
 static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER Complex>() == "complex");

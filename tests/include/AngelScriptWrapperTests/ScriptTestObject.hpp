@@ -6,12 +6,13 @@
 #pragma once
 
 #include <angelscript.h>
+#include <AngelScriptWrapper/TypeDecl.hpp>
 
 namespace as {
 /**
  * A simple reference-counted type for testing.
  */
-struct ScriptTestObject {
+struct[[= RefType]] ScriptTestObject {
     mutable int counter = 0;
 
     inline ScriptTestObject() {

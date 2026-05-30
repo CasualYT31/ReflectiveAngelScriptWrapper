@@ -8,23 +8,24 @@
 namespace as {
 template <typename B, typename S> constexpr std::string Specialize<B, S>::GetTypeDecl() {
     if constexpr (IsPointer<B> && IsConst<B>) {
-        // "@ const" suffix.
+        // "@ const/&" suffix.
         if constexpr (IsConst<std::remove_pointer_t<std::remove_const_t<B>>>) {
             // "const" prefix.
             return "const " + as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<B>>>() + "<" + as::GetTypeDecl<S>()
-                   + ">@ const";
+                   + ">" + as::GetRefType<B, true>();
         } else {
-            return as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<B>>>() + "<" + as::GetTypeDecl<S>()
-                   + ">@ const";
+            return as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<B>>>() + "<" + as::GetTypeDecl<S>() + ">"
+                   + as::GetRefType<B, true>();
         }
     } else if constexpr (IsPointer<B>) {
-        // "@" suffix.
+        // "@/&" suffix.
         if constexpr (IsConst<std::remove_pointer_t<std::remove_const_t<B>>>) {
             // "const" prefix.
             return "const " + as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<B>>>() + "<" + as::GetTypeDecl<S>()
-                   + ">@";
+                   + ">" + as::GetRefType<B>();
         } else {
-            return as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<B>>>() + "<" + as::GetTypeDecl<S>() + ">@";
+            return as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<B>>>() + "<" + as::GetTypeDecl<S>() + ">"
+                   + as::GetRefType<B>();
         }
     } else if constexpr (IsConst<B>) {
         // "const" prefix.
