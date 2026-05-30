@@ -5,22 +5,20 @@
 
 #pragma once
 
-#include <angelscript.h>
-
 BEGIN_AS_NAMESPACE
 
-class[[= as::ValueType]] CDateTime;
-class[[= as::ValueType]] Complex;
+class CDateTime;
+class Complex;
 class[[= as::RefType]] CScriptAny;
 class[[= as::RefType]] CScriptArray;
 class[[= as::RefType]] CScriptDictionary;
-class[[= as::ValueType]] CScriptDictValue;
+class CScriptDictValue;
 class[[= as::RefType]] CScriptFile;
 class[[= as::RefType]] CScriptFileSystem;
 class[[= as::RefType]] CScriptGrid;
-class[[= as::ValueType]] CScriptHandle;
+class CScriptHandle;
 class[[= as::RefType]] CScriptSocket;
-class[[= as::ValueType]] CScriptWeakRef;
+class CScriptWeakRef;
 
 END_AS_NAMESPACE
 
@@ -183,10 +181,28 @@ template <std::meta::info Alias> constexpr std::string GetTypeDecl() {
     }
 }
 
+template <std::meta::info T> constexpr bool IsRefType() {
+    return std::meta::annotations_of_with_type(std::meta::dealias(T), ^^decltype(RefType)).size() > 0;
+}
+
+template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCallConv() {
+    constexpr auto callConv = std::define_static_array(std::meta::annotations_of_with_type(F, ^^CallConv));
+    static_assert(
+        callConv.size() <= 1,
+        "function " + std::string(std::meta::display_string_of(F)) + " was given more than one CallConv annotation"
+    );
+    if constexpr (callConv.size() == 1) {
+        return std::meta::extract<CallConv>(callConv.at(0)).is;
+    } else if constexpr (std::meta::has_parent(F) && std::meta::is_type(std::meta::parent_of(F))
+                         && !std::meta::is_static_member(F)) {
+        return AS_NAMESPACE_QUALIFIER asCALL_THISCALL;
+    } else {
+        return AS_NAMESPACE_QUALIFIER asCALL_CDECL;
+    }
+}
+
 template <typename T, bool C> constexpr std::string GetRefType() {
-    if constexpr (std::meta::annotations_of_with_type(std::meta::dealias(^^remove_all_pointers_t<T>), ^^decltype(RefType))
-                      .size()
-                  > 0) {
+    if constexpr (IsRefType<^^remove_all_pointers_t<T>>()) {
         if constexpr (C) {
             return "@ const";
         } else {

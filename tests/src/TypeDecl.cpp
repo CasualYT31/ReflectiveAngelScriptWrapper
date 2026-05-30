@@ -2,6 +2,39 @@
 #include <AngelScriptWrapperTests/ScriptArray.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 
+static_assert(!as::IsRefType<^^int>());
+static_assert(!as::IsRefType<^^std::string>());
+static_assert(as::IsRefType<^^AS_NAMESPACE_QUALIFIER CScriptArray>());
+static_assert(as::IsRefType<^^as::ScriptTestObject>());
+
+void cdecl();
+
+struct HasStaticMethod {
+    static inline void myStatic() {}
+};
+
+struct HasNonStaticMethod {
+    inline void myNonStatic() {}
+};
+
+[[= as::CallConv(AS_NAMESPACE_QUALIFIER asCALL_STDCALL)]] void customCallConv() {}
+
+struct HasCustomCallConv {
+    [[= as::CallConv(AS_NAMESPACE_QUALIFIER asCALL_GENERIC)]] inline void custom() {}
+};
+
+// You cannot have more than one CallConv annotation:
+// namespace test {
+// [[ = as::CallConv(0), = as::CallConv(1) ]] void m();
+// }
+// static_assert(as::GetFuncCallConv<^^test::m>() == 1);
+
+static_assert(as::GetFuncCallConv<^^cdecl>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::GetFuncCallConv<^^HasStaticMethod::myStatic>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::GetFuncCallConv<^^HasNonStaticMethod::myNonStatic>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+static_assert(as::GetFuncCallConv<^^customCallConv>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::GetFuncCallConv<^^HasCustomCallConv::custom>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
 static_assert(as::GetTypeDecl<void>() == "void");
 static_assert(as::GetTypeDecl<bool>() == "bool");
 static_assert(as::GetTypeDecl<std::int8_t>() == "int8");

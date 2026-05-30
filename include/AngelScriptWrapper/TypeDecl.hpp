@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <angelscript.h>
 #include <AngelScriptWrapper/Concepts.hpp>
 #include <cstdint>
 #include <meta>
@@ -73,18 +74,40 @@ template <std::meta::info Alias> constexpr std::string GetTypeDecl();
 
 /**
  * Annotation attached to classes to denote that they are reference types.
+ * If a class is not annotated with this object, the library assumes it is a value type.
  */
 inline constexpr struct {
 } RefType{};
 
 /**
- * Annotation attached to classes to denote that they are value types.
- * This will be the default type if RefType is not specified.
+ * Finds out if the developer has marked a C++ type as being a reference type in AngelScript.
+ * @tparam T The meta info object of the type to test. Aliases are dealised. Remember to pass the base type and not a
+ *         pointer type.
+ * @return True if the type has been marked as a ref type, false is the type is a value type.
  */
-inline constexpr struct {
-} ValueType{};
+template <std::meta::info T> constexpr bool IsRefType();
 
 /**
+ * Annotation attached to functions to tell the library what call convention to use.
+ * In most contexts, the library will default to either asCALL_CDECL or asCALL_THISCALL where appropriate. If you want
+ * to use other types of call convention, you will usually have to specify them manually. Note that you must only attach
+ * one CallConv annotation to a function.
+ */
+struct CallConv {
+    AS_NAMESPACE_QUALIFIER asDWORD is;
+};
+
+/**
+ * Retrieves a C++ function or method's call convention as specified via a CallConv annotation.
+ * If a call convention is not specified via an annotation, this function will either return asCALL_CDECL or
+ * asCALL_THISCALL depending on if the function is a non-static member of a class or not.
+ * @tparam F The meta info object of the function to inspect.
+ * @return The function's call convention.
+ */
+template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCallConv();
+
+/**
+ * TODO: this is not flexible enough, sometimes you want &[inout] for ref types.
  * Determines if a given typename should use a handle or a reference.
  * @tparam T The type to test. This function will test the underlying type, i.e. you could pass T* here, as well.
  * @tparam C If the type is a RefType, set this flag to true to make the handle constant. Does nothing if the type is a
