@@ -49,4 +49,19 @@ template <typename T>
 concept HasCustomTypeDecl = requires {
     { T::GetTypeDecl() } -> std::same_as<std::string>;
 };
+
+/**
+ * Removes pointers from a type recursively.
+ * https://stackoverflow.com/a/39492671
+ * @tparam T The type to recursively remove all pointers from.
+ */
+template <typename T>
+struct remove_all_pointers
+    : std::conditional_t<std::is_pointer_v<T>, remove_all_pointers<std::remove_pointer_t<T>>, std::type_identity<T>> {};
+
+/**
+ * The type alias representing the given type without any pointers.
+ * @tparam T The type to recursively remove all pointers from.
+ */
+template <typename T> using remove_all_pointers_t = typename remove_all_pointers<T>::type;
 } // namespace as
