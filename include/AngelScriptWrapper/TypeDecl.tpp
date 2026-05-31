@@ -149,40 +149,107 @@ constexpr std::string GetTypeDecl() {
     return GetTypeDecl<std::remove_pointer_t<std::remove_const_t<T>>>() + GetRefType<T, true>();
 }
 
-template <std::meta::info Alias> constexpr std::string GetTypeDecl() {
-    if constexpr (std::meta::has_parent(Alias)) {
-        constexpr auto TParent = std::meta::parent_of(Alias);
-        if constexpr (std::meta::is_type(TParent)) {
-            using ParentType = typename[:TParent:];
-            if constexpr (HasCustomTypeDecl<ParentType>) {
-                return ParentType::GetTypeDecl();
-            } else {
-                static_assert(
-                    false,
-                    "you provided an invalid type alias to GetTypeDecl(), make sure you provide the ^^Specialize<B, T>::T "
-                    "type alias"
-                );
-                return "";
-            }
+template <typename T, TmplSubTypes S> consteval std::string GetTypeDecl() {
+    // First, construct the subtype list.
+    std::string subTypes;
+    template for (constexpr std::size_t i : std::views::iota(0uz, S.subTypes.size())) {
+        if constexpr (S.recursiveSub.empty()) {
+            subTypes += GetTypeDecl<typename[:S.subTypes[i]:]>();
         } else {
-            static_assert(
-                false,
-                "you provided an invalid type alias to GetTypeDecl(), make sure you provide the ^^Specialize<B, T>::T type "
-                "alias"
-            );
-            return "";
+            subTypes += GetTypeDecl<typename[:S.subTypes[i]:], S.recursiveSub[i]>();
         }
+        if constexpr (i + 1 < S.subTypes.size()) { subTypes += ", "; }
+    }
+    if (subTypes.size() > 0) { subTypes = "<" + subTypes + ">"; }
+
+    // Then, construct the base template type declaration with the correct qualifiers.
+    std::string decl;
+    if constexpr (IsPointer<T> && IsConst<T>) {
+        // "@ const/&" suffix.
+        if constexpr (IsConst<std::remove_pointer_t<std::remove_const_t<T>>>) {
+            // "const" prefix.
+            decl = "const " + as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<T>>>() + subTypes
+                   + as::GetRefType<T, true>();
+        } else {
+            decl = as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<T>>>() + subTypes + as::GetRefType<T, true>();
+        }
+    } else if constexpr (IsPointer<T>) {
+        // "@/&" suffix.
+        if constexpr (IsConst<std::remove_pointer_t<std::remove_const_t<T>>>) {
+            // "const" prefix.
+            decl =
+                "const " + as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<T>>>() + subTypes + as::GetRefType<T>();
+        } else {
+            decl = as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<T>>>() + subTypes + as::GetRefType<T>();
+        }
+    } else if constexpr (IsConst<T>) {
+        // "const" prefix.
+        decl = "const " + as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<T>>>() + subTypes;
     } else {
-        static_assert(
-            false,
-            "you provided an invalid type alias to GetTypeDecl(), make sure you provide the ^^Specialize<B, T>::T type alias"
-        );
-        return "";
+        decl = as::GetTypeDecl<std::remove_cvref_t<std::remove_pointer_t<T>>>() + subTypes;
+    }
+    return decl;
+}
+
+template <typename T, std::meta::info S> constexpr std::string GetTypeDecl() {
+    constexpr auto subTypes = GetSubTypes<S>();
+    if constexpr (subTypes.recursiveSub.empty()) {
+        return GetTypeDecl<T>();
+    } else {
+        return GetTypeDecl<T, subTypes>();
     }
 }
 
-template <std::meta::info T> constexpr bool IsRefType() {
-    return std::meta::annotations_of_with_type(std::meta::dealias(T), ^^decltype(RefType)).size() > 0;
+template <std::meta::info S> constexpr std::string GetTypeDecl() {
+    return GetTypeDecl<typename[:std::meta::type_of(S):], S>();
+}
+
+namespace detail {
+consteval TmplSubTypes SubType(std::vector<std::meta::info> types) {
+    std::vector<std::meta::info> subTypes;
+    std::vector<TmplSubTypes> recursiveSub;
+    for (auto T : types) {
+        if (std::meta::has_template_arguments(T) && std::meta::template_of(T) == ^^Tmpl) {
+            auto args = std::meta::template_arguments_of(T);
+            subTypes.push_back(args[0]);
+            args.erase(args.begin());
+            recursiveSub.push_back(SubType(args));
+        } else {
+            subTypes.push_back(T);
+            recursiveSub.emplace_back();
+        }
+    }
+    return TmplSubTypes{
+        .subTypes = std::define_static_array(subTypes),
+        .recursiveSub = std::define_static_array(recursiveSub),
+    };
+}
+} // namespace detail
+
+template <typename... Ts> consteval TmplSubTypes SubType() {
+    return detail::SubType({ ^^Ts... });
+}
+
+template <typename... Ts> consteval TmplSubTypes SubTypes() {
+    return SubType<Ts...>();
+}
+
+template <std::meta::info I> consteval TmplSubTypes GetSubTypes() {
+    constexpr auto subTypes = std::define_static_array(std::meta::annotations_of_with_type(I, ^^TmplSubTypes));
+    static_assert(
+        subTypes.size() <= 1,
+        std::string(std::meta::display_string_of(I)) + " was given more than one TmplSubTypes/SubType[s] annotation"
+    );
+    if constexpr (subTypes.size() == 0) { return {}; }
+    return std::meta::extract<TmplSubTypes>(subTypes[0]);
+}
+
+template <typename T> constexpr bool IsRefType() {
+    return std::meta::annotations_of_with_type(
+               std::meta::dealias(^^std::remove_cvref_t<remove_all_pointers_t<T>>), ^^decltype(RefType)
+           )
+               .size()
+           > 0;
 }
 
 template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCallConv() {
@@ -202,7 +269,7 @@ template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCal
 }
 
 template <typename T, bool C> constexpr std::string GetRefType() {
-    if constexpr (IsRefType<^^remove_all_pointers_t<T>>()) {
+    if constexpr (IsRefType<T>()) {
         if constexpr (C) {
             return "@ const";
         } else {

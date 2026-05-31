@@ -9,6 +9,9 @@
 #include <AngelScriptWrapper/Engine.hpp>
 #include <iostream>
 
+#define COMMA ,
+#define STATIC_ASSERT_EQ(a, b) static_assert(a == b, a);
+
 namespace as {
 /**
  * Simple script message callback that pipes messages to stdout.

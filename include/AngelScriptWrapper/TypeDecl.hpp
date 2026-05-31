@@ -7,8 +7,10 @@
 
 #include <angelscript.h>
 #include <AngelScriptWrapper/Concepts.hpp>
+#include <AngelScriptWrapper/StructuralSpan.hpp>
 #include <cstdint>
 #include <meta>
+#include <ranges>
 #include <string>
 #include <type_traits>
 
@@ -33,44 +35,78 @@ namespace as {
 template <typename T> constexpr std::string GetTypeDecl();
 
 /**
- * Variant of GetTypeDecl() used for AngelScript template types.
- * AngelScript template types, such as CScriptArray, store their subtype information at runtime. This makes it
- * impossible for you to tell the C++ compiler what you intend to store inside a given CScriptArray instance.
- *
- * The solution this library implements involves type aliases. Reflection in C++ treats types and type aliases as
- * separate entities, so we can define a type alias for every specialization of an AngelScript template type that you
- * expect to work with in your application interface.
- *
- * Unfortunately, it's not as simple as passing in the type alias into the regular version of GetTypeDecl(), because by
- * the time the compiler has reached the function, the type alias has been resolved and we're stuck with the original
- * type. So you will need to provide the std::meta::info object of the type alias directly to the GetTypeDecl() function
- * so it can resolve the alias and not the type the alias points to.
- *
- * Here is an example of how to get CScriptArray working as intended:
- * @code{.cpp}
- * // First, define the specialization for the base array typename:
- * template <> constexpr std::string as::GetTypeDecl<CScriptArray>() {
- *     return "array";
- * }
- *
- * // Then, specialize the CScriptArray for strings, as an example:
- * using StringArray = Specialize<CScriptArray, std::string>;
- *
- * // Now you can generate array<string>:
- * static_assert(GetTypeDecl<^^StringArray::T>() == "array<string>");
- *
- * // Slight downside is that you will need to define type aliases for all the variants you need, too:
- * using StringArrayHandle = Specialize<CScriptArray*, std::string>;
- * using StringArrayConstHandle = Specialize<CScriptArray* const, std::string>;
- * using StringConstArray = Specialize<const CScriptArray, std::string>;
- * using ConstStringConstArrayConstHandle = Specialize<const CScriptArray* const, const std::string>;
- * // etc.
- * @endcode
- * @tparam Alias The std::meta::info object of the alias generated using the Specialize template struct.
- * @return The AngelScript name (with qualifiers where given) of the given C++ type.
- * @sa as::Specialize
+ * Annotation attached to variables, fields and function parameters that stores a list of subtypes used in an
+ * AngelScript template specialization.
+ * If it is attached to a function, the subtypes will be applied to the function's return type.
+ * Both vectors are guaranteed to be equal in length, even if entries in recursiveSub are empty.
  */
-template <std::meta::info Alias> constexpr std::string GetTypeDecl();
+struct TmplSubTypes {
+    /**
+     * A list of meta info objects for each subtype, from left to right.
+     */
+    StructuralSpan<const std::meta::info> subTypes;
+
+    /**
+     * If a subtype in the list itself has subtypes, they must be assigned to the corresponding element in this list.
+     */
+    StructuralSpan<const TmplSubTypes> recursiveSub;
+};
+
+/**
+ * Variant of GetTypeDecl() used for AngelScript template types.
+ * @tparam T The C++ type that is registered as a template type in the AngelScript application interface.
+ * @tparam S The annotation object containing the subtypes to include in the AngelScript type declaration, if any.
+ * @return The AngelScript declaration of a specialized template type.
+ */
+template <typename T, TmplSubTypes S> consteval std::string GetTypeDecl();
+
+/**
+ * Variant of GetTypeDecl() used for AngelScript template types.
+ * @tparam T The C++ type that is registered as a template type in the AngelScript application interface.
+ * @tparam S The meta info object containing the subtypes to include in the AngelScript type declaration, if any.
+ * @return The AngelScript declaration of a specialized template type.
+ */
+template <typename T, std::meta::info S> constexpr std::string GetTypeDecl();
+
+/**
+ * Variant of GetTypeDecl() used for AngelScript template types.
+ * @tparam S The C++ object that stores a variable of the template type you want to convert into an AngelScript
+ *           declaration. The C++ object should also include an annotation containing the subtypes to include in the
+ *           AngelScript type declaration, if any.
+ * @return The AngelScript declaration of a specialized template type.
+ */
+template <std::meta::info S> constexpr std::string GetTypeDecl();
+
+/**
+ * Use this struct in the template parameter list of SubType[s]() when you need to declare a template type whose
+ * subtypes are also template types.
+ * @tparam B The C++ type that represents the AngelScript template type.
+ * @tparam S The subtypes to instantiate the template type with.
+ */
+template <typename B, typename... S> struct Tmpl {};
+
+/**
+ * Use this function to annotate a variable that is intended to store an AngelScript object of a specialized template
+ * type.
+ * @tparam Ts... The subtypes of a template type instance.
+ * @return The annotation to attach to e.g. a CScriptArray variable or parameter to tell the library which
+ *         specialization you expect from scripts.
+ * @sa Tmpl
+ */
+template <typename... Ts> consteval TmplSubTypes SubType();
+
+/**
+ * Alias for SubType.
+ * @sa SubType().
+ */
+template <typename... Ts> consteval TmplSubTypes SubTypes();
+
+/**
+ * Retrieves a variable's or parameter's subtypes.
+ * @tparam I The meta info of the parameter or variable to extract the subtypes of.
+ * @return The list of subtypes. An empty list if the meta info object has no subtypes.
+ */
+template <std::meta::info I> consteval TmplSubTypes GetSubTypes();
 
 /**
  * Annotation attached to classes to denote that they are reference types.
@@ -81,11 +117,11 @@ inline constexpr struct {
 
 /**
  * Finds out if the developer has marked a C++ type as being a reference type in AngelScript.
- * @tparam T The meta info object of the type to test. Aliases are dealised. Remember to pass the base type and not a
- *         pointer type.
- * @return True if the type has been marked as a ref type, false is the type is a value type.
+ * @tparam T The type to test. Aliases are dealised. The base type will be tested, e.g. if T* is passed, the pointer
+ *         will be dropped. CV qualifiers are also dropped.
+ * @return True if the type has been marked as a ref type, false if the type is a value type.
  */
-template <std::meta::info T> constexpr bool IsRefType();
+template <typename T> constexpr bool IsRefType();
 
 /**
  * Annotation attached to functions to tell the library what call convention to use.
@@ -94,6 +130,9 @@ template <std::meta::info T> constexpr bool IsRefType();
  * one CallConv annotation to a function.
  */
 struct CallConv {
+    /**
+     * The call convention AngelScript should use for a given function or method.
+     */
     AS_NAMESPACE_QUALIFIER asDWORD is;
 };
 
@@ -107,7 +146,6 @@ struct CallConv {
 template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCallConv();
 
 /**
- * TODO: this is not flexible enough, sometimes you want &[inout] for ref types.
  * Determines if a given typename should use a handle or a reference.
  * @tparam T The type to test. This function will test the underlying type, i.e. you could pass T* here, as well.
  * @tparam C If the type is a RefType, set this flag to true to make the handle constant. Does nothing if the type is a
@@ -118,29 +156,3 @@ template <typename T, bool C = false> constexpr std::string GetRefType();
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>
-
-namespace as {
-/**
- * A helper struct to specialize template type declarations in AngelScript.
- * See the documentation on GetTypeDecl<T, Alias>() for more details and an example.
- * TODO: to support more than one subtype, it's easier to just define a Specialize struct that takes three template
- *       parameters, or four, etc.
- * @tparam B The C++ type, registered as an AngelScript template type, that is being specialized.
- * @tparam T The subtype to specialize with.
- */
-template <typename B, typename S> struct Specialize final {
-    /**
-     * Alias of the C++ class that implements the AngelScript template type.
-     * You must use this alias throughout declarations that directly touch the AngelScript application interface.
-     */
-    using T = B;
-
-    /**
-     * A custom GetTypeDecl() implementation that GetTypDecl<T, Alias>() detects and invokes instead of resolving the
-     * type declaration of T on its own.
-     */
-    static constexpr std::string GetTypeDecl();
-};
-} // namespace as
-
-#include <AngelScriptWrapper/Specialize.tpp>

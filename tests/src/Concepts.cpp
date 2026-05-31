@@ -84,6 +84,7 @@ static_assert(!as::IsArithmetic<double*>);
 static_assert(!as::IsArithmetic<bool*>);
 static_assert(!as::IsArithmetic<char*>);
 
+static_assert(as::IsConst<std::remove_reference_t<const int&>>);
 static_assert(as::IsConst<const int>);
 static_assert(!as::IsConst<int>);
 static_assert(as::IsConst<const int* const>);
@@ -94,14 +95,7 @@ static_assert(!as::IsPointer<int>);
 static_assert(as::IsPointer<const int* const>);
 static_assert(as::IsPointer<const int*>);
 
-struct TypeA {};
-
-struct TypeB {
-    static constexpr std::string GetTypeDecl() {
-        return "";
-    }
-};
-
-static_assert(!as::HasCustomTypeDecl<int>);
-static_assert(!as::HasCustomTypeDecl<::TypeA>);
-static_assert(as::HasCustomTypeDecl<::TypeB>);
+static_assert(as::IsReference<int&>);
+static_assert(as::IsReference<const int&>);
+static_assert(!as::IsReference<int*>);
+static_assert(!as::IsReference<int>);

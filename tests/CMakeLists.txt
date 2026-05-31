@@ -36,6 +36,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     # Static tests go here for immediate feedback:
     "src/Concepts.cpp"
     "src/TypeDecl.cpp"
+    "src/FuncDecl.cpp"
 
     # AngelScript add ons used during testing:
     ${angelscript_SOURCE_DIR}/add_on/scriptarray/scriptarray.cpp

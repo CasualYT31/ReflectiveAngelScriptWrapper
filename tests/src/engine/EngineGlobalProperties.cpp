@@ -587,17 +587,18 @@ TEST(AngelScriptEngineGlobalProperties, ArrayType) {
     AS_NAMESPACE_QUALIFIER RegisterStdString(engine.Ptr());
     AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
 
-    const auto arrayTypeDecl = as::GetTypeDecl<^^as::StringArray::T>();
-    ASSERT_EQ(arrayTypeDecl, "array<string>");
-    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl.c_str());
+    constexpr auto arrayTypeDecl =
+        std::define_static_string(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptArray, as::StringArray>());
+    ASSERT_EQ(std::string(arrayTypeDecl), "array<string>");
+    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl);
     ASSERT_TRUE(arrayType);
-    auto p = as::StringArray::T::Create(arrayType, 3);
+    auto p = AS_NAMESPACE_QUALIFIER CScriptArray::Create(arrayType, 3);
     ASSERT_TRUE(p);
-    as::OwnedObject<as::StringArray::T> array(p);
+    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[= as::StringArray]](p);
     ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringArray::T>("arr", array.Ptr()), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^array>("arr", array), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -638,17 +639,18 @@ TEST(AngelScriptEngineGlobalProperties, ConstArrayType) {
     AS_NAMESPACE_QUALIFIER RegisterStdString(engine.Ptr());
     AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
 
-    const auto arrayTypeDecl = as::GetTypeDecl<^^as::StringArray::T>();
-    ASSERT_EQ(arrayTypeDecl, "array<string>");
-    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl.c_str());
+    constexpr auto arrayTypeDecl =
+        std::define_static_string(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptArray, as::StringArray>());
+    ASSERT_EQ(std::string(arrayTypeDecl), "array<string>");
+    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl);
     ASSERT_TRUE(arrayType);
-    auto p = as::StringArray::T::Create(arrayType, 3);
+    auto p = AS_NAMESPACE_QUALIFIER CScriptArray::Create(arrayType, 3);
     ASSERT_TRUE(p);
-    as::OwnedObject<as::StringArray::T> array(p);
+    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[= as::StringArray]](p);
     ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringConstArray::T>("arr", array.Ptr()), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^array>("arr", array, true), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -689,18 +691,19 @@ TEST(AngelScriptEngineGlobalProperties, ArrayHandleType) {
     AS_NAMESPACE_QUALIFIER RegisterStdString(engine.Ptr());
     AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
 
-    const auto arrayTypeDecl = as::GetTypeDecl<^^as::StringArray::T>();
-    ASSERT_EQ(arrayTypeDecl, "array<string>");
-    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl.c_str());
+    constexpr auto arrayTypeDecl =
+        std::define_static_string(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptArray, as::StringArray>());
+    ASSERT_EQ(std::string(arrayTypeDecl), "array<string>");
+    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl);
     ASSERT_TRUE(arrayType);
-    auto p = as::StringArray::T::Create(arrayType, 3);
+    auto p = AS_NAMESPACE_QUALIFIER CScriptArray::Create(arrayType, 3);
     ASSERT_TRUE(p);
-    as::OwnedObject<as::StringArray::T> array(p);
+    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array(p);
     ASSERT_TRUE(array.Ptr());
-    AS_NAMESPACE_QUALIFIER CScriptArray* prop = nullptr;
+    AS_NAMESPACE_QUALIFIER CScriptArray* prop[[= as::StringArray]] = nullptr;
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::StringArrayHandle::T>("arr", &prop), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^prop>("arr", &prop), 0);
 
     // Retrieve global property within a script.
     bool isNull = false;
@@ -726,17 +729,18 @@ TEST(AngelScriptEngineGlobalProperties, ArrayTypeConstSubtype) {
     AS_NAMESPACE_QUALIFIER RegisterStdString(engine.Ptr());
     AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
 
-    const auto arrayTypeDecl = as::GetTypeDecl<^^as::ConstStringArray::T>();
-    ASSERT_EQ(arrayTypeDecl, "array<const string>");
-    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl.c_str());
+    constexpr auto arrayTypeDecl =
+        std::define_static_string(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptArray, as::ConstStringArray>());
+    ASSERT_EQ(std::string(arrayTypeDecl), "array<const string>");
+    auto arrayType = engine.Ptr()->GetTypeInfoByDecl(arrayTypeDecl);
     ASSERT_TRUE(arrayType);
-    auto p = as::ConstStringArray::T::Create(arrayType, 3);
+    auto p = AS_NAMESPACE_QUALIFIER CScriptArray::Create(arrayType, 3);
     ASSERT_TRUE(p);
-    as::OwnedObject<as::ConstStringArray::T> array(p);
+    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[= as::ConstStringArray]](p);
     ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^as::ConstStringArray::T>("arr", array.Ptr()), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^array>("arr", array), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;

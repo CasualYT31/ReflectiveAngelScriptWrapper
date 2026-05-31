@@ -1,11 +1,49 @@
 #include <AngelScriptWrapper/TypeDecl.hpp>
 #include <AngelScriptWrapperTests/ScriptArray.hpp>
+#include <AngelScriptWrapperTests/ScriptDebugging.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 
-static_assert(!as::IsRefType<^^int>());
-static_assert(!as::IsRefType<^^std::string>());
-static_assert(as::IsRefType<^^AS_NAMESPACE_QUALIFIER CScriptArray>());
-static_assert(as::IsRefType<^^as::ScriptTestObject>());
+static_assert(as::SubType().subTypes.size() == 0);
+static_assert(as::SubType<int>().subTypes[0] == ^^int);
+static_assert(as::SubTypes<int, AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>().subTypes[1] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
+// <array<string>, array<array<string>>>
+#define NESTED                                                                                                              \
+    as::SubTypes<                                                                                                           \
+        as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>,                                                        \
+        as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>>>()
+static_assert(NESTED.subTypes.size() == 2);
+static_assert(NESTED.subTypes.size() == NESTED.recursiveSub.size());
+static_assert(NESTED.subTypes[0] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
+static_assert(NESTED.recursiveSub[0].subTypes[0] == std::meta::dealias(^^std::string));
+static_assert(NESTED.subTypes[1] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
+static_assert(NESTED.recursiveSub[1].subTypes[0] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
+static_assert(NESTED.recursiveSub[1].recursiveSub[0].subTypes[0] == std::meta::dealias(^^std::string));
+#undef NESTED
+
+static_assert(!as::IsRefType<int>());
+static_assert(!as::IsRefType<std::string>());
+static_assert(as::IsRefType<AS_NAMESPACE_QUALIFIER CScriptArray>());
+static_assert(as::IsRefType<as::ScriptTestObject>());
+
+static_assert(!as::IsRefType<int*>());
+static_assert(!as::IsRefType<std::string*>());
+static_assert(as::IsRefType<AS_NAMESPACE_QUALIFIER CScriptArray*>());
+static_assert(as::IsRefType<as::ScriptTestObject*>());
+
+static_assert(!as::IsRefType<int&>());
+static_assert(!as::IsRefType<std::string&>());
+static_assert(as::IsRefType<AS_NAMESPACE_QUALIFIER CScriptArray&>());
+static_assert(as::IsRefType<as::ScriptTestObject&>());
+
+static_assert(!as::IsRefType<const int&>());
+static_assert(!as::IsRefType<const std::string&>());
+static_assert(as::IsRefType<const AS_NAMESPACE_QUALIFIER CScriptArray&>());
+static_assert(as::IsRefType<const as::ScriptTestObject&>());
+
+static_assert(!as::IsRefType<const int* const*>());
+static_assert(!as::IsRefType<const std::string* const*>());
+static_assert(as::IsRefType<const AS_NAMESPACE_QUALIFIER CScriptArray* const*>());
+static_assert(as::IsRefType<const as::ScriptTestObject* const*>());
 
 void cdecl();
 
@@ -69,58 +107,60 @@ static_assert(as::GetTypeDecl<as::ScriptTestObject**>() == "ScriptTestObject@@")
 static_assert(as::GetTypeDecl<const as::ScriptTestObject*>() == "const ScriptTestObject@");
 static_assert(as::GetTypeDecl<const as::ScriptTestObject* const>() == "const ScriptTestObject@ const");
 
-// Technically, strings are value types by default in AngelScript,
-// but we just want to test @ handling here.
-using StringHandleArray = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray, std::string*>;
-using ConstStringHandleArray = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray, const std::string*>;
-using ConstStringConstHandleArray = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray, const std::string* const>;
-using ConstStringConstArray = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray, const std::string>;
-using StringHandleConstArray = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray, std::string*>;
-using ConstStringHandleConstArray = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray, const std::string*>;
-using ConstStringConstHandleConstArray = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray, const std::string* const>;
-using ConstStringArrayHandle = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray*, const std::string>;
-using StringHandleArrayHandle = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string*>;
-using ConstStringHandleArrayHandle = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray*, const std::string*>;
-using ConstStringConstHandleArrayHandle = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray*, const std::string* const>;
-using StringConstArrayConstHandle = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray* const, std::string>;
-using ConstStringConstArrayConstHandle = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray* const, const std::string>;
-using StringHandleConstArrayConstHandle = as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray* const, std::string*>;
-using ConstStringHandleConstArrayConstHandle =
-    as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray* const, const std::string*>;
-using ConstStringConstHandleConstArrayConstHandle =
-    as::Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray* const, const std::string* const>;
-using StringArrayHandleHandle = as::Specialize<AS_NAMESPACE_QUALIFIER CScriptArray**, std::string>;
+static as::ScriptTestObject StringArray[[= as::StringArray]];
+static as::ScriptTestObject ConstStringArray[[= as::ConstStringArray]];
+static as::ScriptTestObject StringHandleArray[[= as::StringHandleArray]];
+static as::ScriptTestObject ConstStringHandleArray[[= as::ConstStringHandleArray]];
+static as::ScriptTestObject ConstStringConstHandleArray[[= as::ConstStringConstHandleArray]];
+static const as::ScriptTestObject StringConstArray[[= as::StringArray]];
+static const as::ScriptTestObject ConstStringConstArray[[= as::ConstStringArray]];
+static const as::ScriptTestObject StringHandleConstArray[[= as::StringHandleArray]];
+static const as::ScriptTestObject ConstStringHandleConstArray[[= as::ConstStringHandleArray]];
+static const as::ScriptTestObject ConstStringConstHandleConstArray[[= as::ConstStringConstHandleArray]];
+static as::ScriptTestObject* StringArrayHandle[[= as::StringArray]] = nullptr;
+static as::ScriptTestObject* ConstStringArrayHandle[[= as::ConstStringArray]] = nullptr;
+static as::ScriptTestObject* StringHandleArrayHandle[[= as::StringHandleArray]] = nullptr;
+static as::ScriptTestObject* ConstStringHandleArrayHandle[[= as::ConstStringHandleArray]] = nullptr;
+static as::ScriptTestObject* ConstStringConstHandleArrayHandle[[= as::ConstStringConstHandleArray]] = nullptr;
+static const as::ScriptTestObject* const StringConstArrayConstHandle[[= as::StringArray]] = nullptr;
+static const as::ScriptTestObject* const ConstStringConstArrayConstHandle[[= as::ConstStringArray]] = nullptr;
+static const as::ScriptTestObject* const StringHandleConstArrayConstHandle[[= as::StringHandleArray]] = nullptr;
+static const as::ScriptTestObject* const ConstStringHandleConstArrayConstHandle[[= as::ConstStringHandleArray]] = nullptr;
+static const as::ScriptTestObject* const ConstStringConstHandleConstArrayConstHandle[[= as::ConstStringConstHandleArray]] =
+    nullptr;
 
-static_assert(as::GetTypeDecl<as::StringArray::T>() == "array");
-static_assert(as::GetTypeDecl<^^as::StringArray::T>() == "array<string>");
-static_assert(as::GetTypeDecl<^^as::ConstStringArray::T>() == "array<const string>");
-static_assert(as::GetTypeDecl<^^StringHandleArray::T>() == "array<string&>");
-static_assert(as::GetTypeDecl<^^ConstStringHandleArray::T>() == "array<const string&>");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleArray::T>() == "array<const string&>");
-static_assert(as::GetTypeDecl<^^as::StringConstArray::T>() == "const array<string>");
-static_assert(as::GetTypeDecl<^^ConstStringConstArray::T>() == "const array<const string>");
-static_assert(as::GetTypeDecl<^^StringHandleConstArray::T>() == "const array<string&>");
-static_assert(as::GetTypeDecl<^^ConstStringHandleConstArray::T>() == "const array<const string&>");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleConstArray::T>() == "const array<const string&>");
-static_assert(as::GetTypeDecl<^^as::StringArrayHandle::T>() == "array<string>@");
-static_assert(as::GetTypeDecl<^^ConstStringArrayHandle::T>() == "array<const string>@");
-static_assert(as::GetTypeDecl<^^StringHandleArrayHandle::T>() == "array<string&>@");
-static_assert(as::GetTypeDecl<^^ConstStringHandleArrayHandle::T>() == "array<const string&>@");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleArrayHandle::T>() == "array<const string&>@");
-static_assert(as::GetTypeDecl<^^StringConstArrayConstHandle::T>() == "const array<string>@ const");
-static_assert(as::GetTypeDecl<^^ConstStringConstArrayConstHandle::T>() == "const array<const string>@ const");
-static_assert(as::GetTypeDecl<^^StringHandleConstArrayConstHandle::T>() == "const array<string&>@ const");
-static_assert(as::GetTypeDecl<^^ConstStringHandleConstArrayConstHandle::T>() == "const array<const string&>@ const");
-static_assert(as::GetTypeDecl<^^ConstStringConstHandleConstArrayConstHandle::T>() == "const array<const string&>@ const");
+// clang-format off
+STATIC_ASSERT_EQ(as::GetTypeDecl<as::ScriptTestObject COMMA as::TmplSubTypes{}>(), "ScriptTestObject");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringArray>(), "ScriptTestObject<string>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringArray>(), "ScriptTestObject<const string>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleArray>(), "ScriptTestObject<string&>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleArray>(), "ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleArray>(), "ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringConstArray>(), "const ScriptTestObject<string>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstArray>(), "const ScriptTestObject<const string>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleConstArray>(), "const ScriptTestObject<string&>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleConstArray>(), "const ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleConstArray>(), "const ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringArrayHandle>(), "ScriptTestObject<string>@");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringArrayHandle>(), "ScriptTestObject<const string>@");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleArrayHandle>(), "ScriptTestObject<string&>@");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleArrayHandle>(), "ScriptTestObject<const string&>@");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleArrayHandle>(), "ScriptTestObject<const string&>@");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringConstArrayConstHandle>(), "const ScriptTestObject<string>@ const");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstArrayConstHandle>(), "const ScriptTestObject<const string>@ const");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleConstArrayConstHandle>(), "const ScriptTestObject<string&>@ const");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleConstArrayConstHandle>(), "const ScriptTestObject<const string&>@ const");
+STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleConstArrayConstHandle>(), "const ScriptTestObject<const string&>@ const");
+// clang-format on
 
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CDateTime>() == "datetime");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER Complex>() == "complex");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptAny>() == "any");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptDictionary>() == "dictionary");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptDictValue>() == "dictionaryValue");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptFile>() == "file");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptFileSystem>() == "filesystem");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptGrid>() == "grid");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptHandle>() == "ref");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptSocket>() == "socket");
-static_assert(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptWeakRef>() == "weakref");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CDateTime>(), "datetime");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER Complex>(), "complex");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptAny>(), "any");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptDictionary>(), "dictionary");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptDictValue>(), "dictionaryValue");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptFile>(), "file");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptFileSystem>(), "filesystem");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptGrid>(), "grid");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptHandle>(), "ref");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptSocket>(), "socket");
+STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptWeakRef>(), "weakref");

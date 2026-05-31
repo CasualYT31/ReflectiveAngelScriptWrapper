@@ -9,8 +9,9 @@
 #include <scriptarray.h>
 
 namespace as {
-using StringArray = Specialize<AS_NAMESPACE_QUALIFIER CScriptArray, std::string>;
-using StringConstArray = Specialize<const AS_NAMESPACE_QUALIFIER CScriptArray, std::string>;
-using StringArrayHandle = Specialize<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>;
-using ConstStringArray = Specialize<AS_NAMESPACE_QUALIFIER CScriptArray, const std::string>;
+constexpr auto StringArray = SubType<std::string>();
+constexpr auto ConstStringArray = SubType<const std::string>();
+constexpr auto StringHandleArray = SubType<std::string*>();
+constexpr auto ConstStringHandleArray = SubType<const std::string*>();
+constexpr auto ConstStringConstHandleArray = SubType<const std::string* const>();
 } // namespace as

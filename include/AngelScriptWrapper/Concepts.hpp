@@ -60,13 +60,11 @@ template <typename T>
 concept IsPointer = std::is_pointer_v<T>;
 
 /**
- * A concept for types that define a custom AngelScript type declaration.
- * @tparam T The type to test.
+ * A concept for reference types.
+ * @tparam T the type to test.
  */
 template <typename T>
-concept HasCustomTypeDecl = requires {
-    { T::GetTypeDecl() } -> std::same_as<std::string>;
-};
+concept IsReference = std::is_reference_v<T>;
 
 /**
  * Removes pointers from a type recursively.
