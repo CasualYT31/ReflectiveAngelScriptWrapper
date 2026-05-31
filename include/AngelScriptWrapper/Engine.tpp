@@ -8,27 +8,19 @@
 #include <AngelScriptWrapper/TypeDecl.hpp>
 
 namespace as {
-template <typename T>
-    requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(std::string name, T* const value, const bool constant) {
-    if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-    if (constant) {
-        name = GetTypeDecl<const T>() + " " + name;
-    } else {
-        name = GetTypeDecl<T>() + " " + name;
-    }
-    return Ptr()->RegisterGlobalProperty(name.c_str(), value);
-}
-
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(std::string name, T* const value, const bool constant) {
+int Engine::RegisterGlobalProperty(std::string name, T* const value, GlobalPropertyOptions const& opts) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-    if (constant) {
-        constexpr auto constType = std::define_static_string(GetTypeDecl<const T, V>());
+    if (name.empty()) {
+        constexpr auto vName = std::meta::identifier_of(V);
+        name = std::string(vName);
+    }
+    if (opts.constant) {
+        constexpr auto constType = detail::OverrideTypeOf<const T, V>;
         name = std::string(constType) + " " + name;
     } else {
-        constexpr auto type = std::define_static_string(GetTypeDecl<T, V>());
+        constexpr auto type = detail::OverrideTypeOf<T, V>;
         name = std::string(type) + " " + name;
     }
     return Ptr()->RegisterGlobalProperty(name.c_str(), value);
@@ -36,16 +28,34 @@ int Engine::RegisterGlobalProperty(std::string name, T* const value, const bool 
 
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(std::string name, OwnedObject<T> const& value, const bool constant) {
+int Engine::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts) {
+    constexpr auto name = std::meta::identifier_of(V);
+    return RegisterGlobalProperty<V, T>(std::string(name), value, opts);
+}
+
+template <std::meta::info V, typename T>
+    requires(!IsConst<T>)
+int Engine::RegisterGlobalProperty(std::string name, OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-    if (constant) {
-        constexpr auto constType = std::define_static_string(GetTypeDecl<const T, V>());
+    if (name.empty()) {
+        constexpr auto vName = std::meta::identifier_of(V);
+        name = std::string(vName);
+    }
+    if (opts.constant) {
+        constexpr auto constType = detail::OverrideTypeOf<const T, V>;
         name = std::string(constType) + " " + name;
     } else {
-        constexpr auto type = std::define_static_string(GetTypeDecl<T, V>());
+        constexpr auto type = detail::OverrideTypeOf<T, V>;
         name = std::string(type) + " " + name;
     }
     return Ptr()->RegisterGlobalProperty(name.c_str(), value.Ptr());
+}
+
+template <std::meta::info V, typename T>
+    requires(!IsConst<T>)
+int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
+    constexpr auto name = std::meta::identifier_of(V);
+    return RegisterGlobalProperty<V, T>(std::string(name), value, opts);
 }
 
 // template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary) {
@@ -71,7 +81,7 @@ int Engine::RegisterGlobalProperty(std::string name, OwnedObject<T> const& value
 // template <std::meta::info T> int Engine::RegisterObjectType() {
 //     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
 //     using type = [:T:];
-//     const auto typeName = GetTypeDecl<type>().c_str();
+//     const auto typeName = TypeName<type>.c_str();
 //     const auto typeIsRef = IsRefType<T>();
 //     const auto typeHasFactory = typeIsRef && HasFactoryFunction<type>;
 //     const auto typeIsRefCounted = typeIsRef && IsReferenceCounted<type>;

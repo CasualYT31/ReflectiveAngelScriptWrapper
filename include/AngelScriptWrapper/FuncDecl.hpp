@@ -28,6 +28,8 @@ inline constexpr struct {
  */
 template <std::meta::info P> constexpr bool AsHandle();
 
+// TODO: is this really necessary? Does CScriptArray& map to array&?
+
 /**
  * Annotation attached to function parameters that are to be registered with a default value.
  * Compilation will fail if you attach more than one of these to a single parameter.
@@ -55,7 +57,7 @@ inline consteval DefaultsTo DefVal(std::string const& val) {
  * @tparam F The std::meta::info object of the function you want to generate the declaration of.
  * @return The AngelScript declaration (with qualifiers) of the given C++ function signature.
  */
-template <std::meta::info F> constexpr std::string GetFuncDecl();
+template <std::meta::info F> constexpr std::string_view GetFuncDecl();
 } // namespace as
 
 #include <AngelScriptWrapper/FuncDecl.tpp>

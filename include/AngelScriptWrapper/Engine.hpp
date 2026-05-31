@@ -13,6 +13,16 @@
 
 namespace as {
 /**
+ * Options to set when registering a global property.
+ */
+struct GlobalPropertyOptions {
+    /**
+     * Set this flag to true if you want your global property to be const.
+     */
+    bool constant = false;
+};
+
+/**
  * A wrapper around an asIScriptEngine instance.
  */
 struct Engine {
@@ -54,21 +64,6 @@ struct Engine {
 
     /**
      * Registers a global property for use in the scripts within this engine.
-     * @tparam T The type of global property to register. AngelScript does not allow registering global properties
-     *         linked to const C++ objects. If you want to register a constant global property, set the constant
-     *         parameter to true.
-     * @param name The name to give to the global property.
-     * @param value Pointer to the value to give to the global property. You are expected to manage the global
-     *        property's value as you would without this wrapper.
-     * @param constant True if you want to register the property as constant.
-     * @return The result of the registration.
-     */
-    template <typename T>
-        requires(!IsConst<T>)
-    int RegisterGlobalProperty(std::string name, T* const value, const bool constant = false);
-
-    /**
-     * Registers a global property of a template AngelScript type (also works with non-template types).
      * @tparam V The std::meta::info object of your global variable of type T.
      * @tparam T The type of global property to register. AngelScript does not allow registering global properties
      *         linked to const C++ objects. If you want to register a constant global property, set the constant
@@ -76,18 +71,25 @@ struct Engine {
      * @param name The name to give to the global property.
      * @param value Pointer to the value to give to the global property. You are expected to manage the global
      *        property's value as you would without this wrapper.
-     * @param constant True if you want to register the property as constant.
+     * @param opts The options to set for this global property.
      * @return The result of the registration.
      */
     template <std::meta::info V, typename T>
         requires(!IsConst<T>)
-    int RegisterGlobalProperty(std::string name, T* const value, const bool constant = false);
+    int RegisterGlobalProperty(std::string name, T* const value, GlobalPropertyOptions const& opts = {});
 
     /**
-     * Registers a global property of a template AngelScript type (also works with non-template types) that are stored
-     * on Object wrappers.
-     * @tparam V The std::meta::info object of your Object wrapper. This means that if your underlying object is of a
-     *         specialized template type, you must attach SubType annotations to the Object wrapper.
+     * Version of RegisterGlobalProperty() that derives the global property's name from the identifier of your C++
+     * object.
+     */
+    template <std::meta::info V, typename T>
+        requires(!IsConst<T>)
+    int RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts = {});
+
+    /**
+     * Registers a global property for use in the scripts whose pointer is being managed by an OwnedObject wrapper.
+     * @tparam V The std::meta::info object of your OwnedObject wrapper. This means that if your underlying object is of
+     *         a specialized template type, you must attach SubTypes annotations to the Object wrapper!
      * @tparam T The type of global property to register. AngelScript does not allow registering global properties
      *         linked to const C++ objects. If you want to register a constant global property, set the constant
      *         parameter to true.
@@ -95,12 +97,20 @@ struct Engine {
      * @param value The OwnedObject wrapper that manages the AngelScript object to use as the value of the global
      *        property. The underlying pointer is used so make sure this OwnedObject survives for as long as the script
      *        engine is running.
-     * @param constant True if you want to register the property as constant.
+     * @param opts The options to set for this global property.
      * @return The result of the registration.
      */
     template <std::meta::info V, typename T>
         requires(!IsConst<T>)
-    int RegisterGlobalProperty(std::string name, OwnedObject<T> const& value, const bool constant = false);
+    int RegisterGlobalProperty(std::string name, OwnedObject<T> const& value, GlobalPropertyOptions const& opts = {});
+
+    /**
+     * Version of RegisterGlobalProperty() that derives the global property's name from the identifier of your C++
+     * OwnedObject instance.
+     */
+    template <std::meta::info V, typename T>
+        requires(!IsConst<T>)
+    int RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts = {});
 
     // MARK: Global Functions
 

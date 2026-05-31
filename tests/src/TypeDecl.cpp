@@ -3,12 +3,12 @@
 #include <AngelScriptWrapperTests/ScriptDebugging.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 
-static_assert(as::SubType().subTypes.size() == 0);
-static_assert(as::SubType<int>().subTypes[0] == ^^int);
-static_assert(as::SubTypes<int, AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>().subTypes[1] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
+static_assert(as::SubTypeList().subTypes.size() == 0);
+static_assert(as::SubTypeList<int>().subTypes[0] == ^^int);
+static_assert(as::SubTypeList<int, AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>().subTypes[1] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
 // <array<string>, array<array<string>>>
 #define NESTED                                                                                                              \
-    as::SubTypes<                                                                                                           \
+    as::SubTypeList<                                                                                                        \
         as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>,                                                        \
         as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>>>()
 static_assert(NESTED.subTypes.size() == 2);
@@ -73,39 +73,51 @@ static_assert(as::GetFuncCallConv<^^HasNonStaticMethod::myNonStatic>() == AS_NAM
 static_assert(as::GetFuncCallConv<^^customCallConv>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
 static_assert(as::GetFuncCallConv<^^HasCustomCallConv::custom>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
 
-static_assert(as::GetTypeDecl<void>() == "void");
-static_assert(as::GetTypeDecl<bool>() == "bool");
-static_assert(as::GetTypeDecl<std::int8_t>() == "int8");
-static_assert(as::GetTypeDecl<std::uint8_t>() == "uint8");
-static_assert(as::GetTypeDecl<std::int16_t>() == "int16");
-static_assert(as::GetTypeDecl<std::uint16_t>() == "uint16");
-static_assert(as::GetTypeDecl<std::int32_t>() == "int32");
-static_assert(as::GetTypeDecl<std::uint32_t>() == "uint32");
-static_assert(as::GetTypeDecl<std::int64_t>() == "int64");
-static_assert(as::GetTypeDecl<std::uint64_t>() == "uint64");
-static_assert(as::GetTypeDecl<float>() == "float");
-static_assert(as::GetTypeDecl<double>() == "double");
-static_assert(as::GetTypeDecl<std::string>() == "string");
-static_assert(as::GetTypeDecl<as::ScriptTestObject>() == "ScriptTestObject");
+STATIC_ASSERT_EQ(as::TypeName<void>, "void");
+STATIC_ASSERT_EQ(as::TypeName<bool>, "bool");
+STATIC_ASSERT_EQ(as::TypeName<std::int8_t>, "int8");
+STATIC_ASSERT_EQ(as::TypeName<std::uint8_t>, "uint8");
+STATIC_ASSERT_EQ(as::TypeName<std::int16_t>, "int16");
+STATIC_ASSERT_EQ(as::TypeName<std::uint16_t>, "uint16");
+STATIC_ASSERT_EQ(as::TypeName<std::int32_t>, "int32");
+STATIC_ASSERT_EQ(as::TypeName<std::uint32_t>, "uint32");
+STATIC_ASSERT_EQ(as::TypeName<std::int64_t>, "int64");
+STATIC_ASSERT_EQ(as::TypeName<std::uint64_t>, "uint64");
+STATIC_ASSERT_EQ(as::TypeName<float>, "float");
+STATIC_ASSERT_EQ(as::TypeName<double>, "double");
+STATIC_ASSERT_EQ(as::TypeName<std::string>, "string");
+STATIC_ASSERT_EQ(as::TypeName<as::ScriptTestObject>, "ScriptTestObject");
 
-static_assert(as::GetTypeDecl<const bool>() == "const bool");
-static_assert(as::GetTypeDecl<const std::int8_t>() == "const int8");
-static_assert(as::GetTypeDecl<const std::uint8_t>() == "const uint8");
-static_assert(as::GetTypeDecl<const std::int16_t>() == "const int16");
-static_assert(as::GetTypeDecl<const std::uint16_t>() == "const uint16");
-static_assert(as::GetTypeDecl<const std::int32_t>() == "const int32");
-static_assert(as::GetTypeDecl<const std::uint32_t>() == "const uint32");
-static_assert(as::GetTypeDecl<const std::int64_t>() == "const int64");
-static_assert(as::GetTypeDecl<const std::uint64_t>() == "const uint64");
-static_assert(as::GetTypeDecl<const float>() == "const float");
-static_assert(as::GetTypeDecl<const double>() == "const double");
-static_assert(as::GetTypeDecl<const std::string>() == "const string");
-static_assert(as::GetTypeDecl<const as::ScriptTestObject>() == "const ScriptTestObject");
+STATIC_ASSERT_EQ(as::TypeName<const bool>, "const bool");
+STATIC_ASSERT_EQ(as::TypeName<const std::int8_t>, "const int8");
+STATIC_ASSERT_EQ(as::TypeName<const std::uint8_t>, "const uint8");
+STATIC_ASSERT_EQ(as::TypeName<const std::int16_t>, "const int16");
+STATIC_ASSERT_EQ(as::TypeName<const std::uint16_t>, "const uint16");
+STATIC_ASSERT_EQ(as::TypeName<const std::int32_t>, "const int32");
+STATIC_ASSERT_EQ(as::TypeName<const std::uint32_t>, "const uint32");
+STATIC_ASSERT_EQ(as::TypeName<const std::int64_t>, "const int64");
+STATIC_ASSERT_EQ(as::TypeName<const std::uint64_t>, "const uint64");
+STATIC_ASSERT_EQ(as::TypeName<const float>, "const float");
+STATIC_ASSERT_EQ(as::TypeName<const double>, "const double");
+STATIC_ASSERT_EQ(as::TypeName<const std::string>, "const string");
+STATIC_ASSERT_EQ(as::TypeName<const as::ScriptTestObject>, "const ScriptTestObject");
 
-static_assert(as::GetTypeDecl<as::ScriptTestObject*>() == "ScriptTestObject@", as::GetTypeDecl<as::ScriptTestObject*>());
-static_assert(as::GetTypeDecl<as::ScriptTestObject**>() == "ScriptTestObject@@");
-static_assert(as::GetTypeDecl<const as::ScriptTestObject*>() == "const ScriptTestObject@");
-static_assert(as::GetTypeDecl<const as::ScriptTestObject* const>() == "const ScriptTestObject@ const");
+STATIC_ASSERT_EQ(as::TypeName<as::ScriptTestObject*>, "ScriptTestObject@");
+STATIC_ASSERT_EQ(as::TypeName<as::ScriptTestObject**>, "ScriptTestObject@");
+STATIC_ASSERT_EQ(as::TypeName<const as::ScriptTestObject*>, "const ScriptTestObject@");
+STATIC_ASSERT_EQ(as::TypeName<const as::ScriptTestObject* const>, "const ScriptTestObject@ const");
+
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CDateTime>, "datetime");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER Complex>, "complex");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptAny>, "any");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptDictionary>, "dictionary");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptDictValue>, "dictionaryValue");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptFile>, "file");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptFileSystem>, "filesystem");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptGrid>, "grid");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptHandle>, "ref");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptSocket>, "socket");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptWeakRef>, "weakref");
 
 static as::ScriptTestObject StringArray[[= as::StringArray]];
 static as::ScriptTestObject ConstStringArray[[= as::ConstStringArray]];
@@ -130,37 +142,24 @@ static const as::ScriptTestObject* const ConstStringConstHandleConstArrayConstHa
     nullptr;
 
 // clang-format off
-STATIC_ASSERT_EQ(as::GetTypeDecl<as::ScriptTestObject COMMA as::TmplSubTypes{}>(), "ScriptTestObject");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringArray>(), "ScriptTestObject<string>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringArray>(), "ScriptTestObject<const string>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleArray>(), "ScriptTestObject<string&>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleArray>(), "ScriptTestObject<const string&>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleArray>(), "ScriptTestObject<const string&>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringConstArray>(), "const ScriptTestObject<string>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstArray>(), "const ScriptTestObject<const string>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleConstArray>(), "const ScriptTestObject<string&>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleConstArray>(), "const ScriptTestObject<const string&>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleConstArray>(), "const ScriptTestObject<const string&>");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringArrayHandle>(), "ScriptTestObject<string>@");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringArrayHandle>(), "ScriptTestObject<const string>@");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleArrayHandle>(), "ScriptTestObject<string&>@");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleArrayHandle>(), "ScriptTestObject<const string&>@");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleArrayHandle>(), "ScriptTestObject<const string&>@");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringConstArrayConstHandle>(), "const ScriptTestObject<string>@ const");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstArrayConstHandle>(), "const ScriptTestObject<const string>@ const");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^StringHandleConstArrayConstHandle>(), "const ScriptTestObject<string&>@ const");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringHandleConstArrayConstHandle>(), "const ScriptTestObject<const string&>@ const");
-STATIC_ASSERT_EQ(as::GetTypeDecl<^^ConstStringConstHandleConstArrayConstHandle>(), "const ScriptTestObject<const string&>@ const");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringArray>, "ScriptTestObject<string>");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringArray>, "ScriptTestObject<const string>");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringHandleArray>, "ScriptTestObject<string&>");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringHandleArray>, "ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstHandleArray>, "ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringConstArray>, "const ScriptTestObject<string>");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstArray>, "const ScriptTestObject<const string>");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringHandleConstArray>, "const ScriptTestObject<string&>");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringHandleConstArray>, "const ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstHandleConstArray>, "const ScriptTestObject<const string&>");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringArrayHandle>, "ScriptTestObject<string>@");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringArrayHandle>, "ScriptTestObject<const string>@");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringHandleArrayHandle>, "ScriptTestObject<string&>@");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringHandleArrayHandle>, "ScriptTestObject<const string&>@");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstHandleArrayHandle>, "ScriptTestObject<const string&>@");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringConstArrayConstHandle>, "const ScriptTestObject<string>@ const");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstArrayConstHandle>, "const ScriptTestObject<const string>@ const");
+STATIC_ASSERT_EQ(as::TypeOf<^^StringHandleConstArrayConstHandle>, "const ScriptTestObject<string&>@ const");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringHandleConstArrayConstHandle>, "const ScriptTestObject<const string&>@ const");
+STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstHandleConstArrayConstHandle>, "const ScriptTestObject<const string&>@ const");
 // clang-format on
-
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CDateTime>(), "datetime");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER Complex>(), "complex");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptAny>(), "any");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptDictionary>(), "dictionary");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptDictValue>(), "dictionaryValue");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptFile>(), "file");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptFileSystem>(), "filesystem");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptGrid>(), "grid");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptHandle>(), "ref");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptSocket>(), "socket");
-STATIC_ASSERT_EQ(as::GetTypeDecl<AS_NAMESPACE_QUALIFIER CScriptWeakRef>(), "weakref");
