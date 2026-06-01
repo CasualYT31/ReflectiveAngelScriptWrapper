@@ -6,8 +6,10 @@
 #pragma once
 
 #include <angelscript.h>
+#include <AngelScriptWrapper/FuncDecl.hpp>
 #include <AngelScriptWrapper/Object.hpp>
 #include <AngelScriptWrapper/OwnedObject.hpp>
+#include <AngelScriptWrapper/SharedObject.hpp>
 #include <memory>
 #include <meta>
 
@@ -29,7 +31,11 @@ struct Engine {
     /**
      * Initializes a new asIScriptEngine instance inside a wrapper object.
      */
-    Engine();
+    inline Engine() {
+        m_engine = std::make_unique<OwnedObject<AS_NAMESPACE_QUALIFIER asIScriptEngine>>(
+            AS_NAMESPACE_QUALIFIER asCreateScriptEngine()
+        );
+    }
 
     /**
      * Initializes an engine wrapper with an existing asIScriptEngine instance.
@@ -37,7 +43,9 @@ struct Engine {
      *          wrapper is constructed in this way, then the engine will not be released and it is the responsibility of
      *          the caller to release the engine that it provides here.
      */
-    Engine(AS_NAMESPACE_QUALIFIER asIScriptEngine* const engine);
+    inline Engine(AS_NAMESPACE_QUALIFIER asIScriptEngine* const engine) {
+        m_engine = std::make_unique<SharedObject<AS_NAMESPACE_QUALIFIER asIScriptEngine>>(engine);
+    }
 
     Engine(Engine&&) = delete;
     Engine& operator=(Engine&&) = delete;
@@ -59,6 +67,21 @@ struct Engine {
     inline bool HasEngine() const noexcept {
         return m_engine && *m_engine;
     }
+
+    /**
+     * Sets the default calling convention for all functions registered with the application interface.
+     * The starting default is CDecl.
+     *
+     * Usually, Engine will be able to deduce a function's calling convention via reflection. E.g. if a function is a
+     * non-static member of a class, asCALL_THISCALL or some variation of it will always be used. AngelScript's generic
+     * calling convention is also very easy to deduce via reflection. But it is not currently possible via reflection to
+     * tell when CDecl or StdCall is being used, so the decision was made to introduce two features:
+     * as::CDecl/as::StdCall annotations (to explicitly mark functions as using one calling convention), and this method
+     * (which, for most people, eliminates the need to explicitly annotate functions at all).
+     * @param callConv asCALL_CDECL or asCALL_STDCALL.
+     * @return asINVALID_ARG if an invalid call convention was given, otherwise the value of callConv is returned.
+     */
+    int SetDefaultCallingConvention(AS_NAMESPACE_QUALIFIER asDWORD callConv) noexcept;
 
     // MARK: Global Properties
 
@@ -102,7 +125,7 @@ struct Engine {
 
     // MARK: Global Functions
 
-    // template <std::meta::info F> int RegisterGlobalFunction(void* auxiliary = nullptr);
+    template <std::meta::info F> int RegisterGlobalFunction(void* auxiliary = nullptr);
 
     // MARK: Object Types
 
@@ -114,6 +137,11 @@ private:
      * Becomes either Owned or Shared depending on how the Engine was constructed.
      */
     std::unique_ptr<Object<AS_NAMESPACE_QUALIFIER asIScriptEngine>> m_engine;
+
+    /**
+     * The default calling convention to use if a given function's calling convention can't be deduced.
+     */
+    AS_NAMESPACE_QUALIFIER asDWORD m_defaultCallingConvention = AS_NAMESPACE_QUALIFIER asCALL_CDECL;
 };
 } // namespace as
 

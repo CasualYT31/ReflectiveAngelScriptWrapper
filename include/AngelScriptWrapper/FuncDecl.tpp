@@ -72,10 +72,103 @@ template <std::meta::info P> constexpr std::string DefaultValueOrEmpty() {
         return "";
     }
 }
+
+template <std::meta::info F> constexpr bool HasGenericCallConvSig() {
+    constexpr auto params = std::meta::parameters_of(F);
+    return (std::meta::return_type_of(F) == ^^void) && (params.size() == 1)
+           && (std::meta::type_of(params[0]) == ^^AS_NAMESPACE_QUALIFIER asIScriptGeneric*);
+}
 } // namespace detail
 
 template <std::meta::info P> constexpr bool AsHandle() {
     return std::meta::annotations_of_with_type(P, ^^decltype(Handle)).size() > 0;
+}
+
+template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD FuncCallConv() {
+    constexpr auto cdeclAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(CDecl)).empty();
+    constexpr auto stdcallAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(StdCall)).empty();
+    static_assert(
+        !(cdeclAnnotation && stdcallAnnotation),
+        std::string(std::meta::display_string_of(F)) + " was given a mix of calling convention annotations"
+    );
+    constexpr auto objFirstAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(ObjFirst)).empty();
+    constexpr auto objLastAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(ObjLast)).empty();
+    static_assert(
+        !(objFirstAnnotation && objLastAnnotation),
+        std::string(std::meta::display_string_of(F)) + " was given a mix of object placement modifier annotations"
+    );
+    constexpr auto hasGenericSignature = detail::HasGenericCallConvSig<F>();
+
+    // First, we always check if a function is a non-static member of a class.
+    // If it is, it always uses some variant of ThisCall.
+    if constexpr (std::meta::is_class_member(F) && !std::meta::is_static_member(F)) {
+        static_assert(
+            !cdeclAnnotation,
+            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+        );
+        static_assert(
+            !stdcallAnnotation,
+            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+        );
+        static_assert(
+            !hasGenericSignature,
+            std::string(std::meta::display_string_of(F))
+                + " is trying to use the generic calling convention, but non-static class members can't use the generic "
+                  "calling convention"
+        );
+        if (objFirstAnnotation) {
+            return AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST;
+        } else if (objLastAnnotation) {
+            return AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST;
+        } else {
+            return AS_NAMESPACE_QUALIFIER asCALL_THISCALL;
+        }
+    }
+
+    // Second, we check for the generic calling convention.
+    if constexpr (hasGenericSignature) {
+        static_assert(
+            !cdeclAnnotation,
+            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+        );
+        static_assert(
+            !stdcallAnnotation,
+            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+        );
+        static_assert(
+            !objFirstAnnotation && !objLastAnnotation,
+            std::string(std::meta::display_string_of(F))
+                + ": the generic calling convention does not support object placement modifiers"
+        );
+        return AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
+    }
+
+    // Lastly, look for CDecl and StdCall.
+    if constexpr (stdcallAnnotation) {
+        static_assert(
+            !objFirstAnnotation && !objLastAnnotation,
+            std::string(std::meta::display_string_of(F))
+                + ": the StdCall calling convention does not support object placement modifiers"
+        );
+        return AS_NAMESPACE_QUALIFIER asCALL_STDCALL;
+    } else if constexpr (cdeclAnnotation) {
+        if (objFirstAnnotation) {
+            return AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST;
+        } else if (objLastAnnotation) {
+            return AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST;
+        } else {
+            return AS_NAMESPACE_QUALIFIER asCALL_CDECL;
+        }
+    } else {
+        // The base calling convention can't be deduced at compile time, defer to runtime.
+        if (objFirstAnnotation) {
+            return -2;
+        } else if (objLastAnnotation) {
+            return -3;
+        } else {
+            return -1;
+        }
+    }
 }
 
 template <std::meta::info F> constexpr std::string_view GetFuncDecl() {

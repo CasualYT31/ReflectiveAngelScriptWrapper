@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <angelscript.h>
 #include <AngelScriptWrapper/Concepts.hpp>
 #include <meta>
 #include <string>
@@ -51,6 +52,50 @@ inline consteval DefaultsTo DefVal(std::string const& val) {
     constexpr auto v = std::meta::variable_of(std::meta::parameters_of(^^DefVal)[0]);
     return DefaultsTo(std::define_static_string(val));
 }
+
+/**
+ * Annotation attached to functions to tell the library that it uses the CDecl calling convention.
+ * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
+ * class methods, attaching to functions that use the generic calling convention, etc.).
+ * @sa Engine::SetDefaultCallingConvention().
+ */
+inline constexpr struct {
+} CDecl{};
+
+/**
+ * Annotation attached to functions to tell the library that it uses the StdCall calling convention.
+ * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
+ * class methods, attaching to functions that use the generic calling convention, etc.).
+ * @sa Engine::SetDefaultCallingConvention().
+ */
+inline constexpr struct {
+} StdCall{};
+
+/**
+ * Annotation attached to functions to tell the library that it uses the _OBJFIRST variant of whatever calling
+ * convention is determined.
+ */
+inline constexpr struct {
+} ObjFirst{};
+
+/**
+ * Annotation attached to functions to tell the library that it uses the _OBJLAST variant of whatever calling
+ * convention is determined.
+ */
+inline constexpr struct {
+} ObjLast{};
+
+/**
+ * Tries to statically compute what base calling convention a given function uses.
+ * This function is able to determine if a function uses ThisCall or AngelScript's Generic. It is also able to pull the
+ * CDecl and StdCall annotations, and if either exist, the relevant AngelScript constant will be returned. Moreover, the
+ * ObjFirst and ObjLast annotations will also be factored into the result.
+ * @tparam F The std::meta::info object of the function you want to get the calling convention of.
+ * @return The AngelScript calling convention constant, if it could be determined. < 0 if it could not be determined at
+ *         compile time. -2 if an ObjFirst annotation was detected, -3 if an ObjLast annotation was detected, and -1 if
+ *         neither were detected.
+ */
+template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD FuncCallConv();
 
 /**
  * Statically computes the equivalent AngelScript declaration for a given C++ function.
