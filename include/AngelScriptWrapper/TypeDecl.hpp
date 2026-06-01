@@ -165,3 +165,24 @@ template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCal
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>
+
+namespace as {
+/**
+ * Contains commonly-used subtype lists.
+ * Application developers are encouraged to define their own commonly-used subtype lists for reuse.
+ */
+namespace subtype {
+constexpr auto Int8 = SubTypeList<std::int8_t>();
+constexpr auto Uint8 = SubTypeList<std::uint8_t>();
+constexpr auto Int16 = SubTypeList<std::int16_t>();
+constexpr auto Uint16 = SubTypeList<std::uint16_t>();
+constexpr auto Int32 = SubTypeList<std::int32_t>();
+constexpr auto Uint32 = SubTypeList<std::uint32_t>();
+constexpr auto Int64 = SubTypeList<std::int64_t>();
+constexpr auto Uint64 = SubTypeList<std::uint64_t>();
+constexpr auto Float = SubTypeList<float>();
+constexpr auto Double = SubTypeList<double>();
+constexpr auto Bool = SubTypeList<bool>();
+constexpr auto String = SubTypeList<std::string>();
+} // namespace subtype
+} // namespace as

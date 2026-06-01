@@ -176,7 +176,9 @@ pEngine->RegisterGlobalProperty("bool CustomFlag", &flag);
 
 // There is a special version of the method that works with OwnedObjects:
 as::OwnedObject<CScriptArray> ownedArray[[
-    =as::SubTypeList<std::string>(),
+    // There are a variety of common-used subtype lists
+    // defined within the as::subtype namespace.
+    =as::subtype::String,
     =as::Name("RenamedArray")
 ]](globalArray);
 

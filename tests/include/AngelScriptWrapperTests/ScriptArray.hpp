@@ -9,7 +9,6 @@
 #include <scriptarray.h>
 
 namespace as {
-constexpr auto StringArray = SubTypeList<std::string>();
 constexpr auto ConstStringArray = SubTypeList<const std::string>();
 constexpr auto StringHandleArray = SubTypeList<std::string*>();
 constexpr auto ConstStringHandleArray = SubTypeList<const std::string*>();

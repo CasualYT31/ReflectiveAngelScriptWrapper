@@ -35,8 +35,8 @@ STATIC_ASSERT_EQ(
     "int8 numeric(int16, int32, int64&out, const float&in, double&out, const bool&in, uint8&out, const uint64&in)"
 )
 
-AS_NAMESPACE_QUALIFIER CScriptArray* complex[[= as::StringArray]](
-    const CScriptArray* i[[= as::SubTypeList<as::Tmpl<CScriptArray, float>>()]], CScriptArray& j[[= as::StringArray]]
+AS_NAMESPACE_QUALIFIER CScriptArray* complex[[= as::subtype::String]](
+    const CScriptArray* i[[= as::SubTypeList<as::Tmpl<CScriptArray, float>>()]], CScriptArray& j[[= as::subtype::String]]
 ) {
     return nullptr;
 }
@@ -49,8 +49,8 @@ void defaults(int a, std::string const& s[[= as::DefVal("\"Hi\"")]] = "Hi", void
 
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^defaults>(), "void defaults(int32, const string&in = \"Hi\", void&out = null)");
 
-// TODO: next steps.
-// - Append const if a const method on a class.
-// - Refactor GetFuncDecl<>() -> FuncDecl<>.
-// - Introduce common SubTypes into an as::subtype namespace. Remove ones like StringArray.
-// - Go back to object type registration for the time being.
+struct A {
+    inline void func() const {}
+};
+
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func>(), "void func() const");
