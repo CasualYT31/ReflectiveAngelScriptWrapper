@@ -16,6 +16,36 @@
 
 namespace as {
 /**
+ * Annotation attached to classes, functions, and variables to set their names in the AngelScript interface.
+ * Usually, the identifier of a C++ entity registered with the application interface will be used as its corresponding
+ * name in AngelScript. If you want to change this name, then attach this annotation. Note that this will not override a
+ * class's TypeName specialization.
+ */
+struct Rename {
+    const char* to;
+};
+
+/**
+ * Used to attach a Rename annotation to a C++ entity.
+ * @param n The name to give to the C++ entity in the AngelScript application interface.
+ * @return The annotation to attach to the C++ entity.
+ */
+inline consteval Rename Name(std::string_view n) {
+    return Rename{ std::define_static_string(n) };
+}
+
+/**
+ * If a given C++ reflection has a Rename annotation attached to it, returns its string view.
+ * Otherwise returns the C++ entity's identifier.
+ *
+ * For classes, you will want to use the TypeName template variable instead of this function, as this function ignores
+ * any specializations of TypeName.
+ * @tparam O The meta info object of the C++ entity to find the AngelScript identifier of.
+ * @return The C++ entity's intended AngelScript identifier.
+ */
+template <std::meta::info O> consteval std::string_view GetIdentifierOf();
+
+/**
  * Annotation attached to variables, fields and function parameters that stores a list of subtypes used in an
  * AngelScript template specialization.
  * If it is attached to a function, the subtypes will be applied to the function's return type.
@@ -52,7 +82,7 @@ template <typename T, std::meta::info I> constexpr std::string_view OverrideType
  * since AngelScript does not allow handles to handles or references to references.
  * @tparam T The C++ type whose AngelScript type is to be deduced.
  */
-template <typename T> constexpr std::string_view TypeName = std::meta::identifier_of(^^T);
+template <typename T> constexpr std::string_view TypeName = as::GetIdentifierOf<^^T>();
 
 /**
  * Stores the qualified AngelScript typename of the given C++ type that represents a template type.

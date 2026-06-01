@@ -64,11 +64,13 @@ struct Engine {
 
     /**
      * Registers a global property for use in the scripts within this engine.
+     * The name of the global property in the application interface is derived from the identifier of the given C++
+     * object. If you want to change this name, you will need to attach a Rename annotation to the C++ object via the
+     * use of the Name() function.
      * @tparam V The std::meta::info object of your global variable of type T.
      * @tparam T The type of global property to register. AngelScript does not allow registering global properties
      *         linked to const C++ objects. If you want to register a constant global property, set the constant
-     *         parameter to true.
-     * @param name The name to give to the global property.
+     *         option to true.
      * @param value Pointer to the value to give to the global property. You are expected to manage the global
      *        property's value as you would without this wrapper.
      * @param opts The options to set for this global property.
@@ -76,37 +78,23 @@ struct Engine {
      */
     template <std::meta::info V, typename T>
         requires(!IsConst<T>)
-    int RegisterGlobalProperty(std::string name, T* const value, GlobalPropertyOptions const& opts = {});
-
-    /**
-     * Version of RegisterGlobalProperty() that derives the global property's name from the identifier of your C++
-     * object.
-     */
-    template <std::meta::info V, typename T>
-        requires(!IsConst<T>)
     int RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts = {});
 
     /**
      * Registers a global property for use in the scripts whose pointer is being managed by an OwnedObject wrapper.
+     * The name of the global property in the application interface is derived from the identifier of the given
+     * OwnedObject instance. If you want to change this name, you will need to attach a Rename annotation to the
+     * OwnedObject instance via the use of the Name() function.
      * @tparam V The std::meta::info object of your OwnedObject wrapper. This means that if your underlying object is of
      *         a specialized template type, you must attach SubTypes annotations to the Object wrapper!
      * @tparam T The type of global property to register. AngelScript does not allow registering global properties
      *         linked to const C++ objects. If you want to register a constant global property, set the constant
      *         parameter to true.
-     * @param name The name to give to the global property.
      * @param value The OwnedObject wrapper that manages the AngelScript object to use as the value of the global
      *        property. The underlying pointer is used so make sure this OwnedObject survives for as long as the script
      *        engine is running.
      * @param opts The options to set for this global property.
      * @return The result of the registration.
-     */
-    template <std::meta::info V, typename T>
-        requires(!IsConst<T>)
-    int RegisterGlobalProperty(std::string name, OwnedObject<T> const& value, GlobalPropertyOptions const& opts = {});
-
-    /**
-     * Version of RegisterGlobalProperty() that derives the global property's name from the identifier of your C++
-     * OwnedObject instance.
      */
     template <std::meta::info V, typename T>
         requires(!IsConst<T>)

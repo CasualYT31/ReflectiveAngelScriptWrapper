@@ -82,7 +82,7 @@ template <std::meta::info F> constexpr std::string_view GetFuncDecl() {
     // Return type.
     std::string decl = std::string(TypeOf<F>);
     // Name.
-    decl += " " + std::string(std::meta::identifier_of(F)) + "(";
+    decl += " " + std::string(as::GetIdentifierOf<F>()) + "(";
     // Parameter list.
     template for (constexpr auto P : std::define_static_array(std::meta::parameters_of(F))) {
         decl += std::string(detail::GetFuncTypeDecl<P>()) + detail::DefaultValueOrEmpty<P>() + ", ";

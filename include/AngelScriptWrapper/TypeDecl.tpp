@@ -23,6 +23,18 @@ class CScriptWeakRef;
 END_AS_NAMESPACE
 
 namespace as {
+template <std::meta::info O> consteval std::string_view GetIdentifierOf() {
+    constexpr auto rename = std::define_static_array(std::meta::annotations_of_with_type(O, ^^Rename));
+    static_assert(
+        rename.size() <= 1, std::string(std::meta::display_string_of(O)) + " was given more than one Rename annotation"
+    );
+    if constexpr (rename.empty()) {
+        return std::meta::identifier_of(O);
+    } else {
+        return std::string_view(std::meta::extract<Rename>(rename[0]).to);
+    }
+}
+
 template <> inline constexpr std::string_view TypeName<void> = "void";
 
 template <> inline constexpr std::string_view TypeName<bool> = "bool";

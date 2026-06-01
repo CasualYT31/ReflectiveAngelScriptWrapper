@@ -50,7 +50,6 @@ void defaults(int a, std::string const& s[[= as::DefVal("\"Hi\"")]] = "Hi", void
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^defaults>(), "void defaults(int32, const string&in = \"Hi\", void&out = null)");
 
 // TODO: next steps.
-// - I think I should drop the name parameter of RegGlobProp and introduce a Rename annotation instead.
 // - Append const if a const method on a class.
 // - Refactor GetFuncDecl<>() -> FuncDecl<>.
 // - Introduce common SubTypes into an as::subtype namespace. Remove ones like StringArray.

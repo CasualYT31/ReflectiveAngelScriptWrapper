@@ -146,32 +146,40 @@ Again, since the subtypes of template types are known only at runtime, you need 
 
 A less impressive use case for the `Engine` wrapper is the ability to register global properties without needing to handwrite the property declaration string. The following pairs of statements are identical:
 
-TODO: This code is out-of-date now. After I've completed the refactor of this API I will update this section.
-
 ```cpp
-int myGlobal = 56;
-CScriptArray* globalArray;
-
 as::Engine engine;
 asIScriptEngine* pEngine = engine.Ptr();
 
-engine.RegisterGlobalProperty("GlobalPropName", &myGlobal);
-pEngine->RegisterGlobalProperty("int GlobalPropName", &myGlobal);
+int myGlobal = 56;
+
+engine.RegisterGlobalProperty<^^myGlobal>(&myGlobal);
+pEngine->RegisterGlobalProperty("int myGlobal", &myGlobal);
 
 // AngelScript does not like registering pointers to const objects in this context,
 // so we'll need to turn the const-ness of the property into a flag.
-engine.RegisterGlobalProperty("GlobalPropName", &myGlobal, true);
-pEngine->RegisterGlobalProperty("const int GlobalPropName", &myGlobal);
+engine.RegisterGlobalProperty<^^myGlobal>(&myGlobal, { .constant = true });
+pEngine->RegisterGlobalProperty("const int myGlobal", &myGlobal);
 
-// Note the variation required for template types!
-// Unfortunately, you are forced to explicitly provide the Specialize info
-// object for these kinds of global properties.
-engine.RegisterGlobalProperty<^^StringArray::T>("GlobalArray", &globalArray);
+// Template types work like non-template types, provided you attach a SubTypes
+// annotation to the C++ object!
+CScriptArray* globalArray[[=as::SubTypeList<std::string>()]];
+
+engine.RegisterGlobalProperty<^^globalArray>(&globalArray);
 pEngine->RegisterGlobalProperty("array<string> GlobalArray", &globalArray);
 
-// We are using the Specialize struct purely to generate the type declaration here,
-// so there is no need for a separate const flag: just pass its Specialize type
-// alias's info object here, even if the original array object isn't const.
-engine.RegisterGlobalProperty<^^StringConstArray::T>("GlobalArray", &globalArray);
-pEngine->RegisterGlobalProperty("const array<string> GlobalArray", &globalArray);
+// If you want to name your property something different in AngelScript,
+// you will need to attach a Rename annotation to the C++ object:
+bool flag[[=as::Name("CustomFlag")]] = true;
+
+engine.RegisterGlobalProperty<^^flag>(&flag);
+pEngine->RegisterGlobalProperty("bool CustomFlag", &flag);
+
+// There is a special version of the method that works with OwnedObjects:
+as::OwnedObject<CScriptArray> ownedArray[[
+    =as::SubTypeList<std::string>(),
+    =as::Name("RenamedArray")
+]](globalArray);
+
+engine.RegisterGlobalProperty<^^ownedArray>(&ownedArray);
+pEngine->RegisterGlobalProperty("array<string> RenamedArray", ownedArray.Ptr());
 ```

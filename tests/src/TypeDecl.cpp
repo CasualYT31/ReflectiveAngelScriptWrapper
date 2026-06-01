@@ -163,3 +163,21 @@ STATIC_ASSERT_EQ(as::TypeOf<^^StringHandleConstArrayConstHandle>, "const ScriptT
 STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringHandleConstArrayConstHandle>, "const ScriptTestObject<const string&>@ const");
 STATIC_ASSERT_EQ(as::TypeOf<^^ConstStringConstHandleConstArrayConstHandle>, "const ScriptTestObject<const string&>@ const");
 // clang-format on
+
+struct A {};
+
+template <> inline constexpr std::string_view as::TypeName<A> = "AClass";
+
+struct[[= as::Name("BRenamed")]] B {};
+
+template <> inline constexpr std::string_view as::TypeName<B> = "BClass";
+
+struct[[= as::Name("CNamed")]] C {};
+
+STATIC_ASSERT_EQ(as::GetIdentifierOf<^^A>(), "A");
+STATIC_ASSERT_EQ(as::GetIdentifierOf<^^B>(), "BRenamed");
+STATIC_ASSERT_EQ(as::GetIdentifierOf<^^C>(), "CNamed");
+
+STATIC_ASSERT_EQ(as::TypeName<A>, "AClass");
+STATIC_ASSERT_EQ(as::TypeName<B>, "BClass");
+STATIC_ASSERT_EQ(as::TypeName<C>, "CNamed");

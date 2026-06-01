@@ -10,12 +10,10 @@
 namespace as {
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(std::string name, T* const value, GlobalPropertyOptions const& opts) {
+int Engine::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-    if (name.empty()) {
-        constexpr auto vName = std::meta::identifier_of(V);
-        name = std::string(vName);
-    }
+    constexpr auto vName = as::GetIdentifierOf<V>();
+    std::string name = std::string(vName);
     if (opts.constant) {
         constexpr auto constType = detail::OverrideTypeOf<const T, V>;
         name = std::string(constType) + " " + name;
@@ -28,19 +26,10 @@ int Engine::RegisterGlobalProperty(std::string name, T* const value, GlobalPrope
 
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts) {
-    constexpr auto name = std::meta::identifier_of(V);
-    return RegisterGlobalProperty<V, T>(std::string(name), value, opts);
-}
-
-template <std::meta::info V, typename T>
-    requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(std::string name, OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
+int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-    if (name.empty()) {
-        constexpr auto vName = std::meta::identifier_of(V);
-        name = std::string(vName);
-    }
+    constexpr auto vName = as::GetIdentifierOf<V>();
+    std::string name = std::string(vName);
     if (opts.constant) {
         constexpr auto constType = detail::OverrideTypeOf<const T, V>;
         name = std::string(constType) + " " + name;
@@ -49,13 +38,6 @@ int Engine::RegisterGlobalProperty(std::string name, OwnedObject<T> const& value
         name = std::string(type) + " " + name;
     }
     return Ptr()->RegisterGlobalProperty(name.c_str(), value.Ptr());
-}
-
-template <std::meta::info V, typename T>
-    requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
-    constexpr auto name = std::meta::identifier_of(V);
-    return RegisterGlobalProperty<V, T>(std::string(name), value, opts);
 }
 
 // template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary) {

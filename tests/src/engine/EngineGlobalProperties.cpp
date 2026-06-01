@@ -15,30 +15,31 @@
 using namespace testing;
 
 TEST(AngelScriptEngineGlobalProperties, NonConstPrimitiveValues) {
-    std::int8_t int8 = -8, int8InScript;
-    std::uint8_t uint8 = 8, uint8InScript;
-    std::int16_t int16 = -16, int16InScript;
-    std::uint16_t uint16 = 16, uint16InScript;
-    std::int32_t int32 = -32, int32InScript;
-    std::uint32_t uint32 = 32, uint32InScript;
-    std::int64_t int64 = -64, int64InScript;
-    std::uint64_t uint64 = 64, uint64InScript;
+    std::int8_t int8[[= as::Name("i8")]] = -8, int8InScript;
+    std::uint8_t uint8[[= as::Name("ui8")]] = 8, uint8InScript;
+    std::int16_t int16[[= as::Name("i16")]] = -16, int16InScript;
+    std::uint16_t uint16[[= as::Name("ui16")]] = 16, uint16InScript;
+    std::int32_t int32[[= as::Name("i32")]] = -32, int32InScript;
+    std::uint32_t uint32[[= as::Name("ui32")]] = 32, uint32InScript;
+    std::int64_t int64[[= as::Name("i64")]] = -64, int64InScript;
+    std::uint64_t uint64[[= as::Name("ui64")]] = 64, uint64InScript;
     float f = 3.14, fInScript;
     double d = 3.1415926536, dInScript;
     bool flag = false, flagInScript;
 
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
 
     // Register global properties.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int8>("i8", &int8), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int8>("ui8", &uint8), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int16>("i16", &int16), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int16>("ui16", &uint16), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int32>("i32", &int32), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int32>("ui32", &uint32), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int64>("i64", &int64), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int64>("ui64", &uint64), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int8>(&int8), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint8>(&uint8), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int16>(&int16), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint16>(&uint16), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int32>(&int32), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint32>(&uint32), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int64>(&int64), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint64>(&uint64), 0);
     ASSERT_GE(engine.RegisterGlobalProperty<^^f>(&f), 0);
     ASSERT_GE(engine.RegisterGlobalProperty<^^d>(&d), 0);
     ASSERT_GE(engine.RegisterGlobalProperty<^^flag>(&flag), 0);
@@ -136,14 +137,14 @@ TEST(AngelScriptEngineGlobalProperties, NonConstPrimitiveValues) {
 }
 
 TEST(AngelScriptEngineGlobalProperties, ConstPrimitiveValues) {
-    std::int8_t int8 = -8, int8InScript = 0;
-    std::uint8_t uint8 = 8, uint8InScript = 0;
-    std::int16_t int16 = -16, int16InScript = 0;
-    std::uint16_t uint16 = 16, uint16InScript = 0;
-    std::int32_t int32 = -32, int32InScript = 0;
-    std::uint32_t uint32 = 32, uint32InScript = 0;
-    std::int64_t int64 = -64, int64InScript = 0;
-    std::uint64_t uint64 = 64, uint64InScript = 0;
+    std::int8_t int8[[= as::Name("i8")]] = -8, int8InScript;
+    std::uint8_t uint8[[= as::Name("ui8")]] = 8, uint8InScript;
+    std::int16_t int16[[= as::Name("i16")]] = -16, int16InScript;
+    std::uint16_t uint16[[= as::Name("ui16")]] = 16, uint16InScript;
+    std::int32_t int32[[= as::Name("i32")]] = -32, int32InScript;
+    std::uint32_t uint32[[= as::Name("ui32")]] = 32, uint32InScript;
+    std::int64_t int64[[= as::Name("i64")]] = -64, int64InScript;
+    std::uint64_t uint64[[= as::Name("ui64")]] = 64, uint64InScript;
     float f = 3.14, fInScript = 0.0;
     double d = 3.1415926536, dInScript = 0.0;
     bool flag = false, flagInScript = true;
@@ -152,17 +153,17 @@ TEST(AngelScriptEngineGlobalProperties, ConstPrimitiveValues) {
     ASSERT_TRUE(engine.HasEngine());
 
     // Register global properties.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int8>("i8", &int8, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int8>("ui8", &uint8, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int16>("i16", &int16, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int16>("ui16", &uint16, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int32>("i32", &int32, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int32>("ui32", &uint32, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int64>("i64", &int64, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^int64>("ui64", &uint64, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^f>("f", &f, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^d>("d", &d, { .constant = true }), 0);
-    ASSERT_GE(engine.RegisterGlobalProperty<^^flag>("flag", &flag, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int8>(&int8, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint8>(&uint8, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int16>(&int16, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint16>(&uint16, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int32>(&int32, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint32>(&uint32, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^int64>(&int64, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^uint64>(&uint64, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^f>(&f, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^d>(&d, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^flag>(&flag, { .constant = true }), 0);
 
     // Retrieve global properties within a script.
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return i8;", &int8InScript, 2), 0);
@@ -267,7 +268,7 @@ TEST(AngelScriptEngineGlobalProperties, NonConstStringValues) {
     const auto stringTypeId = stringTypeInfo->GetTypeId();
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^str>("str", &str), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^str>(&str), 0);
 
     // Retrieve global property within a script.
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return str;", &strInScript, stringTypeId), 0);
@@ -302,7 +303,7 @@ TEST(AngelScriptEngineGlobalProperties, ConstStringValues) {
     const auto stringTypeId = stringTypeInfo->GetTypeId();
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^str>("str", &str, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^str>(&str, { .constant = true }), 0);
 
     // Retrieve global property within a script.
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return str;", &strInScript, stringTypeId), 0);
@@ -340,7 +341,7 @@ TEST(AngelScriptEngineGlobalProperties, NonConstReferenceTypes) {
     ASSERT_GT(as::ScriptTestObject::Register(engine.Ptr()), 0);
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>("obj", &obj), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>(&obj), 0);
 
     // Global property is not a handle.
     std::vector<std::string> messages;
@@ -383,7 +384,7 @@ TEST(AngelScriptEngineGlobalProperties, ConstReferenceTypes) {
     ASSERT_GT(as::ScriptTestObject::Register(engine.Ptr()), 0);
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>("obj", &obj, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>(&obj, { .constant = true }), 0);
 
     // Global property is not a handle.
     std::vector<std::string> messages;
@@ -427,7 +428,7 @@ TEST(AngelScriptEngineGlobalProperties, NonConstReferenceNonConstPointerTypes) {
     ASSERT_GT(as::ScriptTestObject::Register(engine.Ptr()), 0);
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>("obj", &obj), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>(&obj), 0);
 
     // Global property is a non-const handle.
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "@obj = @obj;"), 0);
@@ -465,7 +466,7 @@ TEST(AngelScriptEngineGlobalProperties, ConstReferenceNonConstPointerTypes) {
     ASSERT_GT(as::ScriptTestObject::Register(engine.Ptr()), 0);
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>("obj", &obj), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>(&obj), 0);
 
     // Global property is a non-const handle.
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "@obj = @obj;"), 0);
@@ -503,7 +504,7 @@ TEST(AngelScriptEngineGlobalProperties, NonConstReferenceConstPointerTypes) {
     ASSERT_GT(as::ScriptTestObject::Register(engine.Ptr()), 0);
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>("obj", &obj, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>(&obj, { .constant = true }), 0);
 
     // Global property is a const handle.
     std::vector<std::string> messages;
@@ -548,7 +549,7 @@ TEST(AngelScriptEngineGlobalProperties, ConstReferenceConstPointerTypes) {
     ASSERT_GT(as::ScriptTestObject::Register(engine.Ptr()), 0);
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>("obj", &obj, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^obj>(&obj, { .constant = true }), 0);
 
     // Global property is a const handle.
     std::vector<std::string> messages;
@@ -593,11 +594,11 @@ TEST(AngelScriptEngineGlobalProperties, ArrayType) {
     ASSERT_TRUE(arrayType);
     auto p = AS_NAMESPACE_QUALIFIER CScriptArray::Create(arrayType, 3);
     ASSERT_TRUE(p);
-    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[= as::StringArray]](p);
+    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[ = as::StringArray, = as::Name("arr") ]](p);
     ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^array>("arr", array), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^array>(array), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -644,11 +645,11 @@ TEST(AngelScriptEngineGlobalProperties, ConstArrayType) {
     ASSERT_TRUE(arrayType);
     auto p = AS_NAMESPACE_QUALIFIER CScriptArray::Create(arrayType, 3);
     ASSERT_TRUE(p);
-    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[= as::StringArray]](p);
+    as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array[[ = as::StringArray, = as::Name("arr") ]](p);
     ASSERT_TRUE(array.Ptr());
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^array>("arr", array, { .constant = true }), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^array>(array, { .constant = true }), 0);
 
     // Retrieve global property within a script.
     AS_NAMESPACE_QUALIFIER asUINT length = 0;
@@ -697,10 +698,10 @@ TEST(AngelScriptEngineGlobalProperties, ArrayHandleType) {
     ASSERT_TRUE(p);
     as::OwnedObject<AS_NAMESPACE_QUALIFIER CScriptArray> array(p);
     ASSERT_TRUE(array.Ptr());
-    AS_NAMESPACE_QUALIFIER CScriptArray* prop[[= as::StringArray]] = nullptr;
+    AS_NAMESPACE_QUALIFIER CScriptArray* prop[[ = as::StringArray, = as::Name("arr") ]] = nullptr;
 
     // Register global property.
-    ASSERT_GE(engine.RegisterGlobalProperty<^^prop>("arr", &prop), 0);
+    ASSERT_GE(engine.RegisterGlobalProperty<^^prop>(&prop), 0);
 
     // Retrieve global property within a script.
     bool isNull = false;
