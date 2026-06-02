@@ -43,9 +43,7 @@ int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOp
 template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto deducedCallConv = FuncCallConv<F>();
-    // TODO: this doesn't handle _OBJFIRST or _OBJLAST variations applied to the default calling convention.
-    //       Introduce a private method to handle this.
-    auto callConv = deducedCallConv < 0 ? m_defaultCallingConvention : deducedCallConv;
+    auto callConv = applyDefaultCallConventionAsFallback(deducedCallConv);
     if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
         || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
         callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
@@ -60,14 +58,14 @@ template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary)
 }
 
 /*
-First, we need a way for the developer to either set CDECL or STDCALL as the default calling convention.
+First, we need a way for the developer to either set CDECL or STDCALL as the default call convention.
 We could define this via a template parameter on Engine but that feels wrong.
 I think setting this at runtime will suffice.
 
 Then, we introduce CDECL and STDCALL annotations on functions. If these are given explicitly,
 then Engine will usually endeavour to use them, no matter what the default is.
 
-We can always detect the generic calling convention if return is void and the only parameter is asIScriptGeneric*.
+We can always detect the generic call convention if return is void and the only parameter is asIScriptGeneric*.
 If a function has this convention (besides non-static class members, due to this pointer), then ALWAYS use generic,
 even if specified otherwise via annotations.
 
@@ -77,8 +75,8 @@ THISCALL_ASGLOBAL when RegisterGlobalFunction is being used.
 Only difficult situation is the _OBJFIRST and _OBJLAST variants. There is no way for us to reliably tell
 what the developer intends, even with reflection. E.g. what if a function both starts and ends with an object
 of the same type, how does it know which is intended to be the _OBJ? For these cases we will need to resort to
-annotations again: as::ObjFirst and as::ObjLast. They are calling convention agnostic and will be applied if
-the calling convention is decided to be CDECL or THISCALL. They will be ignored if STDCALL is decided, though
+annotations again: as::ObjFirst and as::ObjLast. They are call convention agnostic and will be applied if
+the call convention is decided to be CDECL or THISCALL. They will be ignored if STDCALL is decided, though
 it is worth noting that support for it is possible, just not added.
 */
 

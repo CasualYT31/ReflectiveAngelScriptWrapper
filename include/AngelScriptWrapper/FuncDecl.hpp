@@ -54,19 +54,19 @@ inline consteval DefaultsTo DefVal(std::string const& val) {
 }
 
 /**
- * Annotation attached to functions to tell the library that it uses the CDecl calling convention.
+ * Annotation attached to functions to tell the library that it uses the CDecl call convention.
  * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
- * class methods, attaching to functions that use the generic calling convention, etc.).
- * @sa Engine::SetDefaultCallingConvention().
+ * class methods, attaching to functions that use the generic call convention, etc.).
+ * @sa Engine::SetDefaultCallConvention().
  */
 inline constexpr struct {
 } CDecl{};
 
 /**
- * Annotation attached to functions to tell the library that it uses the StdCall calling convention.
+ * Annotation attached to functions to tell the library that it uses the StdCall call convention.
  * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
- * class methods, attaching to functions that use the generic calling convention, etc.).
- * @sa Engine::SetDefaultCallingConvention().
+ * class methods, attaching to functions that use the generic call convention, etc.).
+ * @sa Engine::SetDefaultCallConvention().
  */
 inline constexpr struct {
 } StdCall{};
@@ -86,12 +86,12 @@ inline constexpr struct {
 } ObjLast{};
 
 /**
- * Tries to statically compute what base calling convention a given function uses.
+ * Tries to statically compute what base call convention a given function uses.
  * This function is able to determine if a function uses ThisCall or AngelScript's Generic. It is also able to pull the
  * CDecl and StdCall annotations, and if either exist, the relevant AngelScript constant will be returned. Moreover, the
  * ObjFirst and ObjLast annotations will also be factored into the result.
- * @tparam F The std::meta::info object of the function you want to get the calling convention of.
- * @return The AngelScript calling convention constant, if it could be determined. < 0 if it could not be determined at
+ * @tparam F The std::meta::info object of the function you want to get the call convention of.
+ * @return The AngelScript call convention constant, if it could be determined. < 0 if it could not be determined at
  *         compile time. -2 if an ObjFirst annotation was detected, -3 if an ObjLast annotation was detected, and -1 if
  *         neither were detected.
  */

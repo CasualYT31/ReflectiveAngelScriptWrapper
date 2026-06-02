@@ -115,7 +115,7 @@ template <std::meta::info F> constexpr int FuncCallConv() {
     constexpr auto stdcallAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(StdCall)).empty();
     static_assert(
         !(cdeclAnnotation && stdcallAnnotation),
-        std::string(std::meta::display_string_of(F)) + " was given a mix of calling convention annotations"
+        std::string(std::meta::display_string_of(F)) + " was given a mix of call convention annotations"
     );
     constexpr auto objFirstAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(ObjFirst)).empty();
     constexpr auto objLastAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(ObjLast)).empty();
@@ -130,17 +130,17 @@ template <std::meta::info F> constexpr int FuncCallConv() {
     if constexpr (std::meta::is_class_member(F) && !std::meta::is_static_member(F)) {
         static_assert(
             !cdeclAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
         );
         static_assert(
             !stdcallAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
         );
         static_assert(
             !hasGenericSignature,
             std::string(std::meta::display_string_of(F))
-                + " is trying to use the generic calling convention, but non-static class members can't use the generic "
-                  "calling convention"
+                + " is trying to use the generic call convention, but non-static class members can't use the generic "
+                  "call convention"
         );
         if (objFirstAnnotation) {
             return AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST;
@@ -151,20 +151,20 @@ template <std::meta::info F> constexpr int FuncCallConv() {
         }
     }
 
-    // Second, we check for the generic calling convention.
+    // Second, we check for the generic call convention.
     if constexpr (hasGenericSignature) {
         static_assert(
             !cdeclAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
         );
         static_assert(
             !stdcallAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid calling convention annotation"
+            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
         );
         static_assert(
             !objFirstAnnotation && !objLastAnnotation,
             std::string(std::meta::display_string_of(F))
-                + ": the generic calling convention does not support object placement modifiers"
+                + ": the generic call convention does not support object placement modifiers"
         );
         return AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
     }
@@ -174,7 +174,7 @@ template <std::meta::info F> constexpr int FuncCallConv() {
         static_assert(
             !objFirstAnnotation && !objLastAnnotation,
             std::string(std::meta::display_string_of(F))
-                + ": the StdCall calling convention does not support object placement modifiers"
+                + ": the StdCall call convention does not support object placement modifiers"
         );
         return AS_NAMESPACE_QUALIFIER asCALL_STDCALL;
     } else if constexpr (cdeclAnnotation) {
@@ -186,7 +186,7 @@ template <std::meta::info F> constexpr int FuncCallConv() {
             return AS_NAMESPACE_QUALIFIER asCALL_CDECL;
         }
     } else {
-        // The base calling convention can't be deduced at compile time, defer to runtime.
+        // The base call convention can't be deduced at compile time, defer to runtime.
         if (objFirstAnnotation) {
             return -2;
         } else if (objLastAnnotation) {
