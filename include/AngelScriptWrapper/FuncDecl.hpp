@@ -95,14 +95,32 @@ inline constexpr struct {
  *         compile time. -2 if an ObjFirst annotation was detected, -3 if an ObjLast annotation was detected, and -1 if
  *         neither were detected.
  */
-template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD FuncCallConv();
+template <std::meta::info F> constexpr int FuncCallConv();
 
 /**
  * Statically computes the equivalent AngelScript declaration for a given C++ function.
  * @tparam F The std::meta::info object of the function you want to generate the declaration of.
+ * @tparam RC Set this to true to forcibly remove the const qualifier from the declaration, if the corresponding C++
+ *         method does have such a qualifier.
  * @return The AngelScript declaration (with qualifiers) of the given C++ function signature.
  */
-template <std::meta::info F> constexpr std::string_view GetFuncDecl();
+template <std::meta::info F, bool RC = false> constexpr std::string_view GetFuncDecl();
+
+/**
+ * Helper function that resolves overload sets.
+ * You cannot currently take the reflection of functions or methods that are overloaded directly. Developers will need
+ * to explicitly provide the return type and parameters of a function to this function so it can iterate over the
+ * members of a parent reflection to find the intended function reflection.
+ * @tparam P A reflection of the parent of the function to reflect, e.g. class or namespace.
+ * @tparam R The return type of the function to reflect.
+ * @tparam C Whether the method has been qualified as const (true) or not (false). Functions always have no const
+ *         qualifiers.
+ * @tparam Ps The types of the parameters of the function to reflect. Type adjustment will be carried out for you.
+ * @param identifier The identifier of the function or method to search for.
+ * @return A reflection of the overloaded function or method.
+ */
+template <std::meta::info P, typename R, bool C, typename... Ps>
+consteval std::meta::info FindOverload(const std::string_view identifier);
 } // namespace as
 
 #include <AngelScriptWrapper/FuncDecl.tpp>

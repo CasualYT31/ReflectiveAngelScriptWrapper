@@ -77,13 +77,40 @@ template <std::meta::info F>
 constexpr bool HasGenericCallConvSig =
     (std::meta::return_type_of(F) == ^^void) && (std::meta::parameters_of(F).size() == 1)
     && (std::meta::type_of(std::meta::parameters_of(F)[0]) == ^^AS_NAMESPACE_QUALIFIER asIScriptGeneric*);
+
+template <std::meta::info P, typename R, bool C, typename... Ps>
+consteval std::meta::info FindOverload(const std::string_view identifier) {
+    // Mostly written by Claude Code.
+    for (auto member : std::meta::members_of(P, std::meta::access_context::current())) {
+        if (!std::meta::is_function(member)) { continue; }
+
+        if (!std::meta::has_identifier(member)) { continue; }
+
+        if (std::meta::identifier_of(member) != identifier) { continue; }
+
+        if (std::meta::is_const(member) != C) { continue; }
+
+        if (std::meta::return_type_of(member) != ^^R) { continue; }
+
+        auto params = std::meta::parameters_of(member);
+
+        if (params.size() != sizeof...(Ps)) { continue; }
+
+        bool match = [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+            return ((std::meta::type_of(params[Is]) == ^^Ps) && ...);
+        }(std::make_index_sequence<sizeof...(Ps)>{});
+
+        if (match) { return member; }
+    }
+    throw "could not find overload";
+}
 } // namespace detail
 
 template <std::meta::info P> constexpr bool AsHandle() {
     return std::meta::annotations_of_with_type(P, ^^decltype(Handle)).size() > 0;
 }
 
-template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD FuncCallConv() {
+template <std::meta::info F> constexpr int FuncCallConv() {
     constexpr auto cdeclAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(CDecl)).empty();
     constexpr auto stdcallAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(StdCall)).empty();
     static_assert(
@@ -170,7 +197,7 @@ template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD FuncCallCo
     }
 }
 
-template <std::meta::info F> constexpr std::string_view GetFuncDecl() {
+template <std::meta::info F, bool RC> constexpr std::string_view GetFuncDecl() {
     // Return type.
     std::string decl = std::string(TypeOf<F>);
     // Name.
@@ -184,7 +211,12 @@ template <std::meta::info F> constexpr std::string_view GetFuncDecl() {
     // Close.
     decl += ")";
     // Is this a const method?
-    if constexpr (std::meta::is_const(F)) { decl += " const"; }
+    if constexpr (!RC && std::meta::is_const(F)) { decl += " const"; }
     return std::define_static_string(decl);
+}
+
+template <std::meta::info P, typename R, bool C, typename... Ps>
+consteval std::meta::info FindOverload(const std::string_view identifier) {
+    return detail::FindOverload<P, R, C, std::decay_t<Ps>...>(identifier);
 }
 } // namespace as

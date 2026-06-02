@@ -43,14 +43,20 @@ int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOp
 template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto deducedCallConv = FuncCallConv<F>();
+    // TODO: this doesn't handle _OBJFIRST or _OBJLAST variations applied to the default calling convention.
+    //       Introduce a private method to handle this.
     auto callConv = deducedCallConv < 0 ? m_defaultCallingConvention : deducedCallConv;
     if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
         || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
         callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
     }
-    // TODO: not as simple as splicing the function pointer into the function call,
-    //       we will need to involve the macros in some way.
-    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F>().data(), &[:F:], callConv, auxiliary);
+    AS_NAMESPACE_QUALIFIER asSFuncPtr addr;
+    if constexpr (std::meta::is_class_member(F)) {
+        addr = AS_NAMESPACE_QUALIFIER asSMethodPtr<sizeof(decltype(&[:F:]))>::Convert(&[:F:]);
+    } else {
+        addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
+    }
+    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F, true>().data(), addr, callConv, auxiliary);
 }
 
 /*

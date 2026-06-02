@@ -54,6 +54,7 @@ struct A {
 };
 
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func>(), "void func() const");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func COMMA true>(), "void func()");
 
 // TODO: https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_var_type.html
 //       How do we support this??
