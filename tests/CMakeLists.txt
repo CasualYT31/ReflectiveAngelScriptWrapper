@@ -48,6 +48,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/SharedObject.cpp"
     "src/engine/EngineConstruction.cpp"
     "src/engine/EngineGlobalProperties.cpp"
+    "src/engine/EngineGlobalFunctions.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

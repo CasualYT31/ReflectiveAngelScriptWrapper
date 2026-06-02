@@ -73,11 +73,10 @@ template <std::meta::info P> constexpr std::string DefaultValueOrEmpty() {
     }
 }
 
-template <std::meta::info F> constexpr bool HasGenericCallConvSig() {
-    constexpr auto params = std::meta::parameters_of(F);
-    return (std::meta::return_type_of(F) == ^^void) && (params.size() == 1)
-           && (std::meta::type_of(params[0]) == ^^AS_NAMESPACE_QUALIFIER asIScriptGeneric*);
-}
+template <std::meta::info F>
+constexpr bool HasGenericCallConvSig =
+    (std::meta::return_type_of(F) == ^^void) && (std::meta::parameters_of(F).size() == 1)
+    && (std::meta::type_of(std::meta::parameters_of(F)[0]) == ^^AS_NAMESPACE_QUALIFIER asIScriptGeneric*);
 } // namespace detail
 
 template <std::meta::info P> constexpr bool AsHandle() {
@@ -97,7 +96,7 @@ template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD FuncCallCo
         !(objFirstAnnotation && objLastAnnotation),
         std::string(std::meta::display_string_of(F)) + " was given a mix of object placement modifier annotations"
     );
-    constexpr auto hasGenericSignature = detail::HasGenericCallConvSig<F>();
+    constexpr auto hasGenericSignature = detail::HasGenericCallConvSig<F>;
 
     // First, we always check if a function is a non-static member of a class.
     // If it is, it always uses some variant of ThisCall.

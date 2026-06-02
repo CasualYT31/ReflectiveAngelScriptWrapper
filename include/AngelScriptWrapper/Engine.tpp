@@ -48,7 +48,9 @@ template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary)
         || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
         callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
     }
-    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F>(), &[:F:], callConv, auxiliary);
+    // TODO: not as simple as splicing the function pointer into the function call,
+    //       we will need to involve the macros in some way.
+    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F>().data(), &[:F:], callConv, auxiliary);
 }
 
 /*

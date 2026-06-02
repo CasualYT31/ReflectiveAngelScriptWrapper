@@ -29,7 +29,6 @@ TEST(AngelScriptEngineGlobalProperties, NonConstPrimitiveValues) {
 
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     // Register global properties.
     ASSERT_GE(engine.RegisterGlobalProperty<^^int8>(&int8), 0);
