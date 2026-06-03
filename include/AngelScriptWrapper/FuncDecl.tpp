@@ -25,7 +25,7 @@ template <std::meta::info P> consteval std::string_view GetFuncTypeDecl() {
     if constexpr (IsRefType<T>()) {
         if constexpr (IsPointer<T>) {
             if constexpr (AsHandle<P>) {
-                // TODO: handle + modifier for @. Can't just append it as
+                // TODO: handle "+" modifier for @. Can't just append it as
                 //       "...@ const" could be returned (but maybe this is fine)?
                 return detail::OverrideTypeOf<T, P>;
             } else {
@@ -37,7 +37,7 @@ template <std::meta::info P> consteval std::string_view GetFuncTypeDecl() {
     } else {
         if constexpr (IsReference<T>) {
             using Tr = std::remove_reference_t<T>;
-            static_assert(!IsPointer<Tr>, "Detected parameter*&, which is not currently supported[?]");
+            static_assert(!IsPointer<Tr>, "Detected parameter*&, which is not supported");
             if constexpr (IsConst<Tr>) {
                 return std::define_static_string(std::string(detail::OverrideTypeOf<Tr, P>) + "&in");
             } else {
@@ -45,6 +45,7 @@ template <std::meta::info P> consteval std::string_view GetFuncTypeDecl() {
             }
         } else if constexpr (IsPointer<T>) {
             using Tp = std::remove_pointer_t<T>;
+            static_assert(!IsPointer<Tp>, "Detected parameter**, which is not supported");
             if constexpr (IsConst<Tp>) {
                 return std::define_static_string(std::string(detail::OverrideTypeOf<Tp, P>) + "&in");
             } else {

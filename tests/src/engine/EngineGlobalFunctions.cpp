@@ -130,34 +130,73 @@ TEST(AngelScriptEngineGlobalFunctions, RenameCDeclFunction) {
     EXPECT_DOUBLE_EQ(result, 60.84);
 }
 
-void bitwiseOr[[= as::ObjFirst]](std::uint8_t* obj, const std::uint8_t a, const std::uint8_t b, std::uint8_t& c) {
-    *obj = c = a | b;
+void bitwiseOrRef(const std::uint8_t a, const std::uint8_t b, std::uint8_t& c) {
+    c = a | b;
 }
 
-/* TODO: I don't think OBJFRIST or OBJLAST work with global functions. Output of the following test:
-
-No matching signatures to 'bitwiseOr(const int, const int, uint8)'
-Candidates are:
-void bitwiseOr(uint8&out, uint8, uint8, uint8&out)
-
-Make sure of this first, then repurpose the test to try out &out.
-Not convinced the above is the right signature for the C++ function.
-*/
-TEST(AngelScriptEngineGlobalFunctions, SimpleFunction2) {
+TEST(AngelScriptEngineGlobalFunctions, OutRefUsingRef) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
     as::SetMessageCallback(engine);
 
-    std::uint8_t r = 0;
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
-    ASSERT_GE(engine.RegisterGlobalFunction<^^bitwiseOr>(callConv, &r), 0);
-    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+    ASSERT_GE(engine.RegisterGlobalFunction<^^bitwiseOrRef>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL);
 
     std::uint8_t result = 0;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOr(4, 8, r); return r;", &result, 6), 0
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOrRef(4, 8, r); return r;", &result, 6), 0
     );
 
     EXPECT_EQ(result, 12);
-    EXPECT_EQ(r, 12);
 }
+
+void bitwiseOrPtr(const std::uint8_t a, const std::uint8_t b, std::uint8_t* c) {
+    *c = a | b;
+}
+
+TEST(AngelScriptEngineGlobalFunctions, OutRefUsingPtr) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^bitwiseOrPtr>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+
+    std::uint8_t result = 0;
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOrPtr(4, 8, r); return r;", &result, 6), 0
+    );
+
+    EXPECT_EQ(result, 12);
+}
+
+std::uint8_t bitwiseOrIn(std::uint8_t const& a, std::uint8_t const* b, std::uint8_t const* const c) {
+    return a | *b | *c;
+}
+
+TEST(AngelScriptEngineGlobalFunctions, InRefAndPtrs) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^bitwiseOrIn>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+
+    std::uint8_t result = 0;
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 16; return bitwiseOrIn(4, 8, r);", &result, 6), 0
+    );
+
+    EXPECT_EQ(result, 28);
+}
+
+// TODO: we need to test how ref counting works, let's implement a proper ref-counted type.
+//       I will copy my superclass for this from my CW project.
+//       What happens if a function accepts a ref type by value? Is this even supported?
+//       Same for if it accepts it by reference? Do we need the AsHandle annotation?
+//       Play around with the "+" modifier.
+
+TEST(AngelScriptEngineGlobalFunctions, RefTypeParams) {}
