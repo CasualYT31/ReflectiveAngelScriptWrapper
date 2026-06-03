@@ -127,6 +127,9 @@ struct Engine {
 
     template <std::meta::info F> int RegisterGlobalFunction(void* auxiliary = nullptr);
 
+    template <std::meta::info F>
+    int RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary = nullptr);
+
     // MARK: Object Types
 
     // template <std::meta::info T> int RegisterObjectType();

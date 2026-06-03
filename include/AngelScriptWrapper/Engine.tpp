@@ -41,6 +41,12 @@ int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOp
 }
 
 template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary) {
+    AS_NAMESPACE_QUALIFIER asDWORD cc;
+    return RegisterGlobalFunction<F>(cc, auxiliary);
+}
+
+template <std::meta::info F>
+int Engine::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto deducedCallConv = FuncCallConv<F>();
     auto callConv = applyDefaultCallConventionAsFallback(deducedCallConv);
@@ -54,7 +60,7 @@ template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary)
     } else {
         addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
     }
-    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F, true>().data(), addr, callConv, auxiliary);
+    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F, true>().data(), addr, callConvOut = callConv, auxiliary);
 }
 
 /*
