@@ -38,7 +38,7 @@ set(${PROJECT_NAME}_INCLUDE_DIRS_LIST
 
 # Write source files here.
 set(${PROJECT_NAME}_SOURCE_FILES_LIST
-    "src/Engine.cpp"
+    "src/Stub.cpp"
 )
 
 # Apply add on options to our include dirs and source files.

@@ -40,9 +40,7 @@ struct[[= RefType]] ScriptTestObject {
         int typeId = 0;
 
         if (typeId = engine->RegisterObjectType(
-                "ScriptTestObject",
-                sizeof(ScriptTestObject),
-                AS_NAMESPACE_QUALIFIER asOBJ_REF | AS_NAMESPACE_QUALIFIER asOBJ_NOCOUNT
+                "ScriptTestObject", 0, AS_NAMESPACE_QUALIFIER asOBJ_REF | AS_NAMESPACE_QUALIFIER asOBJ_NOCOUNT
             );
             typeId < 0) {
             return typeId;

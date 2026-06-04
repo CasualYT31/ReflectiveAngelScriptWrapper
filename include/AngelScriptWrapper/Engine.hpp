@@ -14,6 +14,27 @@
 #include <meta>
 
 namespace as {
+struct EngineOptions {
+    /**
+     * The default call convention to use if a given function's calling convention can't be deduced.
+     * Can only be one of asCALL_CDECL or asCALL_STDCALL. _OBJFIRST and _OBJLAST will still be used where requested via
+     * annotations.
+     *
+     * Usually, Engine will be able to deduce a function's call convention via reflection. E.g. if a function is a
+     * non-static member of a class, asCALL_THISCALL or some variation of it will always be used. AngelScript's generic
+     * call convention is also very easy to deduce via reflection. But it is not currently possible via reflection to
+     * tell when CDecl or StdCall is being used, so the decision was made to introduce two features:
+     * as::CDecl/as::StdCall annotations (to explicitly mark functions as using one call convention), and this option
+     * (which, for most people, eliminates the need to explicitly annotate functions with CDecl or StdCall at all).
+     */
+    AS_NAMESPACE_QUALIFIER asDWORD CallConventionDefault = AS_NAMESPACE_QUALIFIER asCALL_CDECL;
+
+    /**
+     * Set this to true if you wish to make handle parameters auto handles by default.
+     */
+    bool AutoHandleDefault = false;
+};
+
 /**
  * Options to set when registering a global property.
  */
@@ -26,8 +47,9 @@ struct GlobalPropertyOptions {
 
 /**
  * A wrapper around an asIScriptEngine instance.
+ * @tparam Opts Compile-time options to apply to the Engine wrapper.
  */
-struct Engine {
+template <EngineOptions Opts = EngineOptions{}> struct Engine {
     /**
      * Initializes a new asIScriptEngine instance inside a wrapper object.
      */
@@ -67,21 +89,6 @@ struct Engine {
     inline bool HasEngine() const noexcept {
         return m_engine && *m_engine;
     }
-
-    /**
-     * Sets the default call convention for all functions registered with the application interface.
-     * The starting default is CDecl.
-     *
-     * Usually, Engine will be able to deduce a function's call convention via reflection. E.g. if a function is a
-     * non-static member of a class, asCALL_THISCALL or some variation of it will always be used. AngelScript's generic
-     * call convention is also very easy to deduce via reflection. But it is not currently possible via reflection to
-     * tell when CDecl or StdCall is being used, so the decision was made to introduce two features:
-     * as::CDecl/as::StdCall annotations (to explicitly mark functions as using one call convention), and this method
-     * (which, for most people, eliminates the need to explicitly annotate functions at all).
-     * @param callConv asCALL_CDECL or asCALL_STDCALL.
-     * @return asINVALID_ARG if an invalid call convention was given, otherwise the value of callConv is returned.
-     */
-    int SetDefaultCallConvention(AS_NAMESPACE_QUALIFIER asDWORD callConv) noexcept;
 
     // MARK: Global Properties
 
@@ -136,25 +143,10 @@ struct Engine {
 
 private:
     /**
-     * Combines the result of FuncCallConv() with the assigned default call convention to determine which call
-     * convention should bs used.
-     * @param deducedCallConv The statically-deduced call convention.
-     * @return deducedCallConv if it is greather than or equal to 0, otherwise the default call convention assigned to
-     *         this Engine wrapper. If the default call convention supports it, it will also handle _OBJFIRST and
-     *         _OBJLAST variants, if specified in the result of the statically-duduced call convention.
-     */
-    AS_NAMESPACE_QUALIFIER asDWORD applyDefaultCallConventionAsFallback(const int deducedCallConv) const;
-
-    /**
      * Points to the AngelScript engine instance this wrapper interfaces with.
      * Becomes either Owned or Shared depending on how the Engine was constructed.
      */
     std::unique_ptr<Object<AS_NAMESPACE_QUALIFIER asIScriptEngine>> m_engine;
-
-    /**
-     * The default call convention to use if a given function's calling convention can't be deduced.
-     */
-    AS_NAMESPACE_QUALIFIER asDWORD m_defaultCallConvention = AS_NAMESPACE_QUALIFIER asCALL_CDECL;
 };
 } // namespace as
 

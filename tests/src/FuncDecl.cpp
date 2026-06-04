@@ -2,14 +2,101 @@
 #include <AngelScriptWrapperTests/ScriptArray.hpp>
 #include <AngelScriptWrapperTests/ScriptDebugging.hpp>
 
-void handleChecking(int a[[= as::Handle]], bool b);
-constexpr auto handleCheckingParams = std::define_static_array(std::meta::parameters_of(^^handleChecking));
-
-static_assert(as::AsHandle<handleCheckingParams[0]>());
-static_assert(!as::AsHandle<handleCheckingParams[1]>());
-
 STATIC_ASSERT_EQ(std::string(as::DefVal("5").value), "5");
 STATIC_ASSERT_EQ(std::string(as::DefVal("\"5\"").value), "\"5\"");
+
+namespace call_conv {
+inline void generic(asIScriptGeneric*) {}
+
+inline void Default() {}
+
+inline void defaultFirst[[= as::ObjFirst]]() {}
+
+inline void defaultLast[[= as::ObjLast]]() {}
+
+inline void cDecl[[= as::CDecl]]() {}
+
+inline void cDeclFirst[[ = as::CDecl, = as::ObjFirst ]]() {}
+
+inline void cDeclLast[[ = as::CDecl, = as::ObjLast ]]() {}
+
+inline void stdCall[[= as::StdCall]]() {}
+
+struct C {
+    inline void nonStatic() {}
+
+    inline void nonStaticFirst[[= as::ObjFirst]]() {}
+
+    inline void nonStaticLast[[= as::ObjLast]]() {}
+
+    inline void nonStaticGeneric(asIScriptGeneric*) {}
+
+    inline static void generic(asIScriptGeneric*) {}
+
+    inline static void Default() {}
+
+    inline static void defaultFirst[[= as::ObjFirst]]() {}
+
+    inline static void defaultLast[[= as::ObjLast]]() {}
+
+    inline static void cDecl[[= as::CDecl]]() {}
+
+    inline static void cDeclFirst[[ = as::CDecl, = as::ObjFirst ]]() {}
+
+    inline static void cDeclLast[[ = as::CDecl, = as::ObjLast ]]() {}
+
+    inline static void stdCall[[= as::StdCall]]() {}
+};
+} // namespace call_conv
+
+// clang-format off
+
+static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+
+static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// Not currently supported by AngelScript:
+// static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// Not currently supported by AngelScript:
+// static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+
+// Generic call convention in non-static class methods is not supported:
+// static_assert(as::FuncCallConv<^^call_conv::C::nonStaticGeneric, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+// clang-format on
 
 void basic() {}
 
@@ -35,26 +122,64 @@ STATIC_ASSERT_EQ(
     "int8 numeric(int16, int32, int64&out, const float&in, double&out, const bool&in, uint8&out, const uint64&in)"
 )
 
-AS_NAMESPACE_QUALIFIER CScriptArray* complex[[= as::subtype::String]](
-    const CScriptArray* i[[= as::SubTypeList<as::Tmpl<CScriptArray, float>>()]], CScriptArray& j[[= as::subtype::String]]
+AS_NAMESPACE_QUALIFIER CScriptArray* const complex[[ = as::subtype::String, = as::Auto ]](
+    const AS_NAMESPACE_QUALIFIER CScriptArray*
+        i[[= as::SubTypeList<as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray, float>>()]],
+    AS_NAMESPACE_QUALIFIER CScriptArray& j[[= as::subtype::String]],
+    // const qualifier on k* will be lost due to type adjustment.
+    AS_NAMESPACE_QUALIFIER CScriptArray* const k[[ = as::subtype::Int32, = as::Auto ]]
+) {
+    return nullptr;
+}
+// Includes "@ const+" handling in return type:
+STATIC_ASSERT_EQ(
+    as::GetFuncDecl<^^complex>(), "array<string>@ const+ complex(const array<array<float>>@, array<string>&, array<int32>@+)"
+)
+
+AS_NAMESPACE_QUALIFIER CScriptArray* complex3[[ = as::subtype::String, = as::Auto ]](
+    const AS_NAMESPACE_QUALIFIER CScriptArray*
+        i[[= as::SubTypeList<as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray, float>>()]],
+    AS_NAMESPACE_QUALIFIER CScriptArray& j[[= as::subtype::String]],
+    // const qualifier on k* will be lost due to type adjustment.
+    AS_NAMESPACE_QUALIFIER CScriptArray* const k[[ = as::subtype::Int32, = as::Auto ]]
+) {
+    return nullptr;
+}
+// Includes "@+" handling in return type:
+STATIC_ASSERT_EQ(
+    as::GetFuncDecl<^^complex3>(), "array<string>@+ complex3(const array<array<float>>@, array<string>&, array<int32>@+)"
+)
+
+AS_NAMESPACE_QUALIFIER CScriptArray* complex2[[ = as::subtype::String, = as::NonAuto ]](
+    const AS_NAMESPACE_QUALIFIER CScriptArray*
+        i[[= as::SubTypeList<as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray, float>>()]],
+    AS_NAMESPACE_QUALIFIER CScriptArray& j[[= as::subtype::String]],
+    // const qualifier on k* will be lost due to type adjustment.
+    AS_NAMESPACE_QUALIFIER CScriptArray* const k[[ = as::subtype::Int32, = as::NonAuto ]]
 ) {
     return nullptr;
 }
 
-// TODO: not sure j should map to this, will need to experiment with AngelScript more.
-STATIC_ASSERT_EQ(as::GetFuncDecl<^^complex>(), "array<string>@ complex(const array<array<float>>@, array<string>)")
+STATIC_ASSERT_EQ(
+    as::GetFuncDecl<^^complex2 COMMA true>(),
+    "array<string>@ complex2(const array<array<float>>@+, array<string>&, array<int32>@)"
+)
 
-// TODO: how should void* work?
+// TODO: how should void* work, if at all?
 void defaults(int a, std::string const& s[[= as::DefVal("\"Hi\"")]] = "Hi", void* pTest[[= as::DefVal("null")]] = nullptr) {}
 
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^defaults>(), "void defaults(int32, const string&in = \"Hi\", void&out = null)");
 
 struct A {
     inline void func() const {}
+
+    inline void func2(CScriptArray*) const {}
 };
 
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func>(), "void func() const");
-STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func COMMA true>(), "void func()");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func COMMA false COMMA true>(), "void func()");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA false COMMA true>(), "void func2(array@)");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA true COMMA true>(), "void func2(array@+)");
 
 // TODO: https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_var_type.html
 //       How do we support this??

@@ -8,9 +8,10 @@
 #include <AngelScriptWrapper/TypeDecl.hpp>
 
 namespace as {
+template <EngineOptions Opts>
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts) {
+int Engine<Opts>::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto vName = as::GetIdentifierOf<V>();
     std::string name = std::string(vName);
@@ -24,9 +25,10 @@ int Engine::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& 
     return Ptr()->RegisterGlobalProperty(name.c_str(), value);
 }
 
+template <EngineOptions Opts>
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
+int Engine<Opts>::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto vName = as::GetIdentifierOf<V>();
     std::string name = std::string(vName);
@@ -40,16 +42,17 @@ int Engine::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOp
     return Ptr()->RegisterGlobalProperty(name.c_str(), value.Ptr());
 }
 
-template <std::meta::info F> int Engine::RegisterGlobalFunction(void* auxiliary) {
+template <EngineOptions Opts> template <std::meta::info F> int Engine<Opts>::RegisterGlobalFunction(void* auxiliary) {
     AS_NAMESPACE_QUALIFIER asDWORD cc;
     return RegisterGlobalFunction<F>(cc, auxiliary);
 }
 
+template <EngineOptions Opts>
 template <std::meta::info F>
-int Engine::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary) {
+int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-    constexpr auto deducedCallConv = FuncCallConv<F>();
-    auto callConv = applyDefaultCallConventionAsFallback(deducedCallConv);
+    constexpr auto deducedCallConv = FuncCallConv<F, Opts.CallConventionDefault>();
+    auto callConv = deducedCallConv;
     if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
         || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
         callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
@@ -60,7 +63,9 @@ int Engine::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, 
     } else {
         addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
     }
-    return Ptr()->RegisterGlobalFunction(GetFuncDecl<F, true>().data(), addr, callConvOut = callConv, auxiliary);
+    return Ptr()->RegisterGlobalFunction(
+        GetFuncDecl<F, Opts.AutoHandleDefault, true>().data(), addr, callConvOut = callConv, auxiliary
+    );
 }
 
 /*

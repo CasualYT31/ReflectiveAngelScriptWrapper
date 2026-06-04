@@ -11,25 +11,11 @@
 #include <string>
 
 namespace as {
-/**
- * Annotation attached to pointer function parameters to tell the library to treat them as handles and not references.
- * By default, function parameters that are ref types are registered in the application interface as being passed by
- * reference. If you need to pass the ref object as a handle, then you will need to attach this annotation to it. Your
- * program will fail to compile if you attach this annotation to a parameter of a value type.
- */
 inline constexpr struct {
-} Handle{};
+} Auto{};
 
-/**
- * Finds out if the developer has marked a C++ function parameter as being a handle parameter in AngelScript.
- * This function does not check if the type of the parameter is value or reference, it merely checks for the existence
- * of the Handle annotation.
- * @tparam T The meta info object of the parameter to test.
- * @return True if the parameter should be a handle, false otherwise.
- */
-template <std::meta::info P> constexpr bool AsHandle();
-
-// TODO: is this really necessary? Does CScriptArray& map to array&?
+inline constexpr struct {
+} NonAuto{};
 
 /**
  * Annotation attached to function parameters that are to be registered with a default value.
@@ -57,7 +43,7 @@ inline consteval DefaultsTo DefVal(std::string const& val) {
  * Annotation attached to functions to tell the library that it uses the CDecl call convention.
  * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
  * class methods, attaching to functions that use the generic call convention, etc.).
- * @sa Engine::SetDefaultCallConvention().
+ * @sa EngineOptions::CallConventionDefault.
  */
 inline constexpr struct {
 } CDecl{};
@@ -66,7 +52,7 @@ inline constexpr struct {
  * Annotation attached to functions to tell the library that it uses the StdCall call convention.
  * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
  * class methods, attaching to functions that use the generic call convention, etc.).
- * @sa Engine::SetDefaultCallConvention().
+ * @sa EngineOptions::CallConventionDefault.
  */
 inline constexpr struct {
 } StdCall{};
@@ -91,20 +77,23 @@ inline constexpr struct {
  * CDecl and StdCall annotations, and if either exist, the relevant AngelScript constant will be returned. Moreover, the
  * ObjFirst and ObjLast annotations will also be factored into the result.
  * @tparam F The std::meta::info object of the function you want to get the call convention of.
- * @return The AngelScript call convention constant, if it could be determined. < 0 if it could not be determined at
- *         compile time. -2 if an ObjFirst annotation was detected, -3 if an ObjLast annotation was detected, and -1 if
- *         neither were detected.
+ * @tparam Fallback Either asCALL_DECL or asCALL_STDCALL. If a call convention can't be derived from the given function,
+ *         then this call convention will be returned. If it is asCALL_CDECL, ObjFirst and ObjLast will still be
+ *         factored into the result if those annotations could be extracted.
+ * @return The AngelScript call convention constant.
  */
-template <std::meta::info F> constexpr int FuncCallConv();
+template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr int FuncCallConv();
 
 /**
  * Statically computes the equivalent AngelScript declaration for a given C++ function.
  * @tparam F The std::meta::info object of the function you want to generate the declaration of.
+ * @tparam AutoHandleDefault For any handle parameters found, default to non-auto handles (false) or auto handles
+ *         (true), if the parameter does not have an explicit Auto or NonAuto annotation.
  * @tparam RC Set this to true to forcibly remove the const qualifier from the declaration, if the corresponding C++
  *         method does have such a qualifier.
  * @return The AngelScript declaration (with qualifiers) of the given C++ function signature.
  */
-template <std::meta::info F, bool RC = false> constexpr std::string_view GetFuncDecl();
+template <std::meta::info F, bool AutoHandleDefault = false, bool RC = false> constexpr std::string_view GetFuncDecl();
 
 /**
  * Helper function that resolves overload sets.
