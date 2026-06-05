@@ -68,7 +68,7 @@ Here are equivalent examples showcasing the differences between these classes:
 // underlying asCScriptEngine destructor since the counter has reached 0.
 ```
 
-The `Object` wrapper classes perfectly illustrate the two approaches you can take when working with this library: either you retain as much control over the lifetime of AngelScript's as possible, or you can surrender that control to RAII classes.
+The `Object` wrapper classes perfectly illustrate the two approaches you can take when working with this library: either you retain as much control over the lifetime of AngelScript's objects as possible, or you can surrender that control to RAII classes.
 
 ### `Engine`
 
@@ -107,7 +107,7 @@ static_assert(as::TypeDecl<MyCustomType> == "MyCustomType");
 
 ### `TmplTypeName`
 
-This library also supports rendering AngelScript template types and any of their specializations that you might need. Since the subtypes of template types in AngelScript are only known at runtime, though, they are handled slightly different.
+This library also supports rendering AngelScript template types and any of their specializations that you might need. Since the subtypes of template types in AngelScript are only known at runtime, though, they are handled slightly differently.
 
 You need to call the `SubTypeList()` template function to generate a list of subtypes at compile time. Using `CScriptArray` as an example:
 
@@ -182,6 +182,6 @@ as::OwnedObject<CScriptArray> ownedArray[[
     =as::Name("RenamedArray")
 ]](globalArray);
 
-engine.RegisterGlobalProperty<^^ownedArray>(&ownedArray);
+engine.RegisterGlobalProperty<^^ownedArray>(ownedArray);
 pEngine->RegisterGlobalProperty("array<string> RenamedArray", ownedArray.Ptr());
 ```
