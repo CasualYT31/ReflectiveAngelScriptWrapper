@@ -1,6 +1,6 @@
 #include <AngelScriptWrapper/FuncDecl.hpp>
 #include <AngelScriptWrapperTests/ScriptArray.hpp>
-#include <AngelScriptWrapperTests/ScriptDebugging.hpp>
+#include <AngelScriptWrapperTests/StaticTesting.hpp>
 
 STATIC_ASSERT_EQ(std::string(as::DefVal("5").value), "5");
 STATIC_ASSERT_EQ(std::string(as::DefVal("\"5\"").value), "\"5\"");

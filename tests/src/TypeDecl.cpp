@@ -1,7 +1,7 @@
 #include <AngelScriptWrapper/TypeDecl.hpp>
 #include <AngelScriptWrapperTests/ScriptArray.hpp>
-#include <AngelScriptWrapperTests/ScriptDebugging.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
+#include <AngelScriptWrapperTests/StaticTesting.hpp>
 
 STATIC_ASSERT_EQ(as::TypeName<void>, "void");
 STATIC_ASSERT_EQ(as::TypeName<bool>, "bool");

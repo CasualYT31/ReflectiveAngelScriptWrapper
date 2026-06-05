@@ -4,8 +4,8 @@
  */
 
 #include <AngelScriptWrapper/Annotations.hpp>
-#include <AngelScriptWrapperTests/ScriptDebugging.hpp>
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
+#include <AngelScriptWrapperTests/StaticTesting.hpp>
 
 inline void f[[= as::Name("func")]](int p) {}
 

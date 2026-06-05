@@ -44,6 +44,7 @@ struct EngineOptions {
  * Options to set when registering a global property.
  */
 struct GlobalPropertyOptions {
+    // TODO: this should be an annotation instead of a runtime flag.
     /**
      * Set this flag to true if you want your global property to be const.
      */
