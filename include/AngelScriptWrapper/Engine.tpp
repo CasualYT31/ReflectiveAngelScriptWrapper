@@ -6,11 +6,11 @@ namespace as {
 template <EngineOptions Opts>
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine<Opts>::RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts) {
+int Engine<Opts>::RegisterGlobalProperty(T* const value) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto vName = as::GetIdentifierOf<V>();
     std::string name = std::string(vName);
-    if (opts.constant) {
+    if constexpr (IsGlobalConstQualified<V, Opts.ConstGlobalPropertiesDefault>()) {
         constexpr auto constType = detail::OverrideTypeOf<const T, V>;
         name = std::string(constType) + " " + name;
     } else {
@@ -23,11 +23,11 @@ int Engine<Opts>::RegisterGlobalProperty(T* const value, GlobalPropertyOptions c
 template <EngineOptions Opts>
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
-int Engine<Opts>::RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts) {
+int Engine<Opts>::RegisterGlobalProperty(OwnedObject<T> const& value) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto vName = as::GetIdentifierOf<V>();
     std::string name = std::string(vName);
-    if (opts.constant) {
+    if constexpr (IsGlobalConstQualified<V, Opts.ConstGlobalPropertiesDefault>()) {
         constexpr auto constType = detail::OverrideTypeOf<const T, V>;
         name = std::string(constType) + " " + name;
     } else {

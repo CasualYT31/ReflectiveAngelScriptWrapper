@@ -72,6 +72,35 @@ template <std::meta::info I, std::meta::info T> constexpr bool HasAnnotation() {
  */
 template <bool... Bs> consteval bool AtLeastOneOf();
 
+// MARK: Const
+
+/**
+ * Annotation attached to global properties to denote that they should be const-qualified.
+ * AngelScript does not allow you to register global properties using const-qualified C++ objects, meaning we can't
+ * reflect on the C++ const qualifier to tell whether a global property should be const or not. If you want to make a
+ * global property const, you will need to assign the corresponding C++ object this annotation.
+ * @sa EngineOptions::ConstGlobalPropertiesDefault
+ */
+inline constexpr struct {
+} GlobalConst{};
+
+/**
+ * Annotation attached to global properties to denote that they should not be const-qualified.
+ * Only useful if you change the ConstGlobalPropertiesDefault engine option, as the default is to make global properties
+ * non-const already.
+ * @sa EngineOptions::ConstGlobalPropertiesDefault
+ */
+inline constexpr struct {
+} GlobalNotConst{};
+
+/**
+ * Finds out if the developer has marked a global property as being const-qualified in AngelScript.
+ * @tparam O The object to test.
+ * @tparam Fallback If the object has no explicit const-related annotation, then use this fallback.
+ * @return True if the global property should be const-qualified in the application interface, false if not.
+ */
+template <std::meta::info O, bool Fallback> constexpr bool IsGlobalConstQualified();
+
 // MARK: Rename
 
 /**

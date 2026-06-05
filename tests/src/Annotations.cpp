@@ -7,6 +7,25 @@
 #include <AngelScriptWrapperTests/ScriptTestObject.hpp>
 #include <AngelScriptWrapperTests/StaticTesting.hpp>
 
+int a1;
+const int a2 = 0;
+int a3[[= as::GlobalConst]];
+int a4[[= as::GlobalNotConst]];
+int a5[[ = as::GlobalConst, = as::GlobalNotConst ]];
+
+static_assert(!as::IsGlobalConstQualified<^^a1, false>());
+static_assert(!as::IsGlobalConstQualified<^^a2, false>());
+static_assert(as::IsGlobalConstQualified<^^a3, false>());
+static_assert(!as::IsGlobalConstQualified<^^a4, false>());
+
+static_assert(as::IsGlobalConstQualified<^^a1, true>());
+static_assert(as::IsGlobalConstQualified<^^a2, true>());
+static_assert(as::IsGlobalConstQualified<^^a3, true>());
+static_assert(!as::IsGlobalConstQualified<^^a4, true>());
+
+// Fails compilation due to mix of annotations:
+// static_assert(!as::IsGlobalConstQualified<^^a5, false>());
+
 inline void f[[= as::Name("func")]](int p) {}
 
 static_assert(as::GetAnnotations<^^f COMMA as::Rename>().size() == 1);

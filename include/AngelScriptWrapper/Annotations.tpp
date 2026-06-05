@@ -2,6 +2,7 @@
 
 namespace as {
 // MARK: Helpers
+
 template <std::meta::info I, typename T> consteval std::span<const std::meta::info> GetAnnotations() {
     return std::define_static_array(std::meta::annotations_of_with_type(I, ^^T));
 }
@@ -36,6 +37,21 @@ template <bool... Bs> consteval bool AtLeastOneOf() {
         }
     }
     return true;
+}
+
+// MARK: Const
+
+template <std::meta::info O, bool Fallback> constexpr bool IsGlobalConstQualified() {
+    constexpr auto HasConst = HasAnnotation<O, decltype(GlobalConst)>();
+    constexpr auto HasNotConst = HasAnnotation<O, decltype(GlobalNotConst)>();
+    static_assert(AtLeastOneOf<HasConst, HasNotConst>(), "detected mix of Const and NotConst annotations");
+    if constexpr (HasConst) {
+        return true;
+    } else if constexpr (HasNotConst) {
+        return false;
+    } else {
+        return Fallback;
+    }
 }
 
 // MARK: SubTypes

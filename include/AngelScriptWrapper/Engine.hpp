@@ -16,6 +16,11 @@
 namespace as {
 struct EngineOptions {
     /**
+     * Set this to true if you want all global properties to be const-qualified by default.
+     */
+    bool ConstGlobalPropertiesDefault = false;
+
+    /**
      * The default call convention to use if a given function's calling convention can't be deduced.
      * Can only be one of asCALL_CDECL, asCALL_STDCALL or asCALL_GENERIC. _OBJFIRST and _OBJLAST will still be used
      * where requested via annotations.
@@ -38,17 +43,6 @@ struct EngineOptions {
      * Set this to true if you wish to make handle parameters auto handles by default.
      */
     bool AutoHandleDefault = false;
-};
-
-/**
- * Options to set when registering a global property.
- */
-struct GlobalPropertyOptions {
-    // TODO: this should be an annotation instead of a runtime flag.
-    /**
-     * Set this flag to true if you want your global property to be const.
-     */
-    bool constant = false;
 };
 
 /**
@@ -105,16 +99,16 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      * use of the Name() function.
      * @tparam V The std::meta::info object of your global variable of type T.
      * @tparam T The type of global property to register. AngelScript does not allow registering global properties
-     *         linked to const C++ objects. If you want to register a constant global property, set the constant
-     *         option to true.
+     *         linked to const C++ objects. If you want to register a constant global property, attach the GlobalConst
+     *         annotation to the object pointed to by the value parameter. Conversely, if you need to explicitly mark a
+     *         global property as being not const-qualified, then attach the GlobalNotConst annotation.
      * @param value Pointer to the value to give to the global property. You are expected to manage the global
      *        property's value as you would without this wrapper.
-     * @param opts The options to set for this global property.
      * @return The result of the registration.
      */
     template <std::meta::info V, typename T>
         requires(!IsConst<T>)
-    int RegisterGlobalProperty(T* const value, GlobalPropertyOptions const& opts = {});
+    int RegisterGlobalProperty(T* const value);
 
     /**
      * Registers a global property for use in the scripts whose pointer is being managed by an OwnedObject wrapper.
@@ -124,17 +118,17 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      * @tparam V The std::meta::info object of your OwnedObject wrapper. This means that if your underlying object is of
      *         a specialized template type, you must attach SubTypes annotations to the Object wrapper!
      * @tparam T The type of global property to register. AngelScript does not allow registering global properties
-     *         linked to const C++ objects. If you want to register a constant global property, set the constant
-     *         parameter to true.
+     *         linked to const C++ objects. If you want to register a constant global property, attach the GlobalConst
+     *         annotation to the OwnedObject instance. Conversely, if you need to explicitly mark a global property as
+     *         being not const-qualified, then attach the GlobalNotConst annotation.
      * @param value The OwnedObject wrapper that manages the AngelScript object to use as the value of the global
      *        property. The underlying pointer is used so make sure this OwnedObject survives for as long as the script
      *        engine is running.
-     * @param opts The options to set for this global property.
      * @return The result of the registration.
      */
     template <std::meta::info V, typename T>
         requires(!IsConst<T>)
-    int RegisterGlobalProperty(OwnedObject<T> const& value, GlobalPropertyOptions const& opts = {});
+    int RegisterGlobalProperty(OwnedObject<T> const& value);
 
     // MARK: Global Functions
 
