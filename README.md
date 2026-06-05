@@ -50,7 +50,7 @@ Here are equivalent examples showcasing the differences between these classes:
     // pEngine should no longer be used.
 
     const auto count = engine->GetGlobalFunctionCount();
-    // Notice that the SharedObject wrapped still holds a reference!
+    // Notice that the SharedObject wrapper still holds a reference!
 }
 
 // That reference has now been dropped and the engine has been destructed.
