@@ -204,15 +204,18 @@ STATIC_ASSERT_EQ(
     "array<string>@ complex2(const array<array<float>>@+, array<string>&, array<int32>@)"
 )
 
-// TODO: how should void* work, if at all?
-void defaults(int a, std::string const& s[[= as::DefVal("\"Hi\"")]] = "Hi", void* pTest[[= as::DefVal("null")]] = nullptr) {}
+void defaults(
+    int a,
+    std::string const& s[[= as::DefVal("\"Hi\"")]] = "Hi",
+    AS_NAMESPACE_QUALIFIER CScriptArray* pTest[[ = as::DefVal("null"), = as::subtype::Bool ]] = nullptr
+) {}
 
-STATIC_ASSERT_EQ(as::GetFuncDecl<^^defaults>(), "void defaults(int32, const string&in = \"Hi\", void&out = null)");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^defaults>(), "void defaults(int32, const string&in = \"Hi\", array<bool>@ = null)");
 
 struct A {
     inline void func() const {}
 
-    inline void func2(CScriptArray*) const {}
+    inline void func2(AS_NAMESPACE_QUALIFIER CScriptArray*) const {}
 };
 
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func>(), "void func() const");
@@ -220,11 +223,15 @@ STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func COMMA false COMMA true>(), "void func
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA false COMMA true>(), "void func2(array@)");
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA true COMMA true>(), "void func2(array@+)");
 
-// TODO: https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_var_type.html
-//       How do we support this??
-//       Idea: void* should map to this? Then we just static_assert that the next parameter is a type ID (int32).
-//       Can't think of any other reason why you'd want void* in the context of AngelScript. The linked
-//       documentation even uses void* in its CDECL example. You can have "const ?&in", right? Then it
-//       mostly fits in with the existing paradigm (const void* -> we should use &in, void* -> we should use &out,
-//       and maybe make a note to say that &inout is not supported).
-//       Will do this next, then I think I'm finally ready to start updating the README.
+inline void variableParameterTypeOut(void* o, int typeId) {}
+
+inline void variableParameterTypeIn(const void* o, int typeId) {}
+
+inline void variableParameterTypeSurroundedByParameters(int var, void* o, int typeId, const int* var2) {}
+
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^variableParameterTypeOut>(), "void variableParameterTypeOut(?&out)");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^variableParameterTypeIn>(), "void variableParameterTypeIn(const ?&in)");
+STATIC_ASSERT_EQ(
+    as::GetFuncDecl<^^variableParameterTypeSurroundedByParameters>(),
+    "void variableParameterTypeSurroundedByParameters(int32, ?&out, const int32&in)"
+);

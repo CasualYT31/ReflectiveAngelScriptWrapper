@@ -170,6 +170,14 @@ consteval std::meta::info FindOverload(const std::string_view identifier) {
     }
     throw "could not find overload";
 }
+
+template <std::meta::info P> constexpr bool IsVariableParameterType() {
+    return (std::meta::type_of(P) == (^^void*)) || (std::meta::type_of(P) == (^^const void*));
+}
+
+template <std::meta::info P> constexpr bool IsVariableParameterTypeId() {
+    return (std::meta::type_of(P) == (^^int));
+}
 } // namespace detail
 
 // TODO: the implementation of this function is not easy to follow, especially as it's split into this and
@@ -281,8 +289,30 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
     // Name.
     decl += " " + std::string(as::GetIdentifierOf<F>()) + "(";
     // Parameter list.
+    // Tracks whether we're in the process of declaring a variable type in the parameter list.
+    // 0 = no, 1 = &in, 2 = &out.
+    static constexpr int NO = 0;
+    static constexpr int IN = 1;
+    static constexpr int OUT = 2;
+    int variableTypeInProgress = NO;
     template for (constexpr auto P : std::define_static_array(std::meta::parameters_of(F))) {
-        decl += std::string(detail::GetFuncTypeDecl<P, AutoHandleDefault>()) + detail::DefaultValueOrEmpty<P>() + ", ";
+        using PType = typename[:std::meta::type_of(P):];
+        if (detail::IsVariableParameterType<P>()) {
+            if (variableTypeInProgress) {
+                throw("you cannot declare two void* parameters in a row; the parameter after a void* must be an int typeId");
+            }
+            variableTypeInProgress = std::meta::is_const(^^std::remove_pointer_t<PType>) ? IN : OUT;
+        } else if (variableTypeInProgress && detail::IsVariableParameterTypeId<P>()) {
+            if (variableTypeInProgress == IN) {
+                decl += "const ?&in, ";
+            } else {
+                decl += "?&out, ";
+            }
+            variableTypeInProgress = NO;
+        } else {
+            if (variableTypeInProgress) { throw("the parameter after a void* must be an int typeId"); }
+            decl += std::string(detail::GetFuncTypeDecl<P, AutoHandleDefault>()) + detail::DefaultValueOrEmpty<P>() + ", ";
+        }
     }
     // Remove last comma.
     if constexpr (std::meta::parameters_of(F).size() > 0) { decl.erase(decl.size() - 2); }

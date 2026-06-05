@@ -157,6 +157,7 @@ pEngine->RegisterGlobalProperty("int myGlobal", &myGlobal);
 
 // AngelScript does not like registering pointers to const objects in this context,
 // so we'll need to turn the const-ness of the property into a flag.
+// TODO: we use annotations for this now.
 engine.RegisterGlobalProperty<^^myGlobal>(&myGlobal, { .constant = true });
 pEngine->RegisterGlobalProperty("const int myGlobal", &myGlobal);
 

@@ -401,7 +401,6 @@ void explicitGeneric[[= as::Generic("double mult(double a, double b)")]](AS_NAME
 TEST(AngelScriptEngineGlobalFunctions, ExplicitGeneric) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
     ASSERT_GE(engine.RegisterGlobalFunction<^^explicitGeneric>(callConv), 0);
@@ -419,7 +418,6 @@ double derivedGeneric[[= as::Generic()]](double a, double b) {
 TEST(AngelScriptEngineGlobalFunctions, DerivedGeneric) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
     ASSERT_GE(engine.RegisterGlobalFunction<^^derivedGeneric>(callConv), 0);
@@ -437,7 +435,6 @@ double derivedGenericNoAnno(double a, double b) {
 TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnno) {
     as::Engine<{ .CallConventionDefault = AS_NAMESPACE_QUALIFIER asCALL_GENERIC }> engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
     ASSERT_GE(engine.RegisterGlobalFunction<^^derivedGenericNoAnno>(callConv), 0);
@@ -470,7 +467,6 @@ struct Gen {
 TEST(AngelScriptEngineGlobalFunctions, ExplicitGenericStaticClassMember) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
     ASSERT_GE(engine.RegisterGlobalFunction<^^Gen::explicitGeneric>(callConv), 0);
@@ -484,7 +480,6 @@ TEST(AngelScriptEngineGlobalFunctions, ExplicitGenericStaticClassMember) {
 TEST(AngelScriptEngineGlobalFunctions, DerivedGenericStaticClassMember) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
     ASSERT_GE(engine.RegisterGlobalFunction<^^Gen::derivedGeneric>(callConv), 0);
@@ -498,7 +493,6 @@ TEST(AngelScriptEngineGlobalFunctions, DerivedGenericStaticClassMember) {
 TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnnoStaticClassMember) {
     as::Engine<{ .CallConventionDefault = AS_NAMESPACE_QUALIFIER asCALL_GENERIC }> engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
     ASSERT_GE(engine.RegisterGlobalFunction<^^Gen::derivedGenericNoAnno>(callConv), 0);
@@ -507,4 +501,41 @@ TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnnoStaticClassMember) {
     double res = 0.0;
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0);
     EXPECT_DOUBLE_EQ(res, 62.72);
+}
+
+int getTypeId(const void* p, int typeId) {
+    if (p) {
+        return typeId;
+    } else {
+        return -1;
+    }
+}
+
+TEST(AngelScriptEngineGlobalFunctions, VariableParameterTypeWithValueType) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^getTypeId>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+
+    int res = 0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "int p = 0; return getTypeId(p);", &res, 4), 0);
+    EXPECT_DOUBLE_EQ(res, 4);
+}
+
+TEST(AngelScriptEngineGlobalFunctions, VariableParameterTypeWithReferenceType) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    const auto expectedTypeId = as::TestRefType::Register(engine.Ptr());
+    ASSERT_GE(expectedTypeId, 0);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^getTypeId>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+
+    int res = 0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "TestRefType p; return getTypeId(p);", &res, 4), 0);
+    EXPECT_DOUBLE_EQ(res, expectedTypeId);
 }
