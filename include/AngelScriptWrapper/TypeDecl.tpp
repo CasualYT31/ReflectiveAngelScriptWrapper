@@ -1,8 +1,3 @@
-/**
- * @file TypeDecl.tpp
- * The implementations of template functions found within TypeDecl.
- */
-
 #pragma once
 
 BEGIN_AS_NAMESPACE
@@ -24,14 +19,11 @@ END_AS_NAMESPACE
 
 namespace as {
 template <std::meta::info O> consteval std::string_view GetIdentifierOf() {
-    constexpr auto rename = std::define_static_array(std::meta::annotations_of_with_type(O, ^^Rename));
-    static_assert(
-        rename.size() <= 1, std::string(std::meta::display_string_of(O)) + " was given more than one Rename annotation"
-    );
-    if constexpr (rename.empty()) {
-        return std::meta::identifier_of(O);
+    constexpr auto rename = ExtractAnnotation<O, Rename>();
+    if constexpr (rename) {
+        return std::string_view(rename->to);
     } else {
-        return std::string_view(std::meta::extract<Rename>(rename[0]).to);
+        return std::meta::identifier_of(O);
     }
 }
 
@@ -153,14 +145,10 @@ template <typename T, SubTypes S> consteval std::string_view GetTypeDecl() {
 }
 
 template <std::meta::info I> consteval SubTypes GetSubTypes() {
-    constexpr auto subTypesAnnotation = std::define_static_array(std::meta::annotations_of_with_type(I, ^^SubTypes));
-    static_assert(
-        subTypesAnnotation.size() <= 1,
-        std::string(std::meta::display_string_of(I)) + " was given more than one SubTypes annotation"
-    );
     // TODO: Will likely introduce a Template annotation for types soon? We can then static assert that SubTypes are
     //       only given to AngelScript template types.
-    return subTypesAnnotation.size() == 0 ? SubTypes{} : std::meta::extract<SubTypes>(subTypesAnnotation[0]);
+    constexpr auto subTypesAnnotation = ExtractAnnotation<I, SubTypes>();
+    return subTypesAnnotation ? *subTypesAnnotation : SubTypes{};
 }
 
 template <std::meta::info I> consteval std::string_view GetTypeDecl() {
@@ -181,40 +169,6 @@ template <typename T, std::meta::info I> consteval std::string_view GetTypeDecl(
 }
 }; // namespace detail
 
-namespace detail {
-consteval SubTypes SubTypeList(std::vector<std::meta::info> types) {
-    std::vector<std::meta::info> subTypes;
-    std::vector<SubTypes> recursiveSub;
-    for (auto T : types) {
-        if (std::meta::has_template_arguments(T) && std::meta::template_of(T) == ^^Tmpl) {
-            auto args = std::meta::template_arguments_of(T);
-            subTypes.push_back(args[0]);
-            args.erase(args.begin());
-            recursiveSub.push_back(SubTypeList(args));
-        } else {
-            subTypes.push_back(T);
-            recursiveSub.emplace_back();
-        }
-    }
-    return SubTypes{
-        .subTypes = std::define_static_array(subTypes),
-        .recursiveSub = std::define_static_array(recursiveSub),
-    };
-}
-} // namespace detail
-
-template <typename... Ts> consteval SubTypes SubTypeList() {
-    return detail::SubTypeList({ ^^Ts... });
-}
-
-template <typename T> constexpr bool IsRefType() {
-    return std::meta::annotations_of_with_type(
-               std::meta::dealias(^^std::remove_cvref_t<remove_all_pointers_t<T>>), ^^decltype(RefType)
-           )
-               .size()
-           > 0;
-}
-
 template <typename T, bool C> constexpr std::string_view GetRefType() {
     if constexpr (IsRefType<T>()) {
         if constexpr (C) {
@@ -224,22 +178,6 @@ template <typename T, bool C> constexpr std::string_view GetRefType() {
         }
     } else {
         return "&";
-    }
-}
-
-template <std::meta::info F> constexpr AS_NAMESPACE_QUALIFIER asDWORD GetFuncCallConv() {
-    constexpr auto callConv = std::define_static_array(std::meta::annotations_of_with_type(F, ^^CallConv));
-    static_assert(
-        callConv.size() <= 1,
-        "function " + std::string(std::meta::display_string_of(F)) + " was given more than one CallConv annotation"
-    );
-    if constexpr (callConv.size() == 1) {
-        return std::meta::extract<CallConv>(callConv.at(0)).is;
-    } else if constexpr (std::meta::has_parent(F) && std::meta::is_type(std::meta::parent_of(F))
-                         && !std::meta::is_static_member(F)) {
-        return AS_NAMESPACE_QUALIFIER asCALL_THISCALL;
-    } else {
-        return AS_NAMESPACE_QUALIFIER asCALL_CDECL;
     }
 }
 } // namespace as

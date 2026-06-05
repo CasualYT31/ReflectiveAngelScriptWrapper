@@ -5,6 +5,9 @@
 
 #pragma once
 
+#include <cstdint>
+#include <span>
+
 namespace as {
 /**
  * Structural span.

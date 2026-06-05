@@ -6,6 +6,8 @@
 #pragma once
 
 #include <angelscript.h>
+// TODO: do not like having to rebuild all the tests every time I make one change in one of the header files.
+//       I should make Engine implement an interface, and then include the interface here instead.
 #include <AngelScriptWrapper/Engine.hpp>
 #include <iostream>
 

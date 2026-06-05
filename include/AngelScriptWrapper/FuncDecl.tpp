@@ -1,8 +1,3 @@
-/**
- * @file FuncDecl.tpp
- * The implementations of template functions found within TypeDecl.
- */
-
 #pragma once
 
 #include <AngelScriptWrapper/TypeDecl.hpp>
@@ -10,9 +5,9 @@
 namespace as {
 namespace detail {
 template <std::meta::info P, bool AutoHandleDefault> constexpr std::string_view GetAutoHandleFlag() {
-    constexpr auto hasAutoAnno = std::meta::annotations_of_with_type(P, ^^decltype(Auto)).size() > 0;
-    constexpr auto hasNonAutoAnno = std::meta::annotations_of_with_type(P, ^^decltype(NonAuto)).size() > 0;
-    static_assert(!(hasAutoAnno && hasNonAutoAnno), "detected simultaneous use of Auto and NonAuto annotations");
+    constexpr auto hasAutoAnno = HasAnnotation<P, decltype(Auto)>();
+    constexpr auto hasNonAutoAnno = HasAnnotation<P, decltype(NonAuto)>();
+    static_assert(AtLeastOneOf<hasAutoAnno, hasNonAutoAnno>(), "detected simultaneous use of Auto and NonAuto annotations");
     if constexpr (hasAutoAnno) {
         return "+";
     } else if constexpr (hasNonAutoAnno) {
@@ -79,13 +74,9 @@ template <std::meta::info P, bool AutoHandleDefault> consteval std::string_view 
 }
 
 template <std::meta::info P> constexpr std::string DefaultValueOrEmpty() {
-    constexpr auto defVal = std::define_static_array(std::meta::annotations_of_with_type(P, ^^DefaultsTo));
-    static_assert(
-        defVal.size() <= 1,
-        std::string(std::meta::display_string_of(P)) + " was given more than one DefaultsTo/DefVal annotation"
-    );
-    if constexpr (defVal.size() == 1) {
-        return " = " + std::string(std::meta::extract<DefaultsTo>(defVal.at(0)).value);
+    constexpr auto defVal = ExtractAnnotation<P, DefaultsTo>();
+    if constexpr (defVal) {
+        return " = " + std::string(defVal->value);
     } else {
         return "";
     }
@@ -95,6 +86,63 @@ template <std::meta::info F>
 constexpr bool HasGenericCallConvSig =
     (std::meta::return_type_of(F) == ^^void) && (std::meta::parameters_of(F).size() == 1)
     && (std::meta::type_of(std::meta::parameters_of(F)[0]) == ^^AS_NAMESPACE_QUALIFIER asIScriptGeneric*);
+
+template <std::meta::info F> constexpr CallConvResults DetectGenericCallConv() {
+    constexpr auto hasGenericSignature = HasGenericCallConvSig<F>;
+    constexpr auto genericAnnotation = ExtractAnnotation<F, GenericWithDecl>();
+    constexpr bool annotationHasDecl = genericAnnotation && !std::string_view(genericAnnotation->decl).empty();
+    constexpr auto objFirstAnnotation = HasAnnotation<F, decltype(ObjFirst)>();
+    constexpr auto objLastAnnotation = HasAnnotation<F, decltype(ObjLast)>();
+    static_assert(
+        AtLeastOneOf<objFirstAnnotation, objLastAnnotation>(),
+        std::string(std::meta::display_string_of(F)) + " was given a mix of object placement modifier annotations"
+    );
+    constexpr bool isNonStaticClassMember = std::meta::is_class_member(F) && !std::meta::is_static_member(F);
+
+    CallConvResults opts;
+    if constexpr (hasGenericSignature) {
+        static_assert(!isNonStaticClassMember, "Non-static class methods cannot use the generic call convention");
+        static_assert(
+            annotationHasDecl,
+            "functions that have the void(asIScriptGeneric*) signature must be given a GenericWithDecl annotation with a "
+            "full AngelScript declaration"
+        );
+
+        opts.callConv = AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
+        opts.decl = std::string_view(genericAnnotation->decl);
+        opts.genericType = GenericCallConvType::None;
+        return opts;
+    } else if constexpr (genericAnnotation) {
+        static_assert(!isNonStaticClassMember, "Non-static class methods cannot use the generic call convention");
+        static_assert(
+            !annotationHasDecl,
+            "an AngelScript function declaration was given to the GenericWithDecl annotation, but the annotated function "
+            "did not have the void(asIScriptGeneric*) signature: please remove the declaration if you do not intend to use "
+            "the void(asIScriptGeneric*) signature for your function"
+        );
+
+        opts.callConv = AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
+        // Don't calculate the decl in here.
+        // Find out which WRAP macro should be used.
+        if constexpr (std::meta::is_class_member(F)) {
+            // TODO: at least this is implied from the macros in the autowrapper add on, but is this strictly true?
+            static_assert(
+                !objFirstAnnotation && !objLastAnnotation,
+                "ObjFirst and ObjLast are not supported on static class functions for the generic call convention"
+            );
+            opts.genericType = GenericCallConvType::WrapMFn;
+        } else if constexpr (objFirstAnnotation) {
+            opts.genericType = GenericCallConvType::WrapObjFirst;
+        } else if constexpr (objLastAnnotation) {
+            opts.genericType = GenericCallConvType::WrapObjLast;
+        } else {
+            opts.genericType = GenericCallConvType::WrapFn;
+        }
+        return opts;
+    } else {
+        return opts;
+    }
+}
 
 template <std::meta::info P, typename R, bool C, typename... Ps>
 consteval std::meta::info FindOverload(const std::string_view identifier) {
@@ -124,92 +172,98 @@ consteval std::meta::info FindOverload(const std::string_view identifier) {
 }
 } // namespace detail
 
-template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr int FuncCallConv() {
+// TODO: the implementation of this function is not easy to follow, especially as it's split into this and
+//       detail::DetectGenericCallConv. They should both be rewritten, first by combining them into one big
+//       function and then splitting them up into multiple detail functions towards the end of the refactor.
+template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr CallConvResults FuncCallConv() {
     static_assert(
-        Fallback == AS_NAMESPACE_QUALIFIER asCALL_CDECL || Fallback == AS_NAMESPACE_QUALIFIER asCALL_STDCALL,
-        "illegal fallback call convention provided, it must be either CDecl or StdCall"
+        Fallback == AS_NAMESPACE_QUALIFIER asCALL_CDECL || Fallback == AS_NAMESPACE_QUALIFIER asCALL_STDCALL
+            || Fallback == AS_NAMESPACE_QUALIFIER asCALL_GENERIC,
+        "illegal fallback call convention provided, it must be either CDecl, StdCall or Generic"
     );
 
-    constexpr auto cdeclAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(CDecl)).empty();
-    constexpr auto stdcallAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(StdCall)).empty();
-    static_assert(
-        !(cdeclAnnotation && stdcallAnnotation),
-        std::string(std::meta::display_string_of(F)) + " was given a mix of call convention annotations"
-    );
-    constexpr auto objFirstAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(ObjFirst)).empty();
-    constexpr auto objLastAnnotation = !std::meta::annotations_of_with_type(F, ^^decltype(ObjLast)).empty();
-    static_assert(
-        !(objFirstAnnotation && objLastAnnotation),
-        std::string(std::meta::display_string_of(F)) + " was given a mix of object placement modifier annotations"
-    );
-    constexpr auto hasGenericSignature = detail::HasGenericCallConvSig<F>;
-
-    if constexpr (std::meta::is_class_member(F) && !std::meta::is_static_member(F)) {
-        // First, we always check if a function is a non-static member of a class.
-        // If it is, it always uses some variant of ThisCall.
-        static_assert(
-            !cdeclAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
-        );
-        static_assert(
-            !stdcallAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
-        );
-        static_assert(
-            !hasGenericSignature,
-            std::string(std::meta::display_string_of(F))
-                + " is trying to use the generic call convention, but non-static class members can't use the generic "
-                  "call convention"
-        );
-        if (objFirstAnnotation) {
-            return AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST;
-        } else if (objLastAnnotation) {
-            return AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST;
-        } else {
-            return AS_NAMESPACE_QUALIFIER asCALL_THISCALL;
-        }
-    } else if constexpr (hasGenericSignature) {
-        // Second, we check for the generic call convention.
-        static_assert(
-            !cdeclAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
-        );
-        static_assert(
-            !stdcallAnnotation,
-            std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
-        );
-        static_assert(
-            !objFirstAnnotation && !objLastAnnotation,
-            std::string(std::meta::display_string_of(F))
-                + ": the generic call convention does not support object placement modifiers"
-        );
-        return AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
-    } else if constexpr (stdcallAnnotation) {
-        // Lastly, look for CDecl and StdCall.
-        static_assert(
-            !objFirstAnnotation && !objLastAnnotation,
-            std::string(std::meta::display_string_of(F))
-                + ": the StdCall call convention does not support object placement modifiers"
-        );
-        return AS_NAMESPACE_QUALIFIER asCALL_STDCALL;
-    } else if constexpr (cdeclAnnotation || Fallback == AS_NAMESPACE_QUALIFIER asCALL_CDECL) {
-        // Either the developer explicitly requested CDecl, or the fallback is CDecl.
-        if (objFirstAnnotation) {
-            return AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST;
-        } else if (objLastAnnotation) {
-            return AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST;
-        } else {
-            return AS_NAMESPACE_QUALIFIER asCALL_CDECL;
-        }
+    constexpr auto initialGenericCallConvCheck = detail::DetectGenericCallConv<F>();
+    if constexpr (initialGenericCallConvCheck.callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC) {
+        return initialGenericCallConvCheck;
     } else {
-        // The call convention can't be deduced, use the fallback
-        // (this branch will only be reached if the fallback is StdCall currently).
+        constexpr auto cdeclAnnotation = HasAnnotation<F, decltype(CDecl)>();
+        constexpr auto stdcallAnnotation = HasAnnotation<F, decltype(StdCall)>();
         static_assert(
-            !objFirstAnnotation && !objLastAnnotation,
-            std::string(std::meta::display_string_of(F))
-                + ": the StdCall call convention does not support object placement modifiers"
+            AtLeastOneOf<cdeclAnnotation, stdcallAnnotation>(),
+            std::string(std::meta::display_string_of(F)) + " was given a mix of call convention annotations"
         );
-        return Fallback;
+        constexpr auto objFirstAnnotation = HasAnnotation<F, decltype(ObjFirst)>();
+        constexpr auto objLastAnnotation = HasAnnotation<F, decltype(ObjLast)>();
+        static_assert(
+            AtLeastOneOf<objFirstAnnotation, objLastAnnotation>(),
+            std::string(std::meta::display_string_of(F)) + " was given a mix of object placement modifier annotations"
+        );
+
+        if constexpr (std::meta::is_class_member(F) && !std::meta::is_static_member(F)) {
+            // First, we always check if a function is a non-static member of a class.
+            // If it is, it always uses some variant of ThisCall.
+            static_assert(
+                !cdeclAnnotation,
+                std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
+            );
+            static_assert(
+                !stdcallAnnotation,
+                std::string(std::meta::display_string_of(F)) + " was given an invalid call convention annotation"
+            );
+            if (objFirstAnnotation) {
+                return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
+            } else if (objLastAnnotation) {
+                return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
+            } else {
+                return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+            }
+        } else if constexpr (stdcallAnnotation) {
+            // Lastly, look for CDecl and StdCall.
+            static_assert(
+                !objFirstAnnotation && !objLastAnnotation,
+                std::string(std::meta::display_string_of(F))
+                    + ": the StdCall call convention does not support object placement modifiers"
+            );
+            return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+        } else if constexpr (cdeclAnnotation || Fallback == AS_NAMESPACE_QUALIFIER asCALL_CDECL) {
+            // Either the developer explicitly requested CDecl, or the fallback is CDecl.
+            if (objFirstAnnotation) {
+                return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+            } else if (objLastAnnotation) {
+                return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+            } else {
+                return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+            }
+        } else if constexpr (Fallback == AS_NAMESPACE_QUALIFIER asCALL_GENERIC) {
+            // The fallback is Generic. It will not have the void(asIScriptGeneric*) signature.
+            constexpr auto classMember = std::meta::is_class_member(F);
+            CallConvResults res;
+            res.callConv = AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
+            if constexpr (classMember) {
+                // TODO: at least this is implied from the macros in the autowrapper add on, but is this strictly true?
+                static_assert(
+                    !objFirstAnnotation && !objLastAnnotation,
+                    "ObjFirst and ObjLast are not supported on static class functions for the generic call convention"
+                );
+                res.genericType = GenericCallConvType::WrapMFn;
+            } else if constexpr (objFirstAnnotation) {
+                res.genericType = GenericCallConvType::WrapObjFirst;
+            } else if constexpr (objLastAnnotation) {
+                res.genericType = GenericCallConvType::WrapObjLast;
+            } else {
+                res.genericType = GenericCallConvType::WrapFn;
+            }
+            return res;
+        } else {
+            // The call convention can't be deduced, use the fallback
+            // (this branch will only be reached if the fallback is StdCall currently).
+            static_assert(
+                !objFirstAnnotation && !objLastAnnotation,
+                std::string(std::meta::display_string_of(F))
+                    + ": the StdCall call convention does not support object placement modifiers"
+            );
+            return CallConvResults(AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+        }
     }
 }
 

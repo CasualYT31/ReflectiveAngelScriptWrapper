@@ -6,7 +6,7 @@ STATIC_ASSERT_EQ(std::string(as::DefVal("5").value), "5");
 STATIC_ASSERT_EQ(std::string(as::DefVal("\"5\"").value), "\"5\"");
 
 namespace call_conv {
-inline void generic(asIScriptGeneric*) {}
+inline void generic[[= as::Generic("int add(int, int)")]](asIScriptGeneric*) {}
 
 inline void Default() {}
 
@@ -22,6 +22,8 @@ inline void cDeclLast[[ = as::CDecl, = as::ObjLast ]]() {}
 
 inline void stdCall[[= as::StdCall]]() {}
 
+inline void explicitGeneric[[= as::Generic()]]() {}
+
 struct C {
     inline void nonStatic() {}
 
@@ -31,7 +33,7 @@ struct C {
 
     inline void nonStaticGeneric(asIScriptGeneric*) {}
 
-    inline static void generic(asIScriptGeneric*) {}
+    inline static void generic[[= as::Generic("int add(int, int)")]](asIScriptGeneric*) {}
 
     inline static void Default() {}
 
@@ -46,55 +48,92 @@ struct C {
     inline static void cDeclLast[[ = as::CDecl, = as::ObjLast ]]() {}
 
     inline static void stdCall[[= as::StdCall]]() {}
+
+    inline static void explicitGeneric[[= as::Generic()]]() {}
 };
 } // namespace call_conv
 
 // clang-format off
 
-static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
-static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
-static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
-static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
-static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
-static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
-static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
-static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
-static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
 
-static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
-static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
 // Not currently supported by AngelScript:
-// static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
-// static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
-static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
-static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
-static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
-static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
-static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
 // Not currently supported by AngelScript:
-// static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
-// static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
-static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
-static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
-static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
-static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>() == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_STDCALL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::generic, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::None);
+static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::Default, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::WrapFn);
+static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::WrapObjFirst);
+static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::WrapObjLast);
+static_assert(as::FuncCallConv<^^call_conv::cDecl, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::stdCall, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::WrapFn);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStatic, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticFirst, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::nonStaticLast, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::generic, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::None);
+static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::Default, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::WrapMFn);
+// Not supported:
+// static_assert(as::FuncCallConv<^^call_conv::C::defaultFirst, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+// static_assert(as::FuncCallConv<^^call_conv::C::defaultLast, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::cDecl, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclFirst, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST);
+static_assert(as::FuncCallConv<^^call_conv::C::cDeclLast, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST);
+static_assert(as::FuncCallConv<^^call_conv::C::stdCall, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+static_assert(as::FuncCallConv<^^call_conv::C::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+static_assert(as::FuncCallConv<^^call_conv::C::explicitGeneric, AS_NAMESPACE_QUALIFIER asCALL_GENERIC>().genericType == as::GenericCallConvType::WrapMFn);
 
 // Generic call convention in non-static class methods is not supported:
-// static_assert(as::FuncCallConv<^^call_conv::C::nonStaticGeneric, AS_NAMESPACE_QUALIFIER asCALL_CDECL>() == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+// static_assert(as::FuncCallConv<^^call_conv::C::nonStaticGeneric, AS_NAMESPACE_QUALIFIER asCALL_CDECL>().callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
 
 // clang-format on
 
@@ -183,3 +222,9 @@ STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA true COMMA true>(), "void func
 
 // TODO: https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_var_type.html
 //       How do we support this??
+//       Idea: void* should map to this? Then we just static_assert that the next parameter is a type ID (int32).
+//       Can't think of any other reason why you'd want void* in the context of AngelScript. The linked
+//       documentation even uses void* in its CDECL example. You can have "const ?&in", right? Then it
+//       mostly fits in with the existing paradigm (const void* -> we should use &in, void* -> we should use &out,
+//       and maybe make a note to say that &inout is not supported).
+//       Will do this next, then I think I'm finally ready to start updating the README.

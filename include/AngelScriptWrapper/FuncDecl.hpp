@@ -6,83 +6,51 @@
 #pragma once
 
 #include <angelscript.h>
+#include <AngelScriptWrapper/Annotations.hpp>
 #include <AngelScriptWrapper/Concepts.hpp>
 #include <meta>
 #include <string>
 
 namespace as {
-inline constexpr struct {
-} Auto{};
-
-inline constexpr struct {
-} NonAuto{};
-
 /**
- * Annotation attached to function parameters that are to be registered with a default value.
- * Compilation will fail if you attach more than one of these to a single parameter.
+ * The results of call convention deduction.
  */
-struct DefaultsTo {
+struct CallConvResults {
     /**
-     * The default value to render into an AngelScript function parameter declaration, verbatim.
+     * The call convention deduced at compile time.
      */
-    const char* value;
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = AS_NAMESPACE_QUALIFIER asCALL_CDECL;
+
+    /**
+     * The declaration to register the function with, if it was explicitly provided in a Generic annotation.
+     */
+    std::string_view decl = "";
+
+    /**
+     * The type of macro to use to generate the wrapper function for the original C++ function, in case the callConv is
+     * asCALL_GENERIC.
+     */
+    GenericCallConvType genericType = GenericCallConvType::None;
 };
 
 /**
- * Use this helper function to assign a default value to a function parameter in AngelScript.
- * @param val The value to render into the function declaration, verbatim. This means that if you want to assign a
- *        string default value, you must surround the value with double quotes!
- * @return The annotation to apply to the parameter.
- */
-inline consteval DefaultsTo DefVal(std::string const& val) {
-    constexpr auto v = std::meta::variable_of(std::meta::parameters_of(^^DefVal)[0]);
-    return DefaultsTo(std::define_static_string(val));
-}
-
-/**
- * Annotation attached to functions to tell the library that it uses the CDecl call convention.
- * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
- * class methods, attaching to functions that use the generic call convention, etc.).
- * @sa EngineOptions::CallConventionDefault.
- */
-inline constexpr struct {
-} CDecl{};
-
-/**
- * Annotation attached to functions to tell the library that it uses the StdCall call convention.
- * Trying to attach this annotation to ineligible functions will cause a compiler error (e.g. attaching to non-static
- * class methods, attaching to functions that use the generic call convention, etc.).
- * @sa EngineOptions::CallConventionDefault.
- */
-inline constexpr struct {
-} StdCall{};
-
-/**
- * Annotation attached to functions to tell the library that it uses the _OBJFIRST variant of whatever calling
- * convention is determined.
- */
-inline constexpr struct {
-} ObjFirst{};
-
-/**
- * Annotation attached to functions to tell the library that it uses the _OBJLAST variant of whatever calling
- * convention is determined.
- */
-inline constexpr struct {
-} ObjLast{};
-
-/**
  * Tries to statically compute what base call convention a given function uses.
- * This function is able to determine if a function uses ThisCall or AngelScript's Generic. It is also able to pull the
- * CDecl and StdCall annotations, and if either exist, the relevant AngelScript constant will be returned. Moreover, the
- * ObjFirst and ObjLast annotations will also be factored into the result.
+ * This function is able to determine if a function uses ThisCall, but not AngelScript's Generic convention (use
+ * DetectGenericCallConv() for that instead). It is also able to pull the CDecl and StdCall annotations, and if either
+ * exist, the relevant AngelScript constant will be returned. Moreover, the ObjFirst and ObjLast annotations will also
+ * be factored into the result.
  * @tparam F The std::meta::info object of the function you want to get the call convention of.
  * @tparam Fallback Either asCALL_DECL or asCALL_STDCALL. If a call convention can't be derived from the given function,
  *         then this call convention will be returned. If it is asCALL_CDECL, ObjFirst and ObjLast will still be
  *         factored into the result if those annotations could be extracted.
- * @return The AngelScript call convention constant.
+ * @return The AngelScript call convention. If the generic call convention was detected, additional information will be
+ *         included, such as which autowrapper macro should be used on the function object, if any (as it doesn't use
+ *         the void(asIScriptGeneric*) signature), and if an AngelScript declaration was given directly by the
+ *         developer (as it <em>does</em> use the aforementioned signature and so it can't be computed via reflection
+ *         normally).
+ * @sa DetectGenericCallConv().
  */
-template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr int FuncCallConv();
+template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr CallConvResults FuncCallConv();
 
 /**
  * Statically computes the equivalent AngelScript declaration for a given C++ function.

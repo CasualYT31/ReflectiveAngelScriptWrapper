@@ -34,6 +34,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_sources(${PROJECT_NAME} PRIVATE
     # Static tests go here for immediate feedback:
+    "src/Annotations.cpp"
     "src/Concepts.cpp"
     "src/TypeDecl.cpp"
     "src/FuncDecl.cpp"

@@ -5,7 +5,8 @@ project(ReflectiveAngelScriptWrapper)
 
 set(CMAKE_CXX_FLAGS "-std=c++26 -freflection")
 
-option(${PROJECT_NAME}_AUTOWRAPPER_ADD_ON "Include the autowrapper add on" OFF)
+# Autowrapper must be on as we have special handling for the generic call convention that relies on it.
+# option(${PROJECT_NAME}_AUTOWRAPPER_ADD_ON "Include the autowrapper add on" OFF)
 option(${PROJECT_NAME}_CONTEXT_MANAGER_ADD_ON "Include the context manager add on" OFF)
 option(${PROJECT_NAME}_DATETIME_ADD_ON "Include the datetime add on" OFF)
 option(${PROJECT_NAME}_DEBUGGER_ADD_ON "Include the debugger add on" OFF)
@@ -42,7 +43,8 @@ set(${PROJECT_NAME}_SOURCE_FILES_LIST
 )
 
 # Apply add on options to our include dirs and source files.
-if(${PROJECT_NAME}_AUTOWRAPPER_ADD_ON)
+# if(${PROJECT_NAME}_AUTOWRAPPER_ADD_ON)
+if(TRUE)
     list(APPEND ${PROJECT_NAME}_INCLUDE_DIRS_LIST ${angelscript_SOURCE_DIR}/add_on/autowrapper)
 endif()
 

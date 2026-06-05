@@ -31,6 +31,10 @@ struct Global {
     inline const double add2(const double a, const double b) const {
         return a - b;
     }
+
+    static inline const double div(const double a, const double b) {
+        return a / b;
+    }
 };
 
 TEST(AngelScriptEngineGlobalFunctions, SimpleFunction) {
@@ -89,24 +93,37 @@ TEST(AngelScriptEngineGlobalFunctions, SimpleMethodOverload) {
     EXPECT_DOUBLE_EQ(result, 3.0);
 }
 
-// TODO: working on Ubuntu WSL with 64-bit compiler, so can't test StdCall for the time being.
+TEST(AngelScriptEngineGlobalFunctions, SimpleStaticMethod) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
 
-// __attribute__((stdcall)) double square[[ = as::Name("s"), = as::StdCall ]](double a) {
-//     return a * a;
-// }
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^Global::div>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_CDECL);
 
-// TEST(AngelScriptEngineGlobalFunctions, RenameStdCallFunction) {
-//     as::Engine engine;
-//     ASSERT_TRUE(engine.HasEngine());
+    double result = 0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return div(5, 10);", &result, 11), 0);
+    EXPECT_DOUBLE_EQ(result, 0.5);
+}
 
-// AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
-// ASSERT_GE(engine.RegisterGlobalFunction<^^square>(callConv), 0);
-// ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+// TODO: working on Ubuntu WSL with 64-bit compiler, so can't/shouldn't test invocation of StdCall for the time being.
 
-// double result = 0;
-// ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return s(7.8);", &result, 11), 0);
-// EXPECT_DOUBLE_EQ(result, 60.84);
-// }
+/* __attribute__((stdcall)) */ double square[[ = as::Name("s"), = as::StdCall ]](double a) {
+    return a * a;
+}
+
+TEST(AngelScriptEngineGlobalFunctions, RenameStdCallFunction) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^square>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_STDCALL);
+
+    // double result = 0;
+    // ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return s(7.8);", &result, 11), 0);
+    // EXPECT_DOUBLE_EQ(result, 60.84);
+}
 
 double cSquare[[ = as::Name("s"), = as::CDecl ]](double a) {
     return a * a;
@@ -357,7 +374,6 @@ const AS_NAMESPACE_QUALIFIER CScriptArray* get[[= as::subtype::Int32]](
 TEST(AngelScriptEngineGlobalFunctions, TemplateParameterAndReturn) {
     as::Engine<{ .AutoHandleDefault = true }> engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
     AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
     ASSERT_GE(as::TestRefType::Register(engine.Ptr()), 0);
 
@@ -375,15 +391,120 @@ TEST(AngelScriptEngineGlobalFunctions, TemplateParameterAndReturn) {
     a->Release();
 }
 
-// TODO: I haven't thought through the generic call convention approach well enough.
-//       The script interface still requires a proper declaration, but we can't reflect on that.
-//       Right now developers will need to handwrite the entire function declaration, even though they can't right now.
-//       And this prevents developers from using the WRAP macros (which they will surely be using with this convention).
-//       I wonder if we should introduce a new Generic annotation, and if it's present, somehow pass the function to
-//       the right WRAP macro? But at the same time we shouldn't force the developer to use the macros if they don't
-//       want to.
-//       If the Generic annotation is given an AngelScript function declaration, then use that verbatim, and don't use
-//       the macro.
-//       If the annotation isn't given a declaration, and it has the asIGeneric or whatever argument, then throw.
-//       If the annotation isn't given a declaration, and it doesn't have ^, then generate the declaration as normal,
-//       but use the WRAP macro on the function.
+void explicitGeneric[[= as::Generic("double mult(double a, double b)")]](AS_NAMESPACE_QUALIFIER asIScriptGeneric* s) {
+    double a = s->GetArgDouble(0);
+    double b = s->GetArgDouble(1);
+
+    s->SetReturnDouble(a * b);
+}
+
+TEST(AngelScriptEngineGlobalFunctions, ExplicitGeneric) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^explicitGeneric>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    double res = 0.0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return mult(5.6, 11.2);", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 62.72);
+}
+
+double derivedGeneric[[= as::Generic()]](double a, double b) {
+    return a * b;
+}
+
+TEST(AngelScriptEngineGlobalFunctions, DerivedGeneric) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^derivedGeneric>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    double res = 0.0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGeneric(5.6, 11.2);", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 62.72);
+}
+
+double derivedGenericNoAnno(double a, double b) {
+    return a * b;
+}
+
+TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnno) {
+    as::Engine<{ .CallConventionDefault = AS_NAMESPACE_QUALIFIER asCALL_GENERIC }> engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^derivedGenericNoAnno>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    double res = 0.0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 62.72);
+}
+
+struct Gen {
+    static inline void explicitGeneric[[= as::Generic("double mult(double a, double b)")]](
+        AS_NAMESPACE_QUALIFIER asIScriptGeneric* s
+    ) {
+        double a = s->GetArgDouble(0);
+        double b = s->GetArgDouble(1);
+
+        s->SetReturnDouble(a * b);
+    }
+
+    static inline double derivedGeneric[[= as::Generic()]](double a, double b) {
+        return a * b;
+    }
+
+    static inline double derivedGenericNoAnno(double a, double b) {
+        return a * b;
+    }
+};
+
+TEST(AngelScriptEngineGlobalFunctions, ExplicitGenericStaticClassMember) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^Gen::explicitGeneric>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    double res = 0.0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return mult(5.6, 11.2);", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 62.72);
+}
+
+TEST(AngelScriptEngineGlobalFunctions, DerivedGenericStaticClassMember) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^Gen::derivedGeneric>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    double res = 0.0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGeneric(5.6, 11.2);", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 62.72);
+}
+
+TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnnoStaticClassMember) {
+    as::Engine<{ .CallConventionDefault = AS_NAMESPACE_QUALIFIER asCALL_GENERIC }> engine;
+    ASSERT_TRUE(engine.HasEngine());
+    as::SetMessageCallback(engine);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^Gen::derivedGenericNoAnno>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    double res = 0.0;
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 62.72);
+}

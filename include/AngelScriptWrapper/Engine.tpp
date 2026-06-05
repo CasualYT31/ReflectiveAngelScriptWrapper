@@ -1,11 +1,6 @@
-/**
- * @file Engine.tpp
- * The implementations of template methods found within Engine.
- */
-
 #pragma once
 
-#include <AngelScriptWrapper/TypeDecl.hpp>
+#include <aswrappedcall.h>
 
 namespace as {
 template <EngineOptions Opts>
@@ -52,20 +47,49 @@ template <std::meta::info F>
 int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
     constexpr auto deducedCallConv = FuncCallConv<F, Opts.CallConventionDefault>();
-    auto callConv = deducedCallConv;
-    if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
-        || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
-        callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
-    }
-    AS_NAMESPACE_QUALIFIER asSFuncPtr addr;
-    if constexpr (std::meta::is_class_member(F)) {
-        addr = AS_NAMESPACE_QUALIFIER asSMethodPtr<sizeof(decltype(&[:F:]))>::Convert(&[:F:]);
+
+    if constexpr (deducedCallConv.callConv == AS_NAMESPACE_QUALIFIER asCALL_GENERIC) {
+        auto callConv = deducedCallConv;
+        if (callConv.decl.empty()) {
+            constexpr auto funcDecl = GetFuncDecl<F, Opts.AutoHandleDefault, true>();
+            callConv.decl = funcDecl;
+        }
+        AS_NAMESPACE_QUALIFIER asSFuncPtr addr;
+        if constexpr (deducedCallConv.genericType == GenericCallConvType::WrapFn) {
+            addr = ::gw::id([:F:]).TMPL f<([:F:])>();
+        } else if constexpr (deducedCallConv.genericType == GenericCallConvType::WrapMFn) {
+            // Use fg variant, i.e. WRAP_MFN_GLOBAL.
+            // addr = ::gw::id(&[:F:]).TMPL fg<&([:F:])>();
+            // Compiler doesn't like WRAP_MFN_GLOBAL... Not sure why it exists if non-static class methods can't be used
+            // with the generic call convention anyway.
+            addr = ::gw::id([:F:]).TMPL f<([:F:])>();
+        } else if constexpr (deducedCallConv.genericType == GenericCallConvType::WrapObjFirst) {
+            // TODO: test as part of object type registration work.
+            addr = ::gw::id([:F:]).TMPL of<([:F:])>();
+        } else if constexpr (deducedCallConv.genericType == GenericCallConvType::WrapObjLast) {
+            // TODO: test as part of object type registration work.
+            addr = ::gw::id([:F:]).TMPL ol<([:F:])>();
+        } else /* GenericCallConvType::None */ {
+            // Even if the function is a class member, it will always be static.
+            addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
+        }
+        return Ptr()->RegisterGlobalFunction(callConv.decl.data(), addr, callConvOut = callConv.callConv, auxiliary);
     } else {
-        addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
+        auto callConv = deducedCallConv.callConv;
+        if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
+            || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
+            callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
+        }
+        AS_NAMESPACE_QUALIFIER asSFuncPtr addr;
+        if constexpr (std::meta::is_class_member(F) && !std::meta::is_static_member(F)) {
+            addr = AS_NAMESPACE_QUALIFIER asSMethodPtr<sizeof(decltype(&[:F:]))>::Convert(&[:F:]);
+        } else {
+            addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
+        }
+        return Ptr()->RegisterGlobalFunction(
+            GetFuncDecl<F, Opts.AutoHandleDefault, true>().data(), addr, callConvOut = callConv, auxiliary
+        );
     }
-    return Ptr()->RegisterGlobalFunction(
-        GetFuncDecl<F, Opts.AutoHandleDefault, true>().data(), addr, callConvOut = callConv, auxiliary
-    );
 }
 
 /*
@@ -113,6 +137,7 @@ it is worth noting that support for it is possible, just not added.
 //         AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY,
 //         as::GetFuncDecl<^^type::Factory>(),
 //         AS_NAMESPACE_QUALIFIER asFUNCTION(type::Factory),
+//         // TODO: replace with updated function.
 //         GetFuncCallConv<^^type::Factory>()
 //     );
 //     if (r < 0) { return r; }
