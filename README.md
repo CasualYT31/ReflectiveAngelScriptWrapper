@@ -156,17 +156,18 @@ engine.RegisterGlobalProperty<^^myGlobal>(&myGlobal);
 pEngine->RegisterGlobalProperty("int myGlobal", &myGlobal);
 
 // AngelScript does not like registering pointers to const objects in this context,
-// so we'll need to turn the const-ness of the property into a flag.
-// TODO: we use annotations for this now.
-engine.RegisterGlobalProperty<^^myGlobal>(&myGlobal, { .constant = true });
-pEngine->RegisterGlobalProperty("const int myGlobal", &myGlobal);
+// so we'll need to turn the const-ness of the property into an annotation.
+int myConstGlobal[[=as::GlobalConst]] = 56;
+
+engine.RegisterGlobalProperty<^^myConstGlobal>(&myConstGlobal);
+pEngine->RegisterGlobalProperty("const int myConstGlobal", &myConstGlobal);
 
 // Template types work like non-template types, provided you attach a SubTypes
 // annotation to the C++ object!
 CScriptArray* globalArray[[=as::SubTypeList<std::string>()]];
 
 engine.RegisterGlobalProperty<^^globalArray>(&globalArray);
-pEngine->RegisterGlobalProperty("array<string> GlobalArray", &globalArray);
+pEngine->RegisterGlobalProperty("array<string>@ GlobalArray", &globalArray);
 
 // If you want to name your property something different in AngelScript,
 // you will need to attach a Rename annotation to the C++ object:
