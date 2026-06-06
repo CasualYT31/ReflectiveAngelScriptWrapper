@@ -92,6 +92,12 @@ int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callCon
     }
 }
 
+template <EngineOptions Opts> template <std::meta::info F> int Engine<Opts>::RegisterFuncdef() {
+    if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
+    constexpr auto decl = GetFuncDecl<F, Opts.AutoHandleDefault, true>();
+    return Ptr()->RegisterFuncdef(decl.data());
+}
+
 /*
 First, we need a way for the developer to either set CDECL or STDCALL as the default call convention.
 We could define this via a template parameter on Engine but that feels wrong.

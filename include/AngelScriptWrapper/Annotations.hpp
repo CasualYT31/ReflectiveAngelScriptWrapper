@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <angelscript.h>
 #include <AngelScriptWrapper/Concepts.hpp>
 #include <AngelScriptWrapper/StructuralSpan.hpp>
 #include <meta>

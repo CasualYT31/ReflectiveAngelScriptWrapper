@@ -154,6 +154,18 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
     template <std::meta::info F>
     int RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary = nullptr);
 
+    // MARK: Funcdefs
+
+    /**
+     * Registers a funcdef for use in the scripts within this engine.
+     * asIScriptFunction* parameters and objects can then be given the Funcdef(F) annotation to tell Engine which type
+     * of function handle to work with.
+     * @tparam F A reflection of the C++ function declaration to generate a funcdef for. The name of the function will
+     *         become the name of the funcdef.
+     * @return The result of the registration.
+     */
+    template <std::meta::info F> int RegisterFuncdef();
+
     // MARK: Object Types
 
     // template <std::meta::info T> int RegisterObjectType();

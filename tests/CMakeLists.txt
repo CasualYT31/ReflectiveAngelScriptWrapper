@@ -50,6 +50,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/engine/EngineConstruction.cpp"
     "src/engine/EngineGlobalProperties.cpp"
     "src/engine/EngineGlobalFunctions.cpp"
+    "src/engine/EngineFuncdefs.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

@@ -1,5 +1,23 @@
 #pragma once
 
+BEGIN_AS_NAMESPACE
+
+class asIScriptFunction;
+class CDateTime;
+class Complex;
+class CScriptAny;
+class CScriptArray;
+class CScriptDictionary;
+class CScriptDictValue;
+class CScriptFile;
+class CScriptFileSystem;
+class CScriptGrid;
+class CScriptHandle;
+class CScriptSocket;
+class CScriptWeakRef;
+
+END_AS_NAMESPACE
+
 namespace as {
 // MARK: Helpers
 
@@ -85,6 +103,21 @@ template <typename... Ts> consteval SubTypes SubTypeList() {
 // MARK: RefType
 
 template <typename T> constexpr bool IsRefType() {
-    return HasAnnotation<std::meta::dealias(^^std::remove_cvref_t<remove_all_pointers_t<T>>), decltype(RefType)>();
+    using BaseT = std::remove_cvref_t<remove_all_pointers_t<T>>;
+    // Unfortunately, we can't attach the RefType annotation to these classes reliably, as type attributes are ignored
+    // after types are already defined, and we shouldn't force the developer to include header files in certain orders
+    // to get the annotations to play nicely. So we are forced to add special cases for these here:
+    if constexpr (std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER asIScriptFunction>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptAny>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptArray>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptDictionary>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptFile>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptFileSystem>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptGrid>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptSocket>) {
+        return true;
+    } else {
+        return HasAnnotation<std::meta::dealias(^^BaseT), decltype(RefType)>();
+    }
 }
 } // namespace as
