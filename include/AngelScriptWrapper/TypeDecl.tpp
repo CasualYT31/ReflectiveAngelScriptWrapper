@@ -1,5 +1,22 @@
 #pragma once
 
+BEGIN_AS_NAMESPACE
+
+class CDateTime;
+class Complex;
+class CScriptAny;
+class CScriptArray;
+class CScriptDictionary;
+class CScriptDictValue;
+class CScriptFile;
+class CScriptFileSystem;
+class CScriptGrid;
+class CScriptHandle;
+class CScriptSocket;
+class CScriptWeakRef;
+
+END_AS_NAMESPACE
+
 namespace as {
 template <std::meta::info O> consteval std::string_view GetIdentifierOf() {
     constexpr auto rename = ExtractAnnotation<O, Rename>();
