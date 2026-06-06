@@ -364,6 +364,21 @@ This is what happens behind the scenes when you set the default call convention 
 
 Additionally, you can attach `as::ObjFirst` and `as::ObjLast` to functions that use the generic call convention to tell the library [which autowrapper macro to use](https://www.angelcode.com/angelscript/sdk/docs/manual/doc_addon_autowrap.html).
 
+Another option is to write a separate C++ declaration for your generic function and then pass that in to the template version of the `as::Generic<>()` helper function:
+
+```cpp
+constexpr EngineOptions opts = { .AutoHandleDefault = true };
+
+int myGenericFunction(CScriptArray* arr[[=as::subtype::String]], std::int64_t);
+
+void generic[[as::Generic<^^myGenericFunction, opts.AutoHandleDefault>()]](asIScriptGeneric* g);
+
+// This will then register the function with the name "myGenericFunction":
+engine.RegisterGlobalFunction<^^generic>();
+```
+
+Note that you can also pass in the `AutoHandleDefault` and `RC` parameters used by `GetFuncDecl()`. You will not need to mess around with `RC` 99.9% of the time, but `AutoHandleDefault` is usually populated with the `EngineOptions::AutoHandleDefault` option when it is used within `Engine::RegisterGlobalFunction()`, so the best approach would be to define the `EngineOptions` constexpr struct separately and use its value in all calls to `as::Generic<>()`, instead of giving the options to your `Engine` instance in-place.
+
 #### `GetFuncDecl()`
 
 The mechanism behind function declaration generation can be found in this template function. Here are tables describing how it converts C++ parameters to AngelScript equivalents. Keep in mind that C++ types are by default values types: they must be annotated with [`RefType`](#reftype-annotation) to be considered reference types.

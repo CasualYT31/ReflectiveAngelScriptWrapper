@@ -64,6 +64,19 @@ template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr 
 template <std::meta::info F, bool AutoHandleDefault = false, bool RC = false> constexpr std::string_view GetFuncDecl();
 
 /**
+ * Version of the Generic() helper function that generates an AngelScript function declaration for a generic call
+ * convention function from a C++ function declaration.
+ * @tparam F The std::meta::info object of the function you want to generate the declaration of. Note that the name of
+ *         the generic function will become whatever you named this function!
+ * @tparam AutoHandleDefault Passed directly to GetFuncDecl().
+ * @tparam RC Passed directly to GetFuncDecl().
+ * @return The generic call convention annotation to attach to the actual function you want to register.
+ */
+template <std::meta::info F, bool AutoHandleDefault = false, bool RC = false> inline consteval GenericWithDecl Generic() {
+    return GenericWithDecl{ std::define_static_string(GetFuncDecl<F, AutoHandleDefault, RC>()) };
+}
+
+/**
  * Helper function that resolves overload sets.
  * You cannot currently take the reflection of functions or methods that are overloaded directly. Developers will need
  * to explicitly provide the return type and parameters of a function to this function so it can iterate over the

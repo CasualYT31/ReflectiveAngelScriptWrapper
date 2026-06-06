@@ -539,3 +539,25 @@ TEST(AngelScriptEngineGlobalFunctions, VariableParameterTypeWithReferenceType) {
     ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "TestRefType p; return getTypeId(p);", &res, 4), 0);
     EXPECT_DOUBLE_EQ(res, expectedTypeId);
 }
+
+std::uint64_t getSizeGen(AS_NAMESPACE_QUALIFIER CScriptArray* arr[[ = as::subtype::Double, = as::Auto ]]);
+
+void getSizeGenImpl[[= as::Generic<^^getSizeGen>()]](AS_NAMESPACE_QUALIFIER asIScriptGeneric* s) {
+    s->SetReturnQWord(100);
+}
+
+TEST(AngelScriptEngineGlobalFunctions, ExplicitGenericWithGetFuncDecl) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
+
+    AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
+    ASSERT_GE(engine.RegisterGlobalFunction<^^getSizeGenImpl>(callConv), 0);
+    ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
+
+    std::uint64_t res = 0;
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "array<double> test; return getSizeGen(test);", &res, 9), 0
+    );
+    EXPECT_EQ(res, 100);
+}
