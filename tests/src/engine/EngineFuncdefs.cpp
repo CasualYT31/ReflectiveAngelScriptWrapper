@@ -15,7 +15,6 @@ AS_NAMESPACE_QUALIFIER asIScriptFunction* getFunc[[= as::Funcdef(^^getSize)]](
 TEST(AngelScriptEngineFuncdefs, RegistrationAndTypenameGeneration) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
     AS_NAMESPACE_QUALIFIER RegisterScriptArray(engine.Ptr(), false);
 
     ASSERT_GE(engine.RegisterFuncdef<^^getSize>(), 0);

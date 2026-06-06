@@ -166,6 +166,18 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      */
     template <std::meta::info F> int RegisterFuncdef();
 
+    // MARK: Typedefs
+
+    /**
+     * Registers a typedef for use in the scripts within this engine.
+     * Make sure to pass the typedef you intend! The typedef will be recursively dealiased to find the type you intend
+     * to register the typedef with, but the name of the typedef will be based on the _first_ alias in the chain (and
+     * whether it has a Rename annotation attached to it or not).
+     * @tparam T A reflection of the typedef to register.
+     * @return The result of the registration.
+     */
+    template <std::meta::info T> int RegisterTypedef();
+
     // MARK: Object Types
 
     // template <std::meta::info T> int RegisterObjectType();

@@ -51,6 +51,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/engine/EngineGlobalProperties.cpp"
     "src/engine/EngineGlobalFunctions.cpp"
     "src/engine/EngineFuncdefs.cpp"
+    "src/engine/EngineTypedefs.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

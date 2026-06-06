@@ -98,28 +98,15 @@ template <EngineOptions Opts> template <std::meta::info F> int Engine<Opts>::Reg
     return Ptr()->RegisterFuncdef(decl.data());
 }
 
-/*
-First, we need a way for the developer to either set CDECL or STDCALL as the default call convention.
-We could define this via a template parameter on Engine but that feels wrong.
-I think setting this at runtime will suffice.
-
-Then, we introduce CDECL and STDCALL annotations on functions. If these are given explicitly,
-then Engine will usually endeavour to use them, no matter what the default is.
-
-We can always detect the generic call convention if return is void and the only parameter is asIScriptGeneric*.
-If a function has this convention (besides non-static class members, due to this pointer), then ALWAYS use generic,
-even if specified otherwise via annotations.
-
-THISCALL is simple: non-static class member? Yes, and ignore any CDECL/STDCALL annotation. Otherwise no.
-THISCALL_ASGLOBAL when RegisterGlobalFunction is being used.
-
-Only difficult situation is the _OBJFIRST and _OBJLAST variants. There is no way for us to reliably tell
-what the developer intends, even with reflection. E.g. what if a function both starts and ends with an object
-of the same type, how does it know which is intended to be the _OBJ? For these cases we will need to resort to
-annotations again: as::ObjFirst and as::ObjLast. They are call convention agnostic and will be applied if
-the call convention is decided to be CDECL or THISCALL. They will be ignored if STDCALL is decided, though
-it is worth noting that support for it is possible, just not added.
-*/
+template <EngineOptions Opts> template <std::meta::info T> int Engine<Opts>::RegisterTypedef() {
+    if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
+    constexpr auto typedefName = GetIdentifierOf<T>();
+    // Since AngelScript only supports primitive types here, we don't need to worry about SubTypeLists or other complex
+    // annotations or types.
+    using DealiasedT = typename[:std::meta::dealias(T):];
+    constexpr auto typedefDecl = TypeName<DealiasedT>;
+    return Ptr()->RegisterTypedef(typedefName.data(), typedefDecl.data());
+}
 
 // template <std::meta::info T> int Engine::RegisterObjectType() {
 //     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }

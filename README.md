@@ -38,6 +38,7 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
     - [`asIScriptFunction` Pointers and the `Funcdef` Annotation](/readmes/5-FUNCDEFS.md#asiscriptfunction-pointers-and-the-funcdef-annotation)
 6. [Types](/readmes/6-TYPES.md)
     - [`RefType` Annotation](/readmes/6-TYPES.md#reftype-annotation)
+7. [Typedefs](/readmes/7-TYPEDEFS.md)
 
 ## GCC 16.1.0
 

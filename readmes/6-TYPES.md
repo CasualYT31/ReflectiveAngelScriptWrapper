@@ -1,6 +1,6 @@
 # Types
 
-TODO: write once implementation is finished. But before that, I should transfer the entire Examples section to a Wiki.
+TODO: write once implementation is finished.
 
 ## `RefType` Annotation
 
@@ -13,4 +13,5 @@ C++ types are by default registered as value types. If you want to register a ty
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
+    <a href="7-TYPEDEFS.md">► 7. Typedefs</a>
 </div>
