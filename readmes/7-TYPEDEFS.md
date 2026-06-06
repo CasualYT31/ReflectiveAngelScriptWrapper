@@ -38,8 +38,6 @@ pEngine->RegisterTypedef("MyRename", "bool");
 
 The `decl` parameter that is given to the underlying `RegisterTypedef()` call will be the recursively dealiased type's AngelScript-equivalent typename. The typedef's name in the application interface will _only_ be based on the first typedef in the chain, as you can see above.
 
-[^1]: Reminder that [AngelScript only supports registering typedefs for primitive types](https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#addb24466769dc52be96c7e37d5305245).
-
 ---
 
 <div align="center">
@@ -48,3 +46,5 @@ The `decl` parameter that is given to the underlying `RegisterTypedef()` call wi
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
 </div>
+
+[^1]: Reminder that [AngelScript only supports registering typedefs for primitive types](https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#addb24466769dc52be96c7e37d5305245).
