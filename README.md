@@ -39,6 +39,7 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
 6. [Types](/readmes/6-TYPES.md)
     - [`RefType` Annotation](/readmes/6-TYPES.md#reftype-annotation)
 7. [Typedefs](/readmes/7-TYPEDEFS.md)
+8. [Enums](/readmes/8-ENUMS.md)
 
 ## GCC 16.1.0
 

@@ -56,5 +56,5 @@ pEngine->RegisterGlobalFunction(
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="6-TYPES.md">► 6. Types</a>
+    <a href="6-TYPES.md">6. Types ►</a>
 </div>

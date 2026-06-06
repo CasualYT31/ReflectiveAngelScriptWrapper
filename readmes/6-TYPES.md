@@ -13,5 +13,5 @@ C++ types are by default registered as value types. If you want to register a ty
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="7-TYPEDEFS.md">► 7. Typedefs</a>
+    <a href="7-TYPEDEFS.md">7. Typedefs ►</a>
 </div>

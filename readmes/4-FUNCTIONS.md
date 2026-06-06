@@ -245,5 +245,5 @@ These are "supported," although since they both require the generic call convent
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="5-FUNCDEFS.md">► 5. Funcdefs</a>
+    <a href="5-FUNCDEFS.md">5. Funcdefs ►</a>
 </div>

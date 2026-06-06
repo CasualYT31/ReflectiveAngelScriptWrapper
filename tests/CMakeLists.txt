@@ -52,6 +52,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/engine/EngineGlobalFunctions.cpp"
     "src/engine/EngineFuncdefs.cpp"
     "src/engine/EngineTypedefs.cpp"
+    "src/engine/EngineEnums.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

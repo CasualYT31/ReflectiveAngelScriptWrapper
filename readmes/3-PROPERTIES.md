@@ -74,5 +74,5 @@ pEngine->RegisterGlobalProperty("float nonConstCounter", &nonConstCounter);
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="4-FUNCTIONS.md">► 4. Functions</a>
+    <a href="4-FUNCTIONS.md">4. Functions ►</a>
 </div>

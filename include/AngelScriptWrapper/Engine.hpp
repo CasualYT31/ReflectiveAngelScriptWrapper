@@ -178,6 +178,17 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      */
     template <std::meta::info T> int RegisterTypedef();
 
+    // MARK: Enums
+
+    /**
+     * Registers an enum and all of its values for use in the scripts within this engine.
+     * Note that each value of the given enum will be cast to an int as this is the type AngelScript expects. Also note
+     * that you can rename the enum, as well as individual values, with the Rename annotation.
+     * @tparam E A reflection of the enum to register.
+     * @return The type ID of the enum on success, or the first error code encountered on failure.
+     */
+    template <std::meta::info E> int RegisterEnum();
+
     // MARK: Object Types
 
     // template <std::meta::info T> int RegisterObjectType();

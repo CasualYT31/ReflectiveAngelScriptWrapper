@@ -108,6 +108,21 @@ template <EngineOptions Opts> template <std::meta::info T> int Engine<Opts>::Reg
     return Ptr()->RegisterTypedef(typedefName.data(), typedefDecl.data());
 }
 
+template <EngineOptions Opts> template <std::meta::info E> int Engine<Opts>::RegisterEnum() {
+    if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
+    constexpr auto enumName = GetIdentifierOf<E>();
+    static constexpr auto values = std::define_static_array(std::meta::enumerators_of(E));
+
+    const auto typeId = Ptr()->RegisterEnum(enumName.data());
+
+    template for (constexpr auto v : values) {
+        const auto r = Ptr()->RegisterEnumValue(enumName.data(), GetIdentifierOf<v>().data(), static_cast<int>([:v:]));
+        if (r < 0) { return r; }
+    }
+
+    return typeId;
+}
+
 // template <std::meta::info T> int Engine::RegisterObjectType() {
 //     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
 //     using type = [:T:];

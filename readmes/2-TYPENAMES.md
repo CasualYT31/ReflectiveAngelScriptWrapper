@@ -61,5 +61,5 @@ Again, since the subtypes of template types are known only at runtime, you need 
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="3-PROPERTIES.md">► 3. Properties</a>
+    <a href="3-PROPERTIES.md">3. Properties ►</a>
 </div>
