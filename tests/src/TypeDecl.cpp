@@ -111,3 +111,15 @@ STATIC_ASSERT_EQ(as::GetIdentifierOf<^^C>(), "CNamed");
 STATIC_ASSERT_EQ(as::TypeName<A>, "AClass");
 STATIC_ASSERT_EQ(as::TypeName<B>, "BClass");
 STATIC_ASSERT_EQ(as::TypeName<C>, "CNamed");
+
+int myFuncDef();
+
+static AS_NAMESPACE_QUALIFIER asIScriptFunction* funcdefHandle[[= as::Funcdef(^^myFuncDef)]];
+static AS_NAMESPACE_QUALIFIER asIScriptFunction* const constFuncdefHandle[[= as::Funcdef(^^myFuncDef)]] = nullptr;
+
+STATIC_ASSERT_EQ(as::TypeOf<^^funcdefHandle>, "myFuncDef@");
+STATIC_ASSERT_EQ(as::TypeOf<^^constFuncdefHandle>, "myFuncDef@ const");
+// clang-format off
+STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptFunction* COMMA ^^funcdefHandle>, "myFuncDef@");
+STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptFunction* const COMMA ^^constFuncdefHandle>, "myFuncDef@ const");
+// clang-format on

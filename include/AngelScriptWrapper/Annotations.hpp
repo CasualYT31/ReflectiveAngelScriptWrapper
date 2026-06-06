@@ -320,6 +320,19 @@ enum class GenericCallConvType {
      */
     WrapObjLast,
 };
+
+// MARK: Funcdefs
+
+/**
+ * Annotations attached to asIScriptFunction or asIScriptFUnction* objects that tells the library which funcdef it
+ * should use.
+ */
+struct Funcdef {
+    /**
+     * A reflection of the C++ function declaration to pull the funcdef name from.
+     */
+    const std::meta::info funcdef;
+};
 } // namespace as
 
 #include <AngelScriptWrapper/Annotations.tpp>

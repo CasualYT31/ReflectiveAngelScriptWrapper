@@ -151,21 +151,42 @@ template <std::meta::info I> consteval SubTypes GetSubTypes() {
     return subTypesAnnotation ? *subTypesAnnotation : SubTypes{};
 }
 
-template <std::meta::info I> consteval std::string_view GetTypeDecl() {
-    // First, extract the subtypes assigned to the template type of the given variable/function/parameter/etc.
-    constexpr SubTypes subTypes = GetSubTypes<I>();
+template <std::meta::info T> constexpr bool IsFuncdefHandle() {
+    return T == ^^AS_NAMESPACE_QUALIFIER asIScriptFunction* || T == ^^AS_NAMESPACE_QUALIFIER asIScriptFunction* const;
+}
 
-    // Next, figure out which type we should work with.
+template <std::meta::info T, std::meta::info I> consteval std::string_view GetFuncdef() {
+    constexpr auto funcdef = ExtractAnnotation<I, Funcdef>();
+    static_assert(funcdef, "asIScriptFunction* object or parameter was not given a Funcdef annotation");
+    std::string r = std::string(std::meta::identifier_of(funcdef->funcdef)) + "@";
+    if constexpr (std::meta::is_const(T)) { r += " const"; }
+    return std::define_static_string(r);
+}
+
+template <std::meta::info I> consteval std::string_view GetTypeDecl() {
+    // Figure out which type we should work with.
     // If I reflects a function, use its return type.
     // Otherwise use type_of().
     constexpr auto baseType = std::meta::is_function(I) ? std::meta::return_type_of(I) : std::meta::type_of(I);
 
-    // Finally, defer the rest of the type declaration generation to the other template function.
-    return GetTypeDecl<typename[:baseType:], subTypes>();
+    if constexpr (IsFuncdefHandle<baseType>()) {
+        // If the base type is asIScriptFunction, then use its attached funcdef name.
+        return GetFuncdef<baseType, I>();
+    } else {
+        // Extract the subtypes assigned to the template type of the given variable/function/parameter/etc.
+        constexpr SubTypes subTypes = GetSubTypes<I>();
+
+        // Finally, defer the rest of the type declaration generation to the other template function.
+        return GetTypeDecl<typename[:baseType:], subTypes>();
+    }
 }
 
 template <typename T, std::meta::info I> consteval std::string_view GetTypeDecl() {
-    return GetTypeDecl<T, GetSubTypes<I>()>();
+    if constexpr (IsFuncdefHandle<^^T>()) {
+        return GetFuncdef<^^T, I>();
+    } else {
+        return GetTypeDecl<T, GetSubTypes<I>()>();
+    }
 }
 }; // namespace detail
 
