@@ -67,7 +67,7 @@ pEngine->Release();
 
 <div align="center">
     &emsp;&emsp;
-    <a href="/README.md#table-of-contents">• Back to Contents</a>
+    <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
     <a href="2-TYPENAMES.md">► 2. Typenames</a>
 </div>
