@@ -8,6 +8,7 @@
 #include <angelscript.h>
 #include <AngelScriptWrapper/Annotations.hpp>
 #include <AngelScriptWrapper/Concepts.hpp>
+#include <AngelScriptWrapper/StructuralSpan.hpp>
 #include <cstdint>
 #include <meta>
 #include <ranges>
@@ -70,6 +71,53 @@ template <std::meta::info I> constexpr std::string_view TypeOf = detail::GetType
  * @return "@" or "@ const" if the given type has been annotated with RefType, "&" otherwise.
  */
 template <typename T, bool C = false> constexpr std::string_view GetRefType();
+
+/**
+ * The result of a call to GetClassHierarchy().
+ */
+struct ClassMembers {
+    /**
+     * A reflection of the type whose members are stored in this struct.
+     */
+    std::meta::info type;
+
+    /**
+     * The base classes, both direct and indirect, of type, if any.
+     */
+    const StructuralSpan<const std::meta::info> bases;
+
+    /**
+     * The members of type.
+     * Check the documentation on GetClassHierarchy() to see which members will be
+     */
+    const StructuralSpan<const std::meta::info> members;
+};
+
+/**
+ * Retrieves the direct and inherited public members, and the direct and indirect bases, of a given class.
+ * There are a variety of members this function will not include in the result:
+ * - Any private or protected members.
+ * - Any members of base classes with protected or private inheritance.
+ * - Any constructors.
+ * - Any destructors.
+ * - Any special member functions.
+ * - Any embedded types.
+ * - Any members that do not have an identifier, <em>except for</em> operator functions.
+ *
+ * Though the order of the results is defined (e.g. members are always stored in declaration order, with special member
+ * functions coming last), you should not rely on it. In a similar fashion, you should not rely on each instance of
+ * std::meta::info within the members field belonging to a certain class. You can only rely on the fact that members can
+ * be accessed via type.
+ *
+ * This function does not distinguish between different versions of overridden members (this includes fields, so don't
+ * override those!): it will simply return the first version found. It does, however, include all function overloads.
+ * @tparam C The reflection of the class you wish to traverse.
+ * @param recurse By default, only the given class is traversed. If true is given, however, each separate base class
+ *        will also be traversed in the same manner.
+ * @return C's information will be stored in the first element of the span always. Further elements will be added
+ *         depending on the value of recurse.
+ */
+template <std::meta::info C> consteval StructuralSpan<const ClassMembers> GetClassHierarchy(const bool recurse = false);
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>

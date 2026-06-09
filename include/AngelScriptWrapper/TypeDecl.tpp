@@ -1,5 +1,7 @@
 #pragma once
 
+#include <algorithm>
+
 BEGIN_AS_NAMESPACE
 
 class CDateTime;
@@ -190,6 +192,93 @@ template <typename T, std::meta::info I> consteval std::string_view GetTypeDecl(
         return GetTypeDecl<T, GetSubTypes<I>()>();
     }
 }
+
+struct ClassMembers {
+    std::meta::info type;
+
+    std::vector<std::meta::info> bases;
+
+    std::vector<std::meta::info> members;
+
+    std::vector<std::string> memberIdentifiers;
+};
+
+template <std::meta::info M> consteval std::string GetUniqueIdentifierOfMember() {
+    if constexpr (std::meta::has_identifier(M)) {
+        return std::string(std::meta::identifier_of(M));
+    } else if constexpr (std::meta::is_operator_function(M)) {
+        auto ds = std::string(std::meta::display_string_of(M));
+        ds = ds.substr(0, ds.find('('));
+        ds = ds.substr(ds.find("operator"));
+        // operator() will appear as just operator, this is fine for this function's purposes.
+        return ds;
+    } else {
+        return "";
+    }
+}
+
+template <std::meta::info M> consteval std::string GetUniqueSignatureOfMember() {
+    std::string ret = "";
+    ret += GetUniqueIdentifierOfMember<M>();
+    if (std::meta::is_function(M)) {
+        const auto params = std::meta::parameters_of(M);
+        for (std::size_t i = 0; i < params.size(); ++i) {
+            ret += std::string(std::meta::display_string_of(std::meta::type_of(params[i])));
+        }
+        if (std::meta::is_const(M)) { ret += "const"; }
+    }
+    return ret;
+}
+
+template <std::meta::info C>
+consteval bool FindMembersOf(detail::ClassMembers& members, std::vector<std::meta::info>& visited) {
+    for (auto v : visited) {
+        if (v == C) { return false; }
+    }
+    visited.push_back(C);
+
+    template for (constexpr auto m :
+                  std::define_static_array(std::meta::members_of(C, std::meta::access_context::current()))) {
+        if constexpr (!std::meta::is_special_member_function(m) && !std::meta::is_constructor(m)
+                      && !std::meta::is_destructor(m) && !std::meta::is_type(m)) {
+            const auto id = GetUniqueSignatureOfMember<m>();
+            if (!id.empty() && !std::ranges::contains(members.memberIdentifiers, id)) {
+                members.members.push_back(m);
+                members.memberIdentifiers.push_back(id);
+            }
+        }
+    }
+
+    template for (constexpr auto b :
+                  std::define_static_array(std::meta::bases_of(C, std::meta::access_context::current()))) {
+        constexpr auto bType = std::meta::type_of(b);
+        if (FindMembersOf<bType>(members, visited)) { members.bases.push_back(bType); }
+    }
+
+    return true;
+}
+
+template <std::meta::info C>
+consteval void FindMembersRecursiveOf(
+    std::vector<detail::ClassMembers>& classes, std::vector<std::meta::info>& visited, const bool recurse
+) {
+    for (auto v : visited) {
+        if (v == C) { return; }
+    }
+    visited.push_back(C);
+
+    classes.emplace_back(C);
+    std::vector<std::meta::info> visitedInner;
+    detail::FindMembersOf<C>(classes.back(), visitedInner);
+
+    if (recurse) {
+        template for (constexpr auto b :
+                      std::define_static_array(std::meta::bases_of(C, std::meta::access_context::current()))) {
+            constexpr auto bType = std::meta::type_of(b);
+            FindMembersRecursiveOf<bType>(classes, visited, recurse);
+        }
+    }
+}
 }; // namespace detail
 
 template <typename T, bool C> constexpr std::string_view GetRefType() {
@@ -202,5 +291,17 @@ template <typename T, bool C> constexpr std::string_view GetRefType() {
     } else {
         return "&";
     }
+}
+
+template <std::meta::info C> consteval StructuralSpan<const ClassMembers> GetClassHierarchy(const bool recurse) {
+    std::vector<detail::ClassMembers> ret;
+    std::vector<std::meta::info> visited;
+    detail::FindMembersRecursiveOf<C>(ret, visited, recurse);
+
+    std::vector<ClassMembers> staticRet;
+    for (const auto r : ret) {
+        staticRet.emplace_back(r.type, std::define_static_array(r.bases), std::define_static_array(r.members));
+    }
+    return std::define_static_array(staticRet);
 }
 } // namespace as
