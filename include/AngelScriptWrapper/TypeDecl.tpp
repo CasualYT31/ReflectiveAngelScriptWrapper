@@ -158,8 +158,6 @@ template <std::meta::info T> constexpr bool IsFuncdefHandle() {
 }
 
 template <std::meta::info T, std::meta::info I> consteval std::string_view GetFuncdef() {
-    // TODO: support scoped funcdefs, i.e. if the given function declaration is within a class, scope it to that class:
-    //       https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#a03c1a2cc23ae4b742c927f3472a1a4f7.
     constexpr auto funcdef = ExtractAnnotation<I, Funcdef>();
     static_assert(funcdef, "asIScriptFunction* object or parameter was not given a Funcdef annotation");
     std::string r = std::string(std::meta::identifier_of(funcdef->funcdef)) + "@";

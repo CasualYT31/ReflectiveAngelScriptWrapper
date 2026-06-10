@@ -144,6 +144,123 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
     return r;
 }
 
+/* Prerequisites TODO list:
+1. Have ObjFirst or ObjLast default engine setting.
+*/
+
+/* Reference types TODO list:
+1. Factory function, default and custom.
+2. Factory functions with auxiliary objects.
+3. List factory functions (see point 3 under value types).
+4. AddRef and Release behaviours, including asOBJ_NOCOUNT.
+5. Support scoped reference types that only have Release behaviour. ScopedReferenceType.hpp.
+    a. https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_scoped_type.html
+       These types have their own weird @ and &in/&out behaviour... Might need to make this a special type like
+       as::RefType.
+6. Support asOBJ_NOHANDLE. No factory, addref or release behaviours.
+7. Support inheritance. Automatically add opCast and opImplCast methods. Make it work across multiple levels of the
+   hierarchy.
+8. Support weak refs.
+*/
+
+/* Value types TODO list:
+1. Tell the difference between a POD type and a non-POD type.
+2. Figure out how constructors and destructors will work (similarly to factory functions probably).
+3. Figure out how list constructors will work (want to minimize manually writing out the pattern as much as possible).
+4. Use asGetTypeTraits().
+5. asOBJ_APP_CLASS_MORE_CONSTRUCTORS.
+6. asOBJ_APP_CLASS_ALLINTS.
+7. asOBJ_APP_CLASS_ALLFLOATS.
+8. asOBJ_APP_CLASS_ALIGN8. How can I tell if a class may require 8byte alignment??
+9. asOBJ_APP_CLASS_UNION. How would I even register a class that uses unions?
+*/
+
+/* Operators TODO list:
+1. Create a mapping from display_string_of() to AngelScript op method names.
+2. Support both static and non-static operators so long as they are within the class's scope.
+3. Do we want to ignore special member functions?
+4. Refer to Claude notes below on getting the correct method pointer.
+*/
+
+/* Methods TODO list:
+1. Ignore non-public, static, and pure virtual methods, along with constructors and destructors.
+2. Do we support composite members? Inclination is to ignore this for now, but it might be useful.
+3. Detect property accessors, i.e. get_XYZ and set_XYZ methods, and append "property" to the declaration.
+*/
+
+/* Properties TODO list:
+1. Public properties only.
+2. Supporting pointer properties. They require special & syntax, regardless of ref or value type?
+3. Ignore composite members.
+*/
+
+/* Garbage-collected types TODO list:
+1. Implement GarbageCollectedReferenceType.hpp ...
+2. ... and GarbageCollectedValueType.hpp abstract classes.
+3. Detect presence of garbage collection-related methods/functions and apply asOBJ_GC flag, etc.
+*/
+
+/* Template types TODO list:
+1. Factory (ref) and constructor (value) hidden parameter: map asITypeInfo* to int&in.
+2. Support 1 for list factories/constructors, too.
+3. if_handle_then_const.
+4. asBEHAVE_TEMPLATE_CALLBACK behaviour.
+5. Template specializations.
+*/
+
+/* Scoped funcdefs TODO list:
+1. Support scoped funcdefs, i.e. if the given function declaration is within a class, scope it to that class:
+   https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#a03c1a2cc23ae4b742c927f3472a1a4f7.
+2. Support scoped funcdefs for template types.
+*/
+
+/* Claude on getting member pointers & offsets in relation to e.g. MyDerived:
+This is a tricky one because the reflection system gives you members as they were originally declared — an inherited method's
+reflection will always refer to the base class it was declared in, so splicing it directly always gives you the base class
+pointer.
+
+The key insight is that you don't actually need the address relative to the derived class for methods — what AngelScript
+needs is a method pointer that works correctly when called on the derived class, and a base class method pointer already
+satisfies that via normal C++ virtual dispatch and implicit pointer conversion. So `&[:BaseClass::MyInheritedMethod:]` cast
+to a `BaseClass` method pointer, then registered against `GivenClass`, should work correctly.
+
+However if you do need the derived class pointer explicitly — for example for non-virtual methods where AngelScript needs the
+correct `this` pointer adjustment — the approach is to use the type from `GetClassHierarchy` to form the cast explicitly:
+
+```cpp
+consteval auto MemberPtrFor(std::meta::info givenClass, std::meta::info member) {
+    // If the member is declared in givenClass, splice directly
+    if (std::meta::parent_of(member) == givenClass)
+        return &[: member :];
+
+    // Otherwise cast the base class pointer to the given class
+    // by forming the correct pointer-to-member type
+    using GivenType = [: givenClass :];
+    using RetType   = [: std::meta::return_type_of(member) :];
+    return static_cast<RetType (GivenType::*)(
+        [: std::meta::type_of(p) :] ... [: std::meta::parameters_of(member) :]
+    )>(&[: member :]);
+}
+```
+
+The cast is safe because `GivenClass` inherits from `BaseClass`, so a pointer-to-member of `BaseClass` is implicitly
+convertible to a pointer-to-member of `GivenClass` — this is the contravariant pointer-to-member conversion rule in C++, and
+it's exactly what AngelScript needs to call the method on a `GivenClass` instance.
+
+For **data members** (properties) rather than methods, `offsetof` or `std::meta::offset_of` is the right tool — it gives you
+the byte offset of the member relative to any class in the hierarchy, and AngelScript's property registration typically takes
+an offset rather than a pointer anyway:
+
+```cpp
+consteval std::size_t OffsetOf(std::meta::info givenClass, std::meta::info member) {
+    return std::meta::offset_of(member); // offset is absolute, works regardless of which class declared it
+}
+```
+
+So the short answer is: for methods, use the contravariant pointer-to-member cast; for properties, use `offset_of` which is
+already class-agnostic.
+*/
+
 // template <std::meta::info T> int Engine::RegisterObjectType() {
 //     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
 //     using type = [:T:];
