@@ -40,6 +40,12 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
     - [`RefType` Annotation](/readmes/6-TYPES.md#reftype-annotation)
 7. [Typedefs](/readmes/7-TYPEDEFS.md)
 8. [Enums](/readmes/8-ENUMS.md)
+9. [Interfaces](/readmes/9-INTERFACES.md)
+    - [`Engine::RegisterInterface()`](/readmes/9-INTERFACES.md#engineregisterinterface)
+        - [Interface Inheritance](/readmes/9-INTERFACES.md#interface-inheritance)
+        - [Multiple Inheritance](/readmes/9-INTERFACES.md#multiple-inheritance)
+        - [What's Registered](/readmes/9-INTERFACES.md#whats-registered)
+        - [C++ Namespaces Are Ignored](/readmes/9-INTERFACES.md#c-namespaces-are-ignored)
 
 ## GCC 16.1.0
 

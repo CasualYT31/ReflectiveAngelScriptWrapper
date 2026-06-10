@@ -167,13 +167,28 @@ template <std::meta::info T, std::meta::info I> consteval std::string_view GetFu
     return std::define_static_string(r);
 }
 
+template <std::meta::info T> constexpr bool IsObjectHandle() {
+    return T == ^^AS_NAMESPACE_QUALIFIER asIScriptObject* || T == ^^AS_NAMESPACE_QUALIFIER asIScriptObject* const;
+}
+
+template <std::meta::info T, std::meta::info I> consteval std::string_view GetInterface() {
+    constexpr auto interface = ExtractAnnotation<I, Interface>();
+    static_assert(interface, "asIScriptObject* object or parameter was not given an Interface annotation");
+    std::string r = std::string(std::meta::identifier_of(interface->interface)) + "@";
+    if constexpr (std::meta::is_const(T)) { r += " const"; }
+    return std::define_static_string(r);
+}
+
 template <std::meta::info I> consteval std::string_view GetTypeDecl() {
     // Figure out which type we should work with.
     // If I reflects a function, use its return type.
     // Otherwise use type_of().
     constexpr auto baseType = std::meta::is_function(I) ? std::meta::return_type_of(I) : std::meta::type_of(I);
 
-    if constexpr (IsFuncdefHandle<baseType>()) {
+    if constexpr (IsObjectHandle<baseType>()) {
+        // If the base type is asIScriptObject, then use its attached interface name.
+        return GetInterface<baseType, I>();
+    } else if constexpr (IsFuncdefHandle<baseType>()) {
         // If the base type is asIScriptFunction, then use its attached funcdef name.
         return GetFuncdef<baseType, I>();
     } else {
@@ -186,7 +201,9 @@ template <std::meta::info I> consteval std::string_view GetTypeDecl() {
 }
 
 template <typename T, std::meta::info I> consteval std::string_view GetTypeDecl() {
-    if constexpr (IsFuncdefHandle<^^T>()) {
+    if constexpr (IsObjectHandle<^^T>()) {
+        return GetInterface<^^T, I>();
+    } else if constexpr (IsFuncdefHandle<^^T>()) {
         return GetFuncdef<^^T, I>();
     } else {
         return GetTypeDecl<T, GetSubTypes<I>()>();

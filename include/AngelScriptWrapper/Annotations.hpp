@@ -325,7 +325,7 @@ enum class GenericCallConvType {
 // MARK: Funcdefs
 
 /**
- * Annotations attached to asIScriptFunction or asIScriptFUnction* objects that tells the library which funcdef it
+ * Annotations attached to asIScriptFunction or asIScriptFunction* objects that tells the library which funcdef it
  * should use.
  */
 struct Funcdef {
@@ -333,6 +333,19 @@ struct Funcdef {
      * A reflection of the C++ function declaration to pull the funcdef name from.
      */
     const std::meta::info funcdef;
+};
+
+// MARK: Interfaces
+
+/**
+ * Annotations attached to asIScriptObject or asIScriptObject* objects that tells the library which interface it is
+ * expected to implement.
+ */
+struct Interface {
+    /**
+     * A reflection of the C++ interface to pull the interface name from.
+     */
+    const std::meta::info interface;
 };
 } // namespace as
 

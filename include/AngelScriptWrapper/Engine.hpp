@@ -201,7 +201,7 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      * interface in the same way by setting R to true.
      *
      * Multiple methods that share the same name and signature inherited from different classes using multiple
-     * inheritance will be merged into one method in the registered interface.
+     * inheritance will be ignored in favour of the first method found in the registered interface.
      * @warning This function will not take C++ namespaces into account. If more than one class in I's inheritance chain
      *          has the same identifier, you will need to rename one or more of them using as::Name() to avoid an error
      *          code of asALREADY_REGISTERED.

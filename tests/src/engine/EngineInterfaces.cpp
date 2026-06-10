@@ -51,6 +51,38 @@ struct Basic {
 };
 } // namespace original
 
+int interfaceTest(AS_NAMESPACE_QUALIFIER asIScriptObject* const scriptObject[[= as::Interface(^^original::Basic)]]) {
+    if (const auto asType = scriptObject->GetObjectType()) {
+        if (const auto func = asType->GetMethodByDecl(as::GetFuncDecl<^^original::Basic::getNumber>().data())) {
+            if (const auto engine = func->GetEngine()) {
+                if (const auto ctx = engine->CreateContext()) {
+                    if (ctx->Prepare(func) >= 0) {
+                        if (ctx->SetObject(scriptObject) >= 0) {
+                            if (ctx->Execute() == AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED) {
+                                return static_cast<int>(ctx->GetReturnDWord());
+                            } else {
+                                return -7;
+                            }
+                        } else {
+                            return -6;
+                        }
+                    } else {
+                        return -5;
+                    }
+                } else {
+                    return -4;
+                }
+            } else {
+                return -3;
+            }
+        } else {
+            return -2;
+        }
+    } else {
+        return -1;
+    }
+}
+
 TEST(AngelScriptEngineInterfaces, RegisterBasicInterface) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
@@ -61,6 +93,8 @@ TEST(AngelScriptEngineInterfaces, RegisterBasicInterface) {
     ASSERT_GE((engine.RegisterInterface<^^original::Basic>()), 0);
 
     EXPECT_EQ(engine.Ptr()->RegisterInterface("Basic"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
+
+    ASSERT_GE(engine.RegisterGlobalFunction<^^interfaceTest>(), 0);
 
     AS_NAMESPACE_QUALIFIER asIScriptModule* mod = engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
     ASSERT_TRUE(mod);
@@ -81,6 +115,7 @@ TEST(AngelScriptEngineInterfaces, RegisterBasicInterface) {
             "test.as",
             "class MyImpl : Basic { int getNumber() { return 6; } }"
             "int main() { MyImpl test; return test.getNumber(); }"
+            "int scriptInterfaceTest() { MyImpl test; return interfaceTest(test); }"
         ),
         0
     );
@@ -97,8 +132,18 @@ TEST(AngelScriptEngineInterfaces, RegisterBasicInterface) {
 
     ASSERT_EQ(ctx->Execute(), AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED);
 
-    const auto res = static_cast<int>(ctx->GetReturnDWord());
-    EXPECT_EQ(res, 6);
+    const auto res1 = static_cast<int>(ctx->GetReturnDWord());
+    EXPECT_EQ(res1, 6);
+
+    func = mod->GetFunctionByDecl("int scriptInterfaceTest()");
+    ASSERT_TRUE(func);
+
+    ASSERT_GE(ctx->Prepare(func), 0);
+
+    ASSERT_EQ(ctx->Execute(), AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED);
+
+    const auto res2 = static_cast<int>(ctx->GetReturnDWord());
+    EXPECT_EQ(res2, 6);
 }
 
 struct Extended : original::Basic {

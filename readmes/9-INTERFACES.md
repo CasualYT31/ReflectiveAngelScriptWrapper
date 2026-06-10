@@ -1,0 +1,201 @@
+# Interfaces
+
+You can register interfaces to the application interface by simply providing a C++ equivalent to the `Engine::RegisterInterface()` template method.
+
+## `Engine::RegisterInterface()`
+
+Here is a simple example of registering an interface:
+
+```cpp
+struct MyInterface[[=as::Name("Renamed")]] {
+    virtual void myMethod() = 0;
+    virtual std::string generateString(int) const = 0;
+    virtual std::uint64_t getSize(CScriptArray const* arr[[=as::subtype::Int32]]) const = 0;
+};
+
+engine->RegisterInterface<^^MyInterface>();
+
+// ... is equivalent to ...
+
+pEngine->RegisterInterface("Renamed");
+pEngine->RegisterInterfaceMethod("Renamed", "void myMethod()");
+pEngine->RegisterInterfaceMethod("Renamed", "string generateString(int32) const");
+pEngine->RegisterInterfaceMethod("Renamed", "uint64 getSize(const array<int32>@) const");
+```
+
+Unfortunately, since interfaces are purely AngelScript constructs and cannot be directly mapped back to the C++ interface, you can't use the interface class when writing e.g. parameters for global functions, you instead need to use the `Interface` annotation:
+
+```cpp
+void functionThatAcceptsScriptObject(asIScriptObject* objThatImplementsMyInterface[[=as::Interface(^^MyInterface)]]) {
+    // Call e.g. objThatImplementsMyInterface.myMethod() in the usual AngelScript fashion.
+    // TODO: this fashion is very arduous! It might be nice to write template helper functions for this...
+}
+```
+
+Then the library knows that you intend to receive an object from the scripts that is of a type—entirely defined within the scripts—that implements your interface.
+
+### Interface Inheritance
+
+But what about an interface hierarchy like this?
+
+```cpp
+struct InterfaceA {
+    virtual void methodA() = 0;
+};
+
+struct InterfaceB : InterfaceA {
+    virtual void methodB() = 0;
+}
+
+struct InterfaceC: InterfaceB {
+    virtual void methodC() = 0;
+}
+```
+
+What happens when you call `Engine::RegisterInterface<^^InterfaceC>()`?
+
+When registered, `InterfaceC` will include all inherited methods for you. Not only that, but by default, `RegisterInterface()` will also recursively register each base interface as a separate interface! So the above call registers the same interfaces as the following AngelScript code:
+
+```cpp
+pEngine->RegisterInterface("InterfaceA");
+pEngine->RegisterInterfaceMethod("InterfaceA", "void methodA()");
+
+pEngine->RegisterInterface("InterfaceB");
+pEngine->RegisterInterfaceMethod("InterfaceB", "void methodA()");
+pEngine->RegisterInterfaceMethod("InterfaceB", "void methodB()");
+
+pEngine->RegisterInterface("InterfaceC");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodA()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodB()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
+```
+
+If you don't want to register each base interface separately, you can instead call `Engine::RegisterInterface<^^InterfaceC, false>()`, which is the same as:
+
+```cpp
+pEngine->RegisterInterface("InterfaceC");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodA()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodB()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
+```
+
+### Multiple Inheritance
+
+Multiple inheritance is also fully supported:
+
+```cpp
+struct DiamondTip {
+    virtual void baseMethod() = 0;
+}
+
+struct DiamondLeft : DiamondTip {
+    virtual void midMethod() = 0;
+    virtual void leftMethod() = 0;
+}
+
+struct DiamondRight : DiamondTip {
+    virtual void midMethod() = 0;
+    virtual void rightMethod() = 0;
+}
+
+struct Diamond : DiamondLeft, DiamondRight {
+    virtual void method() = 0;
+}
+
+engine.RegisterInterface<^^Diamond>();
+
+// ... is equivalent to ...
+
+pEngine->RegisterInterface("DiamondTip");
+pEngine->RegisterInterfaceMethod("DiamondTip", "void baseMethod()");
+
+pEngine->RegisterInterface("DiamondLeft");
+pEngine->RegisterInterfaceMethod("DiamondLeft", "void baseMethod()");
+pEngine->RegisterInterfaceMethod("DiamondLeft", "void midMethod()");
+pEngine->RegisterInterfaceMethod("DiamondLeft", "void leftMethod()");
+
+pEngine->RegisterInterface("DiamondRight");
+pEngine->RegisterInterfaceMethod("DiamondRight", "void baseMethod()");
+pEngine->RegisterInterfaceMethod("DiamondRight", "void midMethod()");
+pEngine->RegisterInterfaceMethod("DiamondRight", "void rightMethod()");
+
+pEngine->RegisterInterface("Diamond");
+pEngine->RegisterInterfaceMethod("Diamond", "void baseMethod()");
+pEngine->RegisterInterfaceMethod("Diamond", "void midMethod()");
+pEngine->RegisterInterfaceMethod("Diamond", "void leftMethod()");
+pEngine->RegisterInterfaceMethod("Diamond", "void rightMethod()");
+pEngine->RegisterInterfaceMethod("Diamond", "void method()");
+```
+
+Notice how both `midMethod()`s from `DiamondLeft` and `DiamondRight` condense into a single `midMethod()` within `Diamond`, as they share the same signature.
+
+> [!CAUTION]
+> In reality, *this library does not make any effort to warn you about conflicts with methods defined in different base interfaces*, it will simply use the first version of the method it finds!
+
+For example if `DiamondRight` declared `midMethod()` as returning `int` instead of `void`, `DiamondLeft`'s version of the method will be registered instead as the `int` version was found later during class traversal. Defining `Diamond` as `struct Diamond : DiamondRight : DiamondLeft { ... }` will have the opposite effect.
+
+For this reason you should be careful when registering interfaces that use multiple inheritance.
+
+Method overloading is also fully supported, though, so both versions of `midMethod()` would be included separately within `Diamond` if, for example, `DiamondRight::midMethod(int)` was declared instead.
+
+### What's Registered
+
+It's important to note that only public, pure virtual methods will be registered. The following, if found in the given C++ interface, will be ignored:
+
+- Constructors and destructors.
+- Operator functions, even if they are pure virtual.
+- All protected and private members. This includes all members inherited via protected and private inheritance.
+    - An interface inherited via `protected` or `private` will also not be registered in the script interface. You will need to register these separately.
+- Concrete methods, and virtual methods that are not pure.
+- Fields.
+
+### C++ Namespaces Are Ignored
+
+A warning on interfaces that share the same identifier in C++.
+
+If you try to register interface `A` in this example:
+
+```cpp
+namespace one {
+struct One {};
+}
+
+namespace two {
+struct One : one::One {};
+}
+
+struct A : two::One {};
+```
+
+`RegisterInterface<^^A>()` will result in `asALREADY_REGISTERED`, as it tries to register both `One` interfaces with the same name.
+
+To avoid this, you will either need to rename one of the interfaces in C++, or you can attach a `Rename` annotation to one of the interfaces like you can with other C++ entities:
+
+```cpp
+namespace one {
+struct One {};
+}
+
+namespace two {
+struct One[[=as::Name("OneRenamed")]] : one::One {};
+}
+
+struct A : two::One {};
+
+engine.RegisterInterface<^^A>();
+
+// ... is the same as ...
+
+pEngine->RegisterInterface("A");
+pEngine->RegisterInterface("OneRenamed");
+pEngine->RegisterInterface("One");
+```
+
+---
+
+<div align="center">
+    <a href="8-ENUMS.md">◄ 8. Enums</a>
+    &emsp;&emsp;
+    <a href="/README.md#table-of-contents">Back to Contents</a>
+    &emsp;&emsp;
+</div>

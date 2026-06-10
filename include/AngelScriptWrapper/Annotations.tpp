@@ -107,7 +107,8 @@ template <typename T> constexpr bool IsRefType() {
     // Unfortunately, we can't attach the RefType annotation to these classes reliably, as type attributes are ignored
     // after types are already defined, and we shouldn't force the developer to include header files in certain orders
     // to get the annotations to play nicely. So we are forced to add special cases for these here:
-    if constexpr (std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER asIScriptFunction>
+    if constexpr (std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER asIScriptObject>
+                  || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER asIScriptFunction>
                   || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptAny>
                   || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptArray>
                   || std::is_same_v<BaseT, AS_NAMESPACE_QUALIFIER CScriptDictionary>

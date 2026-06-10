@@ -286,3 +286,13 @@ static_assert(myDerivedRecursiveResults[4].members.size() == 1);
 // clang-format off
 STATIC_ASSERT_EQ(std::meta::display_string_of(myDerivedRecursiveResults[4].members[0]), "Bad::f"sv);
 // clang-format on
+
+static AS_NAMESPACE_QUALIFIER asIScriptObject* objectHandle[[= as::Interface(^^MyDerived)]];
+static AS_NAMESPACE_QUALIFIER asIScriptObject* const constObjectHandle[[= as::Interface(^^MyDerived)]] = nullptr;
+
+STATIC_ASSERT_EQ(as::TypeOf<^^objectHandle>, "MyDerived@");
+STATIC_ASSERT_EQ(as::TypeOf<^^constObjectHandle>, "MyDerived@ const");
+// clang-format off
+STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptObject* COMMA ^^objectHandle>, "MyDerived@");
+STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptObject* const COMMA ^^constObjectHandle>, "MyDerived@ const");
+// clang-format on
