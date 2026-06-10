@@ -189,6 +189,28 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      */
     template <std::meta::info E> int RegisterEnum();
 
+    // MARK: Interfaces
+
+    /**
+     * Registers a C++ interface for use in the scripts within this engine.
+     * The first thing to note is that this function will only register public, pure virtual methods of the given class,
+     * that aren't operator functions, constructors or destructors.
+     *
+     * This function will make sure that the registered interface not only has the pure virtual methods of the given
+     * class, but all of its base classes recursively, too. You can optionally register each base class as a separate
+     * interface in the same way by setting R to true.
+     *
+     * Multiple methods that share the same name and signature inherited from different classes using multiple
+     * inheritance will be merged into one method in the registered interface.
+     * @warning This function will not take C++ namespaces into account. If more than one class in I's inheritance chain
+     *          has the same identifier, you will need to rename one or more of them using as::Name() to avoid an error
+     *          code of asALREADY_REGISTERED.
+     * @tparam I A reflection of the interface to register.
+     * @tparam R Whether or not to recursively register each base interface separately, too.
+     * @return >= 0 on success, or the first error code encountered on failure.
+     */
+    template <std::meta::info I, bool R = true> int RegisterInterface();
+
     // MARK: Object Types
 
     // template <std::meta::info T> int RegisterObjectType();

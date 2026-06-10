@@ -12,7 +12,6 @@ enum class MyEnum {
 TEST(AngelScriptEngineEnums, Registration) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     const auto typeId = engine.RegisterEnum<^^MyEnum>();
     ASSERT_GE(typeId, 0);
@@ -33,7 +32,6 @@ enum[[= as::Name("NormalEnum")]] CastedEnum : std::uint8_t{
 TEST(AngelScriptEngineEnums, RegistrationWithCastingToInt) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     const auto typeId = engine.RegisterEnum<^^CastedEnum>();
     ASSERT_GE(typeId, 0);

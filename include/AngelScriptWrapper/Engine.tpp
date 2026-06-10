@@ -123,6 +123,27 @@ template <EngineOptions Opts> template <std::meta::info E> int Engine<Opts>::Reg
     return typeId;
 }
 
+template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Opts>::RegisterInterface() {
+    if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
+    int r = 0;
+    static constexpr auto interfaceHierarchy = GetClassHierarchy<I>(R);
+
+    template for (constexpr auto i : interfaceHierarchy) {
+        constexpr auto interfaceName = GetIdentifierOf<i.type>();
+        if (r = Ptr()->RegisterInterface(interfaceName.data()); r < 0) { return r; }
+
+        static constexpr auto members = i.members;
+        template for (constexpr auto m : members) {
+            if constexpr (std::meta::is_pure_virtual(m) && !std::meta::is_operator_function(m)) {
+                constexpr auto decl = GetFuncDecl<m, Opts.AutoHandleDefault>();
+                if (r = Ptr()->RegisterInterfaceMethod(interfaceName.data(), decl.data()); r < 0) { return r; }
+            }
+        }
+    }
+
+    return r;
+}
+
 // template <std::meta::info T> int Engine::RegisterObjectType() {
 //     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
 //     using type = [:T:];

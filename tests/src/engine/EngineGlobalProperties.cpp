@@ -326,10 +326,6 @@ TEST(AngelScriptEngineGlobalProperties, ConstStringValues) {
     EXPECT_EQ(strInScript, str);
 }
 
-void messageCallback(AS_NAMESPACE_QUALIFIER asSMessageInfo* msg, std::vector<std::string>* state) {
-    state->emplace_back(msg->message);
-}
-
 TEST(AngelScriptEngineGlobalProperties, NonConstReferenceTypes) {
     as::ScriptTestObject obj[[= as::GlobalNotConst]];
     int counterInScript = 0;
@@ -344,9 +340,7 @@ TEST(AngelScriptEngineGlobalProperties, NonConstReferenceTypes) {
 
     // Global property is not a handle.
     std::vector<std::string> messages;
-    ASSERT_GE(
-        engine.Ptr()->SetMessageCallback(asFUNCTION(messageCallback), &messages, AS_NAMESPACE_QUALIFIER asCALL_CDECL), 0
-    );
+    ASSERT_GE((as::SetMessageCallback(engine, &messages)), 0);
     ASSERT_LT(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "@obj = @obj;"), 0);
     ASSERT_THAT(messages, ElementsAre("Expression is not an l-value"));
     EXPECT_GE(engine.Ptr()->ClearMessageCallback(), 0);
@@ -387,9 +381,7 @@ TEST(AngelScriptEngineGlobalProperties, ConstReferenceTypes) {
 
     // Global property is not a handle.
     std::vector<std::string> messages;
-    ASSERT_GE(
-        engine.Ptr()->SetMessageCallback(asFUNCTION(messageCallback), &messages, AS_NAMESPACE_QUALIFIER asCALL_CDECL), 0
-    );
+    ASSERT_GE((as::SetMessageCallback(engine, &messages)), 0);
     ASSERT_LT(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "@obj = @obj;"), 0);
     ASSERT_THAT(messages, ElementsAre("Expression is not an l-value"));
     EXPECT_GE(engine.Ptr()->ClearMessageCallback(), 0);
@@ -507,9 +499,7 @@ TEST(AngelScriptEngineGlobalProperties, NonConstReferenceConstPointerTypes) {
 
     // Global property is a const handle.
     std::vector<std::string> messages;
-    ASSERT_GE(
-        engine.Ptr()->SetMessageCallback(asFUNCTION(messageCallback), &messages, AS_NAMESPACE_QUALIFIER asCALL_CDECL), 0
-    );
+    ASSERT_GE((as::SetMessageCallback(engine, &messages)), 0);
     ASSERT_LT(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "@obj = @obj;"), 0);
     ASSERT_THAT(messages, ElementsAre("Reference is read-only"));
     EXPECT_GE(engine.Ptr()->ClearMessageCallback(), 0);
@@ -552,9 +542,7 @@ TEST(AngelScriptEngineGlobalProperties, ConstReferenceConstPointerTypes) {
 
     // Global property is a const handle.
     std::vector<std::string> messages;
-    ASSERT_GE(
-        engine.Ptr()->SetMessageCallback(asFUNCTION(messageCallback), &messages, AS_NAMESPACE_QUALIFIER asCALL_CDECL), 0
-    );
+    ASSERT_GE((as::SetMessageCallback(engine, &messages)), 0);
     ASSERT_LT(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "@obj = @obj;"), 0);
     ASSERT_THAT(messages, ElementsAre("Reference is read-only"));
     EXPECT_GE(engine.Ptr()->ClearMessageCallback(), 0);
