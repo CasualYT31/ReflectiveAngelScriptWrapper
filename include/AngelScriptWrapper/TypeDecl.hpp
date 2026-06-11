@@ -73,9 +73,24 @@ template <std::meta::info I> constexpr std::string_view TypeOf = detail::GetType
 template <typename T, bool C = false> constexpr std::string_view GetRefType();
 
 /**
+ * Stores information on a single class member.
+ */
+struct ClassMember {
+    /**
+     * A reflection of the class member.
+     */
+    const std::meta::info member;
+
+    /**
+     * True if this member was inherited, false if it's a direct member of the class.
+     */
+    const bool inherited;
+};
+
+/**
  * The result of a call to GetClassHierarchy().
  */
-struct ClassMembers {
+struct ClassInformation {
     /**
      * A reflection of the type whose members are stored in this struct.
      */
@@ -90,7 +105,7 @@ struct ClassMembers {
      * The members of type.
      * Check the documentation on GetClassHierarchy() to see which members will be
      */
-    const StructuralSpan<const std::meta::info> members;
+    const StructuralSpan<const ClassMember> members;
 };
 
 /**
@@ -117,7 +132,8 @@ struct ClassMembers {
  * @return C's information will be stored in the first element of the span always. Further elements will be added
  *         depending on the value of recurse.
  */
-template <std::meta::info C> consteval StructuralSpan<const ClassMembers> GetClassHierarchy(const bool recurse = false);
+template <std::meta::info C>
+consteval StructuralSpan<const ClassInformation> GetClassHierarchy(const bool recurse = false);
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>

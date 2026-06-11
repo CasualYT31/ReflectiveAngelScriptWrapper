@@ -136,8 +136,8 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
 
         static constexpr auto members = i.members;
         template for (constexpr auto m : members) {
-            if constexpr (std::meta::is_pure_virtual(m) && !std::meta::is_operator_function(m)) {
-                constexpr auto decl = GetFuncDecl<m, Opts.AutoHandleDefault>();
+            if constexpr (std::meta::is_pure_virtual(m.member) && !std::meta::is_operator_function(m.member)) {
+                constexpr auto decl = GetFuncDecl<m.member, Opts.AutoHandleDefault>();
                 if (r = Ptr()->RegisterInterfaceMethod(interfaceName.data(), decl.data()); r < 0) { return r; }
             }
         }

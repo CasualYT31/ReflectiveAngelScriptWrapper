@@ -208,12 +208,12 @@ template <typename T, std::meta::info I> consteval std::string_view GetTypeDecl(
     }
 }
 
-struct ClassMembers {
+struct ClassInformation {
     std::meta::info type;
 
     std::vector<std::meta::info> bases;
 
-    std::vector<std::meta::info> members;
+    std::vector<ClassMember> members;
 
     std::vector<std::string> memberIdentifiers;
 };
@@ -246,7 +246,9 @@ template <std::meta::info M> consteval std::string GetUniqueSignatureOfMember() 
 }
 
 template <std::meta::info C>
-consteval bool FindMembersOf(detail::ClassMembers& members, std::vector<std::meta::info>& visited) {
+consteval bool FindMembersOf(
+    detail::ClassInformation& info, std::vector<std::meta::info>& visited, bool inherited = false
+) {
     for (auto v : visited) {
         if (v == C) { return false; }
     }
@@ -257,9 +259,9 @@ consteval bool FindMembersOf(detail::ClassMembers& members, std::vector<std::met
         if constexpr (!std::meta::is_special_member_function(m) && !std::meta::is_constructor(m)
                       && !std::meta::is_destructor(m) && !std::meta::is_type(m)) {
             const auto id = GetUniqueSignatureOfMember<m>();
-            if (!id.empty() && !std::ranges::contains(members.memberIdentifiers, id)) {
-                members.members.push_back(m);
-                members.memberIdentifiers.push_back(id);
+            if (!id.empty() && !std::ranges::contains(info.memberIdentifiers, id)) {
+                info.members.emplace_back(m, inherited);
+                info.memberIdentifiers.push_back(id);
             }
         }
     }
@@ -267,7 +269,7 @@ consteval bool FindMembersOf(detail::ClassMembers& members, std::vector<std::met
     template for (constexpr auto b :
                   std::define_static_array(std::meta::bases_of(C, std::meta::access_context::current()))) {
         constexpr auto bType = std::meta::type_of(b);
-        if (FindMembersOf<bType>(members, visited)) { members.bases.push_back(bType); }
+        if (FindMembersOf<bType>(info, visited, true)) { info.bases.push_back(bType); }
     }
 
     return true;
@@ -275,7 +277,7 @@ consteval bool FindMembersOf(detail::ClassMembers& members, std::vector<std::met
 
 template <std::meta::info C>
 consteval void FindMembersRecursiveOf(
-    std::vector<detail::ClassMembers>& classes, std::vector<std::meta::info>& visited, const bool recurse
+    std::vector<detail::ClassInformation>& classes, std::vector<std::meta::info>& visited, const bool recurse
 ) {
     for (auto v : visited) {
         if (v == C) { return; }
@@ -308,12 +310,12 @@ template <typename T, bool C> constexpr std::string_view GetRefType() {
     }
 }
 
-template <std::meta::info C> consteval StructuralSpan<const ClassMembers> GetClassHierarchy(const bool recurse) {
-    std::vector<detail::ClassMembers> ret;
+template <std::meta::info C> consteval StructuralSpan<const ClassInformation> GetClassHierarchy(const bool recurse) {
+    std::vector<detail::ClassInformation> ret;
     std::vector<std::meta::info> visited;
     detail::FindMembersRecursiveOf<C>(ret, visited, recurse);
 
-    std::vector<ClassMembers> staticRet;
+    std::vector<ClassInformation> staticRet;
     for (const auto r : ret) {
         staticRet.emplace_back(r.type, std::define_static_array(r.bases), std::define_static_array(r.members));
     }
