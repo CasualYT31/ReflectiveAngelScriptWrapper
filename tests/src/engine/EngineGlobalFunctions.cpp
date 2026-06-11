@@ -156,7 +156,8 @@ TEST(AngelScriptEngineGlobalFunctions, OutRefUsingRef) {
 
     std::uint8_t result = 0;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOrRef(4, 8, r); return r;", &result, 6), 0
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOrRef(4, 8, r); return r;", &result, 6),
+        0
     );
     EXPECT_EQ(result, 12);
 }
@@ -175,7 +176,8 @@ TEST(AngelScriptEngineGlobalFunctions, OutRefUsingPtr) {
 
     std::uint8_t result = 0;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOrPtr(4, 8, r); return r;", &result, 6), 0
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "uint8 r = 0; bitwiseOrPtr(4, 8, r); return r;", &result, 6),
+        0
     );
     EXPECT_EQ(result, 12);
 }
@@ -286,7 +288,9 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeReturn) {
 
     int count = 0;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "TestRefType@ a = createObj(); return a.RefCount();", &count, 4),
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "TestRefType@ a = createObj(); return a.RefCount();", &count, 4
+        ),
         0
     );
     // Returning non-auto handles will not increment the ref counter for us
@@ -305,7 +309,9 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeAutoReturn) {
 
     int count = 0;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "TestRefType@ a = createObj(); return a.RefCount();", &count, 4),
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "TestRefType@ a = createObj(); return a.RefCount();", &count, 4
+        ),
         0
     );
     // Returning auto handles will increment the ref counter for us
@@ -361,7 +367,10 @@ TEST(AngelScriptEngineGlobalFunctions, TemplateParameter) {
 
     // Doesn't work on non-string arrays:
     ASSERT_LT(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "array<int> a; a.insertLast(5); return getSize(a);", &count, 8), 0
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "array<int> a; a.insertLast(5); return getSize(a);", &count, 8
+        ),
+        0
     );
 }
 
@@ -384,7 +393,8 @@ TEST(AngelScriptEngineGlobalFunctions, TemplateParameterAndReturn) {
     const auto typeId = engine.Ptr()->GetTypeIdByDecl("const array<int>@");
     const AS_NAMESPACE_QUALIFIER CScriptArray* a = nullptr;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "array<int> a; a.insertLast(8); return get(a);", &a, typeId), 0
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "array<int> a; a.insertLast(8); return get(a);", &a, typeId),
+        0
     );
     ASSERT_TRUE(a);
     EXPECT_EQ(a->GetSize(), 1);
@@ -441,7 +451,9 @@ TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnno) {
     ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
 
     double res = 0.0;
-    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0);
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0
+    );
     EXPECT_DOUBLE_EQ(res, 62.72);
 }
 
@@ -499,7 +511,9 @@ TEST(AngelScriptEngineGlobalFunctions, DerivedGenericNoAnnoStaticClassMember) {
     ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_GENERIC);
 
     double res = 0.0;
-    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0);
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "return derivedGenericNoAnno(5.6, 11.2);", &res, 11), 0
+    );
     EXPECT_DOUBLE_EQ(res, 62.72);
 }
 

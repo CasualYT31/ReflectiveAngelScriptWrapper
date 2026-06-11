@@ -20,7 +20,8 @@ TEST(AngelScriptEngineFuncdefs, RegistrationAndTypenameGeneration) {
     ASSERT_GE(engine.RegisterFuncdef<^^getSize>(), 0);
     ASSERT_GE(engine.RegisterGlobalFunction<^^getFunc>(), 0);
 
-    AS_NAMESPACE_QUALIFIER asIScriptModule* mod = engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
     ASSERT_TRUE(mod);
 
     // This script tests two things:

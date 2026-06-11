@@ -172,7 +172,8 @@ AS_NAMESPACE_QUALIFIER CScriptArray* const complex[[ = as::subtype::String, = as
 }
 // Includes "@ const+" handling in return type:
 STATIC_ASSERT_EQ(
-    as::GetFuncDecl<^^complex>(), "array<string>@ const+ complex(const array<array<float>>@, array<string>&, array<int32>@+)"
+    as::GetFuncDecl<^^complex>(),
+    "array<string>@ const+ complex(const array<array<float>>@, array<string>&, array<int32>@+)"
 )
 
 AS_NAMESPACE_QUALIFIER CScriptArray* complex3[[ = as::subtype::String, = as::Auto ]](
@@ -186,7 +187,8 @@ AS_NAMESPACE_QUALIFIER CScriptArray* complex3[[ = as::subtype::String, = as::Aut
 }
 // Includes "@+" handling in return type:
 STATIC_ASSERT_EQ(
-    as::GetFuncDecl<^^complex3>(), "array<string>@+ complex3(const array<array<float>>@, array<string>&, array<int32>@+)"
+    as::GetFuncDecl<^^complex3>(),
+    "array<string>@+ complex3(const array<array<float>>@, array<string>&, array<int32>@+)"
 )
 
 AS_NAMESPACE_QUALIFIER CScriptArray* complex2[[ = as::subtype::String, = as::NonAuto ]](

@@ -47,7 +47,9 @@ template <typename T>
     requires(IsEngineWrapper<T>)
 inline int SetMessageCallback(T& engine) {
     return engine.Ptr()->SetMessageCallback(
-        AS_NAMESPACE_QUALIFIER asFUNCTIONPR(ScriptMessageCallback, (AS_NAMESPACE_QUALIFIER asSMessageInfo*, void*), void),
+        AS_NAMESPACE_QUALIFIER asFUNCTIONPR(
+            ScriptMessageCallback, (AS_NAMESPACE_QUALIFIER asSMessageInfo*, void*), void
+        ),
         nullptr,
         AS_NAMESPACE_QUALIFIER asCALL_CDECL
     );

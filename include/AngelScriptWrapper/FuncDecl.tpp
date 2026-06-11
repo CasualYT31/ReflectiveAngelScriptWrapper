@@ -7,7 +7,9 @@ namespace detail {
 template <std::meta::info P, bool AutoHandleDefault> constexpr std::string_view GetAutoHandleFlag() {
     constexpr auto hasAutoAnno = HasAnnotation<P, decltype(Auto)>();
     constexpr auto hasNonAutoAnno = HasAnnotation<P, decltype(NonAuto)>();
-    static_assert(AtLeastOneOf<hasAutoAnno, hasNonAutoAnno>(), "detected simultaneous use of Auto and NonAuto annotations");
+    static_assert(
+        AtLeastOneOf<hasAutoAnno, hasNonAutoAnno>(), "detected simultaneous use of Auto and NonAuto annotations"
+    );
     if constexpr (hasAutoAnno) {
         return "+";
     } else if constexpr (hasNonAutoAnno) {
@@ -41,7 +43,8 @@ template <std::meta::info P, bool AutoHandleDefault> consteval std::string_view 
             using Tp = std::remove_pointer_t<T>;
             static_assert(!IsPointer<Tp>, "detected parameter**, which is not supported");
             return std::define_static_string(
-                std::string(detail::OverrideTypeOf<T, P>) + std::string(detail::GetAutoHandleFlag<P, AutoHandleDefault>())
+                std::string(detail::OverrideTypeOf<T, P>)
+                + std::string(detail::GetAutoHandleFlag<P, AutoHandleDefault>())
             );
         } else {
             throw "reference types must be passed by reference or by pointer";
@@ -104,8 +107,8 @@ template <std::meta::info F> constexpr CallConvResults DetectGenericCallConv() {
         static_assert(!isNonStaticClassMember, "Non-static class methods cannot use the generic call convention");
         static_assert(
             annotationHasDecl,
-            "functions that have the void(asIScriptGeneric*) signature must be given a GenericWithDecl annotation with a "
-            "full AngelScript declaration"
+            "functions that have the void(asIScriptGeneric*) signature must be given a GenericWithDecl annotation with "
+            "a full AngelScript declaration"
         );
 
         opts.callConv = AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
@@ -116,9 +119,9 @@ template <std::meta::info F> constexpr CallConvResults DetectGenericCallConv() {
         static_assert(!isNonStaticClassMember, "Non-static class methods cannot use the generic call convention");
         static_assert(
             !annotationHasDecl,
-            "an AngelScript function declaration was given to the GenericWithDecl annotation, but the annotated function "
-            "did not have the void(asIScriptGeneric*) signature: please remove the declaration if you do not intend to use "
-            "the void(asIScriptGeneric*) signature for your function"
+            "an AngelScript function declaration was given to the GenericWithDecl annotation, but the annotated "
+            "function did not have the void(asIScriptGeneric*) signature: please remove the declaration if you do not "
+            "intend to use the void(asIScriptGeneric*) signature for your function"
         );
 
         opts.callConv = AS_NAMESPACE_QUALIFIER asCALL_GENERIC;
@@ -299,7 +302,8 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
         using PType = typename[:std::meta::type_of(P):];
         if (detail::IsVariableParameterType<P>()) {
             if (variableTypeInProgress) {
-                throw("you cannot declare two void* parameters in a row; the parameter after a void* must be an int typeId");
+                throw("you cannot declare two void* parameters in a row; the parameter after a void* must be an int "
+                      "typeId");
             }
             variableTypeInProgress = std::meta::is_const(^^std::remove_pointer_t<PType>) ? IN : OUT;
         } else if (variableTypeInProgress && detail::IsVariableParameterTypeId<P>()) {
@@ -311,7 +315,8 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
             variableTypeInProgress = NO;
         } else {
             if (variableTypeInProgress) { throw("the parameter after a void* must be an int typeId"); }
-            decl += std::string(detail::GetFuncTypeDecl<P, AutoHandleDefault>()) + detail::DefaultValueOrEmpty<P>() + ", ";
+            decl +=
+                std::string(detail::GetFuncTypeDecl<P, AutoHandleDefault>()) + detail::DefaultValueOrEmpty<P>() + ", ";
         }
     }
     // Remove last comma.

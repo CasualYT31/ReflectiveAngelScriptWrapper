@@ -72,7 +72,8 @@ template <std::meta::info F, bool AutoHandleDefault = false, bool RC = false> co
  * @tparam RC Passed directly to GetFuncDecl().
  * @return The generic call convention annotation to attach to the actual function you want to register.
  */
-template <std::meta::info F, bool AutoHandleDefault = false, bool RC = false> inline consteval GenericWithDecl Generic() {
+template <std::meta::info F, bool AutoHandleDefault = false, bool RC = false>
+inline consteval GenericWithDecl Generic() {
     return GenericWithDecl{ std::define_static_string(GetFuncDecl<F, AutoHandleDefault, RC>()) };
 }
 

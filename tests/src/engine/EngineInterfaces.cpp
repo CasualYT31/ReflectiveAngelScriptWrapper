@@ -96,7 +96,8 @@ TEST(AngelScriptEngineInterfaces, RegisterBasicInterface) {
 
     ASSERT_GE(engine.RegisterGlobalFunction<^^interfaceTest>(), 0);
 
-    AS_NAMESPACE_QUALIFIER asIScriptModule* mod = engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
     ASSERT_TRUE(mod);
 
     ASSERT_GE(mod->AddScriptSection("test.as", "class MyImpl : Basic {}"), 0);
@@ -162,7 +163,8 @@ TEST(AngelScriptEngineInterfaces, RegisterExtendedInterface) {
     EXPECT_EQ(engine.Ptr()->RegisterInterface("Basic"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
     EXPECT_EQ(engine.Ptr()->RegisterInterface("Extended"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
 
-    AS_NAMESPACE_QUALIFIER asIScriptModule* mod = engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
     ASSERT_TRUE(mod);
 
     ASSERT_GE(mod->AddScriptSection("test.as", "class MyImpl : Basic {} class MyExtImpl : Extended {}"), 0);
@@ -212,7 +214,8 @@ TEST(AngelScriptEngineInterfaces, RegisterRenamedInterface) {
     EXPECT_EQ(engine.Ptr()->RegisterInterface("Extended"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
     EXPECT_EQ(engine.Ptr()->RegisterInterface("RenamedBasic"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
 
-    AS_NAMESPACE_QUALIFIER asIScriptModule* mod = engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
     ASSERT_TRUE(mod);
 
     ASSERT_GE(
@@ -277,7 +280,8 @@ TEST(AngelScriptEngineInterfaces, RegisterDiamondInterface) {
     EXPECT_EQ(engine.Ptr()->RegisterInterface("DiamondLeft"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
     EXPECT_EQ(engine.Ptr()->RegisterInterface("DiamondTip"), AS_NAMESPACE_QUALIFIER asALREADY_REGISTERED);
 
-    AS_NAMESPACE_QUALIFIER asIScriptModule* mod = engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
     ASSERT_TRUE(mod);
 
     ASSERT_GE(mod->AddScriptSection("test.as", "class MyImpl : Diamond {}"), 0);

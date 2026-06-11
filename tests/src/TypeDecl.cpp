@@ -67,9 +67,10 @@ static as::ScriptTestObject* ConstStringConstHandleArrayHandle[[= as::ConstStrin
 static const as::ScriptTestObject* const StringConstArrayConstHandle[[= as::subtype::String]] = nullptr;
 static const as::ScriptTestObject* const ConstStringConstArrayConstHandle[[= as::ConstStringArray]] = nullptr;
 static const as::ScriptTestObject* const StringHandleConstArrayConstHandle[[= as::StringHandleArray]] = nullptr;
-static const as::ScriptTestObject* const ConstStringHandleConstArrayConstHandle[[= as::ConstStringHandleArray]] = nullptr;
-static const as::ScriptTestObject* const ConstStringConstHandleConstArrayConstHandle[[= as::ConstStringConstHandleArray]] =
+static const as::ScriptTestObject* const ConstStringHandleConstArrayConstHandle[[= as::ConstStringHandleArray]] =
     nullptr;
+static const as::ScriptTestObject* const
+    ConstStringConstHandleConstArrayConstHandle[[= as::ConstStringConstHandleArray]] = nullptr;
 
 // clang-format off
 STATIC_ASSERT_EQ(as::TypeOf<^^StringArray>, "ScriptTestObject<string>");

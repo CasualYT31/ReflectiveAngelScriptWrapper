@@ -11,12 +11,16 @@ TEST(AngelScriptEngineTypedefs, Registration) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
 
-    ASSERT_LT(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "MyTypedef number = 1000000000; MyFlag flag = true;"), 0);
+    ASSERT_LT(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "MyTypedef number = 1000000000; MyFlag flag = true;"), 0
+    );
 
     ASSERT_GE(engine.RegisterTypedef<^^MyTypedef>(), 0);
     ASSERT_GE(engine.RegisterTypedef<^^MyFlag>(), 0);
 
-    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "MyTypedef number = 1000000000; MyFlag flag = true;"), 0);
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "MyTypedef number = 1000000000; MyFlag flag = true;"), 0
+    );
 }
 
 using One[[= as::Name("MyOne")]] = float;

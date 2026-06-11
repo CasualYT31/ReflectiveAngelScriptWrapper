@@ -19,7 +19,7 @@ BreakAdjacentStringLiterals: true
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeBraces: Attach
 AlwaysBreakTemplateDeclarations: MultiLine
-ColumnLimit: 125
+ColumnLimit: 120
 CompactNamespaces: true
 Cpp11BracedListStyle: false
 EmptyLineBeforeAccessModifier: Always

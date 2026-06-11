@@ -46,8 +46,9 @@ struct[[= RefType]] ScriptTestObject {
             return typeId;
         }
 
-        if (const int r =
-                engine->RegisterObjectProperty("ScriptTestObject", "int32 counter", asOFFSET(ScriptTestObject, counter));
+        if (const int r = engine->RegisterObjectProperty(
+                "ScriptTestObject", "int32 counter", asOFFSET(ScriptTestObject, counter)
+            );
             r < 0) {
             return r;
         }

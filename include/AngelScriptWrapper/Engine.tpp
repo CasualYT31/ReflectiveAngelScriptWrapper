@@ -76,7 +76,8 @@ int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callCon
         return Ptr()->RegisterGlobalFunction(callConv.decl.data(), addr, callConvOut = callConv.callConv, auxiliary);
     } else {
         auto callConv = deducedCallConv.callConv;
-        if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
+        if (callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL
+            || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
             || callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
             callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
         }
@@ -216,17 +217,18 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
 */
 
 /* Claude on getting member pointers & offsets in relation to e.g. MyDerived:
-This is a tricky one because the reflection system gives you members as they were originally declared — an inherited method's
-reflection will always refer to the base class it was declared in, so splicing it directly always gives you the base class
-pointer.
+This is a tricky one because the reflection system gives you members as they were originally declared — an inherited
+method's reflection will always refer to the base class it was declared in, so splicing it directly always gives you the
+base class pointer.
 
 The key insight is that you don't actually need the address relative to the derived class for methods — what AngelScript
 needs is a method pointer that works correctly when called on the derived class, and a base class method pointer already
-satisfies that via normal C++ virtual dispatch and implicit pointer conversion. So `&[:BaseClass::MyInheritedMethod:]` cast
-to a `BaseClass` method pointer, then registered against `GivenClass`, should work correctly.
+satisfies that via normal C++ virtual dispatch and implicit pointer conversion. So `&[:BaseClass::MyInheritedMethod:]`
+cast to a `BaseClass` method pointer, then registered against `GivenClass`, should work correctly.
 
-However if you do need the derived class pointer explicitly — for example for non-virtual methods where AngelScript needs the
-correct `this` pointer adjustment — the approach is to use the type from `GetClassHierarchy` to form the cast explicitly:
+However if you do need the derived class pointer explicitly — for example for non-virtual methods where AngelScript
+needs the correct `this` pointer adjustment — the approach is to use the type from `GetClassHierarchy` to form the cast
+explicitly:
 
 ```cpp
 consteval auto MemberPtrFor(std::meta::info givenClass, std::meta::info member) {
@@ -245,12 +247,12 @@ consteval auto MemberPtrFor(std::meta::info givenClass, std::meta::info member) 
 ```
 
 The cast is safe because `GivenClass` inherits from `BaseClass`, so a pointer-to-member of `BaseClass` is implicitly
-convertible to a pointer-to-member of `GivenClass` — this is the contravariant pointer-to-member conversion rule in C++, and
-it's exactly what AngelScript needs to call the method on a `GivenClass` instance.
+convertible to a pointer-to-member of `GivenClass` — this is the contravariant pointer-to-member conversion rule in C++,
+and it's exactly what AngelScript needs to call the method on a `GivenClass` instance.
 
-For **data members** (properties) rather than methods, `offsetof` or `std::meta::offset_of` is the right tool — it gives you
-the byte offset of the member relative to any class in the hierarchy, and AngelScript's property registration typically takes
-an offset rather than a pointer anyway:
+For **data members** (properties) rather than methods, `offsetof` or `std::meta::offset_of` is the right tool — it gives
+you the byte offset of the member relative to any class in the hierarchy, and AngelScript's property registration
+typically takes an offset rather than a pointer anyway:
 
 ```cpp
 consteval std::size_t OffsetOf(std::meta::info givenClass, std::meta::info member) {
@@ -258,8 +260,8 @@ consteval std::size_t OffsetOf(std::meta::info givenClass, std::meta::info membe
 }
 ```
 
-So the short answer is: for methods, use the contravariant pointer-to-member cast; for properties, use `offset_of` which is
-already class-agnostic.
+So the short answer is: for methods, use the contravariant pointer-to-member cast; for properties, use `offset_of` which
+is already class-agnostic.
 */
 
 // template <std::meta::info T> int Engine::RegisterObjectType() {

@@ -63,9 +63,9 @@ static_assert(as::SubTypeList().subTypes.size() == 0);
 static_assert(as::SubTypeList<int>().subTypes[0] == ^^int);
 static_assert(as::SubTypeList<int, AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>().subTypes[1] == ^^AS_NAMESPACE_QUALIFIER CScriptArray*);
 // <array<string>, array<array<string>>>
-#define NESTED                                                                                                              \
-    as::SubTypeList<                                                                                                        \
-        as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>,                                                        \
+#define NESTED                                                                                                         \
+    as::SubTypeList<                                                                                                   \
+        as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>,                                                   \
         as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, as::Tmpl<AS_NAMESPACE_QUALIFIER CScriptArray*, std::string>>>()
 static_assert(NESTED.subTypes.size() == 2);
 static_assert(NESTED.subTypes.size() == NESTED.recursiveSub.size());
