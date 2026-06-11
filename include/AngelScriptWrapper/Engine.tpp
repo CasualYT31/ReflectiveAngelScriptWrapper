@@ -129,7 +129,8 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
     static constexpr auto interfaceHierarchy = GetClassHierarchy<I>(R);
 
     template for (constexpr auto i : interfaceHierarchy) {
-        constexpr auto interfaceName = GetIdentifierOf<i.type>();
+        using type = [:i.type:];
+        constexpr auto interfaceName = TypeName<type>;
         if (r = Ptr()->RegisterInterface(interfaceName.data()); r < 0) { return r; }
 
         static constexpr auto members = i.members;

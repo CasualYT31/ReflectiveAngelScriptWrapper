@@ -172,9 +172,15 @@ struct A : two::One {};
 
 `RegisterInterface<^^A>()` will result in `asALREADY_REGISTERED`, as it tries to register both `One` interfaces with the same name.
 
-To avoid this, you will either need to rename one of the interfaces in C++, or you can attach a `Rename` annotation to one of the interfaces like you can with other C++ entities:
+To avoid this, you will need to do one of:
+
+1. Rename one of the interfaces in C++.
+2. Attach a `Rename` annotation to one of the interfaces like you can with other C++ entities.
+3. Specialize TypeName for your interface.
 
 ```cpp
+// Example of 2:
+
 namespace one {
 struct One {};
 }
