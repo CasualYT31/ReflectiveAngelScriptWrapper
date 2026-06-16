@@ -204,6 +204,61 @@ pEngine->RegisterInterface("One");
 
 If you try to register the same interface more than once, either directly or indirectly, the wrapper will skip over registering it to prevent `asALREADY_REGISTERED` errors. This means you don't have to worry about accidentally registering the same base interface multiple times when registering all of its descendants (since, unfortunately, it's not possible for the wrapper to figure out derived interfaces, given a base interface).
 
+### Excluding Interfaces From Registration
+
+If you need to exclude interfaces from registration, then you can attach the `DoNotRegister` annotation to the interface:
+
+```cpp
+struct InterfaceA {
+    virtual void methodA() = 0;
+};
+
+struct[[=as::DoNotRegister]] InterfaceB : InterfaceA {
+    virtual void methodB() = 0;
+}
+
+struct InterfaceC: InterfaceB {
+    virtual void methodC() = 0;
+}
+
+// ... is the same as ...
+
+pEngine->RegisterInterface("InterfaceC");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodA()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodB()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
+```
+
+Notice that this also excludes all bases interfaces. But base interfaces that aren't annotated with `DoNotRegister` can still be registered separately.
+
+You can also exclude individual methods from registration:
+
+```cpp
+struct InterfaceA {
+    virtual void methodA() = 0;
+};
+
+struct InterfaceB : InterfaceA {
+    virtual void methodB[[=as::DoNotRegister]]() = 0;
+}
+
+struct InterfaceC: InterfaceB {
+    virtual void methodC() = 0;
+}
+
+// ... is the same as ...
+
+pEngine->RegisterInterface("InterfaceA");
+pEngine->RegisterInterfaceMethod("InterfaceA", "void methodA()");
+
+pEngine->RegisterInterface("InterfaceB");
+pEngine->RegisterInterfaceMethod("InterfaceB", "void methodA()");
+
+pEngine->RegisterInterface("InterfaceC");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodA()");
+pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
+```
+
 ---
 
 <div align="center">
