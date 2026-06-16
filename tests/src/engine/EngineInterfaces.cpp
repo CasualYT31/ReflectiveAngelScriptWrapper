@@ -297,3 +297,29 @@ TEST(AngelScriptEngineInterfaces, RegisterDiamondInterface) {
         )
     );
 }
+
+TEST(AngelScriptEngineInterfaces, AttemptToRegisterTheSameInterface) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    ASSERT_GE((engine.RegisterInterface<^^Diamond>()), 0);
+
+    EXPECT_TRUE(engine.HasRegisteredInterface<Diamond>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<DiamondRight>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<DiamondLeft>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<DiamondTip>());
+    EXPECT_FALSE(engine.HasRegisteredInterface<original::Basic>());
+
+    EXPECT_EQ((engine.RegisterInterface<^^Diamond>()), 0);
+    EXPECT_EQ((engine.RegisterInterface<^^DiamondRight>()), 0);
+    EXPECT_EQ((engine.RegisterInterface<^^DiamondLeft>()), 0);
+    EXPECT_EQ((engine.RegisterInterface<^^DiamondTip>()), 0);
+
+    ASSERT_GE((engine.RegisterInterface<^^original::Basic>()), 0);
+
+    EXPECT_TRUE(engine.HasRegisteredInterface<Diamond>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<DiamondRight>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<DiamondLeft>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<DiamondTip>());
+    EXPECT_TRUE(engine.HasRegisteredInterface<original::Basic>());
+}

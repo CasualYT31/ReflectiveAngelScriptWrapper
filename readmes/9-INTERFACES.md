@@ -200,6 +200,10 @@ pEngine->RegisterInterface("OneRenamed");
 pEngine->RegisterInterface("One");
 ```
 
+### The Same Interface is Never Registered More Than Once
+
+If you try to register the same interface more than once, either directly or indirectly, the wrapper will skip over registering it to prevent `asALREADY_REGISTERED` errors. This means you don't have to worry about accidentally registering the same base interface multiple times when registering all of its descendants (since, unfortunately, it's not possible for the wrapper to figure out derived interfaces, given a base interface).
+
 ---
 
 <div align="center">

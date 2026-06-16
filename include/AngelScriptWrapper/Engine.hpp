@@ -12,6 +12,8 @@
 #include <AngelScriptWrapper/SharedObject.hpp>
 #include <memory>
 #include <meta>
+#include <typeindex>
+#include <unordered_set>
 
 namespace as {
 struct EngineOptions {
@@ -211,6 +213,17 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      */
     template <std::meta::info I, bool R = true> int RegisterInterface();
 
+    /**
+     * Figures out if this wrapper has already been used to register the given interface.
+     * This method will only return true if the RegisterInterface() template method has been used to register the given
+     * interface. If the interface has been registered directly via Ptr(), then this method will always return false.
+     * @tparam I The interface to query.
+     * @return True if the interface has already been registered using RegisterInterface(), false if not.
+     */
+    template <typename I> inline bool HasRegisteredInterface() {
+        return m_interfaces.contains(std::type_index(typeid(I)));
+    }
+
     // MARK: Object Types
 
     // template <std::meta::info T> int RegisterObjectType();
@@ -221,6 +234,12 @@ private:
      * Becomes either Owned or Shared depending on how the Engine was constructed.
      */
     std::unique_ptr<Object<AS_NAMESPACE_QUALIFIER asIScriptEngine>> m_engine;
+
+    /**
+     * Keeps track of which interfaces the wrapper's already registered.
+     * This is used to stop the wrapper from trying to register the same interface more than once.
+     */
+    std::unordered_set<std::type_index> m_interfaces;
 };
 } // namespace as
 

@@ -27,7 +27,7 @@ template <std::meta::info I, typename T> consteval std::span<const std::meta::in
 
 /**
  * Attempt to extract a single annotation of type T from I.
- * This function will fail compilation if more than one annotation fo type T can be found on I.
+ * This function will fail compilation if more than one annotation of type T can be found on I.
  * @tparam I The C++ entity to extract the annotation from.
  * @tparam T The type of annotation to extract from I.
  * @return The extracted annotation, if found. std::nullopt if no annotations of type T were attached to I.

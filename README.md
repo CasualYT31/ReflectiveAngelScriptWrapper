@@ -46,6 +46,7 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
         - [Multiple Inheritance](/readmes/9-INTERFACES.md#multiple-inheritance)
         - [What's Registered](/readmes/9-INTERFACES.md#whats-registered)
         - [C++ Namespaces Are Ignored](/readmes/9-INTERFACES.md#c-namespaces-are-ignored)
+        - [The Same Interface is Never Registered More Than Once](/readmes/9-INTERFACES.md#the-same-interface-is-never-registered-more-than-once)
 
 ## GCC 16.1.0
 
