@@ -249,6 +249,8 @@ template <std::meta::info C>
 consteval bool FindMembersOf(
     detail::ClassInformation& info, std::vector<std::meta::info>& visited, bool inherited = false
 ) {
+    if constexpr (HasAnnotation<C, decltype(DoNotRegister)>()) { return false; }
+
     for (auto v : visited) {
         if (v == C) { return false; }
     }
@@ -259,9 +261,14 @@ consteval bool FindMembersOf(
         if constexpr (!std::meta::is_special_member_function(m) && !std::meta::is_constructor(m)
                       && !std::meta::is_destructor(m) && !std::meta::is_type(m)) {
             const auto id = GetUniqueSignatureOfMember<m>();
+
+            // If we've already registered this member, don't register it again.
             if (!id.empty() && !std::ranges::contains(info.memberIdentifiers, id)) {
-                info.members.emplace_back(m, inherited);
-                info.memberIdentifiers.push_back(id);
+                // If this member has an Exclude annotation attached to it, don't include it in the result.
+                if (!HasAnnotation<m, decltype(DoNotRegister)>()) {
+                    info.members.emplace_back(m, inherited);
+                    info.memberIdentifiers.push_back(id);
+                }
             }
         }
     }
@@ -279,6 +286,8 @@ template <std::meta::info C>
 consteval void FindMembersRecursiveOf(
     std::vector<detail::ClassInformation>& classes, std::vector<std::meta::info>& visited, const bool recurse
 ) {
+    if constexpr (HasAnnotation<C, decltype(DoNotRegister)>()) { return; }
+
     for (auto v : visited) {
         if (v == C) { return; }
     }

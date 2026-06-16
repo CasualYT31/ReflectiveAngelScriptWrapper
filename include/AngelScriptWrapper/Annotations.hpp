@@ -335,6 +335,14 @@ struct Funcdef {
     const std::meta::info funcdef;
 };
 
+// MARK: Exclusions
+
+/**
+ * Annotation attached to classes and class members that should not be registered with the application interface.
+ */
+inline constexpr struct {
+} DoNotRegister;
+
 // MARK: Interfaces
 
 /**

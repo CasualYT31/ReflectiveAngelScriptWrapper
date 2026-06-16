@@ -126,6 +126,12 @@ struct ClassInformation {
  *
  * This function does not distinguish between different versions of overridden members (this includes fields, so don't
  * override those!): it will simply return the first version found. It does, however, include all function overloads.
+ *
+ * If a class has the DoNotRegister annotation attached to it, it will be entirely excluded from the result, along with
+ * all of its base classes. Base classes could still be included in the result of a different call to
+ * GetClassHierarchy().
+ *
+ * If a class member has the DoNotRegister annotation attached to it, it will be entirely excluded from the result.
  * @tparam C The reflection of the class you wish to traverse.
  * @param recurse By default, only the given class is traversed. If true is given, however, each separate base class
  *        will also be traversed in the same manner.

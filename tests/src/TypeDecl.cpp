@@ -125,8 +125,18 @@ STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptFunction* COMMA ^^funcdefHa
 STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptFunction* const COMMA ^^constFuncdefHandle>, "myFuncDef@ const");
 // clang-format on
 
-struct MyInt {
+struct IgnoredBase {
+    virtual void alsoIgnored() = 0;
+};
+
+struct[[= as::DoNotRegister]] IgnoredDerived : public IgnoredBase {
+    virtual void ignored() = 0;
+};
+
+struct MyInt : public IgnoredDerived {
     virtual int myTest() = 0;
+
+    virtual bool ignoreMe[[= as::DoNotRegister]]() = 0;
 
 protected:
     void myProtectedTest() {}
