@@ -269,14 +269,14 @@ STATIC_ASSERT_EQ(std::meta::display_string_of(myDerivedRecursiveResults[0].membe
 STATIC_ASSERT_EQ(std::meta::display_string_of(myDerivedRecursiveResults[0].members[5].member), "virtual int MyInt3::myTest3()"sv);
 STATIC_ASSERT_EQ(std::meta::display_string_of(myDerivedRecursiveResults[0].members[6].member), "MyInt3::f"sv);
 STATIC_ASSERT_EQ(std::meta::display_string_of(myDerivedRecursiveResults[0].members[7].member), "virtual int MyInt2::myTest2()"sv);
-static_assert(!myDerivedResults[0].members[0].inherited);
-static_assert(!myDerivedResults[0].members[1].inherited);
-static_assert(!myDerivedResults[0].members[2].inherited);
-static_assert(!myDerivedResults[0].members[3].inherited);
-static_assert(myDerivedResults[0].members[4].inherited);
-static_assert(myDerivedResults[0].members[5].inherited);
-static_assert(myDerivedResults[0].members[6].inherited);
-static_assert(myDerivedResults[0].members[7].inherited);
+static_assert(!myDerivedRecursiveResults[0].members[0].inherited);
+static_assert(!myDerivedRecursiveResults[0].members[1].inherited);
+static_assert(!myDerivedRecursiveResults[0].members[2].inherited);
+static_assert(!myDerivedRecursiveResults[0].members[3].inherited);
+static_assert(myDerivedRecursiveResults[0].members[4].inherited);
+static_assert(myDerivedRecursiveResults[0].members[5].inherited);
+static_assert(myDerivedRecursiveResults[0].members[6].inherited);
+static_assert(myDerivedRecursiveResults[0].members[7].inherited);
 // clang-format on
 
 static_assert(myDerivedRecursiveResults[1].type == ^^MyInt);

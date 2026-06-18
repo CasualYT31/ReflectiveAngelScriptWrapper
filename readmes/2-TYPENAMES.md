@@ -17,6 +17,27 @@ static_assert(as::TypeDecl<std::string> == "string");
 static_assert(as::TypeDecl<MyCustomType> == "MyCustomType");
 ```
 
+### Template Types
+
+Template classes require explicit specialization of `TypeName`. This is because they do not have identifiers like regular classes. Also remember that AngelScript template classes are not the same as C++ template classes: each specialization of your C++ template class will be a completely separate class when registered with the application interface, so you cannot use [the `Rename` annotation](/readmes/6-TYPES.md).
+
+Here is a simple example of how you might specialize `TypeName` for a template class:
+
+```cpp
+// All specializations of TypeName must live in the as namespace:
+
+namespace as {
+
+template <typename T>
+inline constexpr std::string_view TypeName<std::vector<T>> =
+    std::define_static_string("Vector_" + std::string(TypeName<T>));
+
+} // namespace as
+
+static_assert(as::TypeName<std::vector<int>> == "Vector_int32");
+static_assert(as::TypeName<std::vector<std::string>> == "Vector_string");
+```
+
 ## `TmplTypeName`
 
 This library also supports rendering AngelScript template types and any of their specializations that you might need. Since the subtypes of template types in AngelScript are only known at runtime, though, they are handled slightly differently.

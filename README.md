@@ -15,6 +15,7 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
     - [`Engine`](/readmes/1-WRAPPERS.md#engine)
 2. [Typenames](/readmes/2-TYPENAMES.md)
     - [`TypeName`](/readmes/2-TYPENAMES.md#typename)
+        - [Template Types](/readmes/2-TYPENAMES.md#template-types)
     - [`TmplTypeName`](/readmes/2-TYPENAMES.md#tmpltypename)
     - [`TypeOf`](/readmes/2-TYPENAMES.md#typeof)
 3. [Properties](/readmes/3-PROPERTIES.md)

@@ -21,6 +21,7 @@ END_AS_NAMESPACE
 
 namespace as {
 template <std::meta::info O> consteval std::string_view GetIdentifierOf() {
+    static_assert(!std::meta::has_template_arguments(O), "template types require explicit specialization of TypeName");
     constexpr auto rename = ExtractAnnotation<O, Rename>();
     if constexpr (rename) {
         return std::string_view(rename->to);
