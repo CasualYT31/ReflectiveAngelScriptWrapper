@@ -221,6 +221,8 @@ struct InterfaceC: InterfaceB {
     virtual void methodC() = 0;
 }
 
+engine.RegisterInterface<^^InterfaceC>();
+
 // ... is the same as ...
 
 pEngine->RegisterInterface("InterfaceC");
@@ -246,6 +248,8 @@ struct InterfaceC: InterfaceB {
     virtual void methodC() = 0;
 }
 
+engine.RegisterInterface<^^InterfaceC>();
+
 // ... is the same as ...
 
 pEngine->RegisterInterface("InterfaceA");
@@ -258,6 +262,53 @@ pEngine->RegisterInterface("InterfaceC");
 pEngine->RegisterInterfaceMethod("InterfaceC", "void methodA()");
 pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
 ```
+
+### Mixin Interfaces
+
+Sometimes you might want to include some methods in an interface without treating the base interface they come from as a separate interface in the scripts. To do this, you can mark the interface as a mixin:
+
+```cpp
+struct BaseInterface {
+    virtual void baseMethod() = 0;
+};
+
+struct[[=as::Mixin]] MyMixin : BaseInterface {
+    virtual void commonMethod() = 0;
+};
+
+struct A : MyMixin {
+    virtual void a() = 0;
+};
+
+engine.RegisterInterface<^^A>();
+
+// ... is equivalent to ...
+
+pEngine->RegisterInterface("A");
+pEngine->RegisterInterfaceMethod("A", "void a()");
+pEngine->RegisterInterfaceMethod("A", "void commonMethod()");
+pEngine->RegisterInterfaceMethod("A", "void baseMethod()");
+
+struct B : MyMixin, BaseInterface {
+    virtual void b() = 0;
+};
+
+engine.RegisterInterface<^^B>();
+
+// ... is equivalent to ...
+
+pEngine->RegisterInterface("B");
+pEngine->RegisterInterfaceMethod("B", "void b()");
+pEngine->RegisterInterfaceMethod("B", "void commonMethod()");
+pEngine->RegisterInterfaceMethod("B", "void baseMethod()");
+
+pEngine->RegisterInterface("BaseInterface");
+pEngine->RegisterInterfaceMethod("BaseInterface", "void baseMethod()");
+```
+
+Notice that all base interfaces of the mixin interface are also treated as mixins, but if those same base interfaces are registered or inherited separately, they will _not_ be treated as mixins.
+
+You cannot register mixin interfaces directly.
 
 ---
 
