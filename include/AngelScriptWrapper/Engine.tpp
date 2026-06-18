@@ -85,6 +85,12 @@ struct Func {
     std::string_view decl;
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv;
+
+    bool objFirst;
+
+    bool objLast;
+
+    bool auxObj;
 };
 
 template <std::meta::info F, EngineOptions Opts, bool RC = false> Func GetFuncDetails() {
@@ -125,6 +131,12 @@ template <std::meta::info F, EngineOptions Opts, bool RC = false> Func GetFuncDe
             details.addr = AS_NAMESPACE_QUALIFIER asFunctionPtr(&[:F:]);
         }
     }
+
+    details.objFirst = details.callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJFIRST
+                       || details.callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST;
+    details.objLast = details.callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST
+                      || details.callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST;
+    details.auxObj = details.objFirst || details.objLast;
 
     return details;
 }

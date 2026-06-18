@@ -54,6 +54,8 @@ template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr 
 
 /**
  * Statically computes the equivalent AngelScript declaration for a given C++ function.
+ * Note that if the function is marked with ObjFirst or ObjLast, the first or last parameter will be excluded from the
+ * generated signature, respectively.
  * @tparam F The std::meta::info object of the function you want to generate the declaration of.
  * @tparam AutoHandleDefault For any handle parameters found, default to non-auto handles (false) or auto handles
  *         (true), if the parameter does not have an explicit Auto or NonAuto annotation.

@@ -280,6 +280,7 @@ template <std::meta::info F, AS_NAMESPACE_QUALIFIER asDWORD Fallback> constexpr 
 
 template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::string_view GetFuncDecl() {
     std::string decl;
+
     // Return type.
     using RetType = [:std::meta::return_type_of(F):];
     if constexpr (IsRefType<RetType>()) {
@@ -289,16 +290,36 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
         // Value types use regular TypeOf logic:
         decl += std::string(TypeOf<F>);
     }
+
     // Name.
     decl += " " + std::string(as::GetIdentifierOf<F>()) + "(";
+
     // Parameter list.
+    static constexpr auto ParamList = std::define_static_array(std::meta::parameters_of(F));
+
     // Tracks whether we're in the process of declaring a variable type in the parameter list.
     // 0 = no, 1 = &in, 2 = &out.
     static constexpr int NO = 0;
     static constexpr int IN = 1;
     static constexpr int OUT = 2;
     int variableTypeInProgress = NO;
-    template for (constexpr auto P : std::define_static_array(std::meta::parameters_of(F))) {
+
+    constexpr auto IsObjFirst = HasAnnotation<F, decltype(ObjFirst)>();
+    constexpr auto IsObjLast = HasAnnotation<F, decltype(ObjLast)>();
+    static_assert(AtLeastOneOf<IsObjFirst, IsObjLast>(), "you cannot mix ObjFirst and ObjLast annotations");
+    std::size_t parameterIndex = 0, paramsAdded = 0;
+
+    template for (constexpr auto P : ParamList) {
+        // Do not include auxiliary objects in the function signature.
+        const auto pIndex = parameterIndex++;
+        if (pIndex == 0 && IsObjFirst) {
+            continue;
+        } else if (pIndex == ParamList.size() - 1 && IsObjLast) {
+            continue;
+        } else {
+            ++paramsAdded;
+        }
+
         using PType = typename[:std::meta::type_of(P):];
         if (detail::IsVariableParameterType<P>()) {
             if (variableTypeInProgress) {
@@ -319,10 +340,13 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
                 std::string(detail::GetFuncTypeDecl<P, AutoHandleDefault>()) + detail::DefaultValueOrEmpty<P>() + ", ";
         }
     }
+
     // Remove last comma.
-    if constexpr (std::meta::parameters_of(F).size() > 0) { decl.erase(decl.size() - 2); }
+    if (paramsAdded > 0) { decl.erase(decl.size() - 2); }
+
     // Close.
     decl += ")";
+
     // Is this a const method?
     if constexpr (!RC && std::meta::is_const(F)) { decl += " const"; }
     return std::define_static_string(decl);
