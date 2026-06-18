@@ -341,7 +341,16 @@ struct Funcdef {
  * Annotation attached to classes and class members that should not be registered with the application interface.
  */
 inline constexpr struct {
-} DoNotRegister;
+} DoNotRegister{};
+
+/**
+ * Annotation attached to base classes that should be treated as mixins during GetClassHierarchy() calls.
+ * This means that derived classes will inherit all of their members, but the class itself will not be treated as a base
+ * class of the derived class, and thus will not be registered in the application interface separately. This includes
+ * all base classes of the Mixin class, even if they are not marked with the Mixin annotation.
+ */
+inline constexpr struct {
+} Mixin{};
 
 // MARK: Interfaces
 

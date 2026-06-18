@@ -10,9 +10,11 @@
 namespace as {
 /**
  * Base class containing standard reference counting logic.
+ * This class makes more sense as a mixin, as otherwise every one of your reference types will have individual
+ * ReferenceType base classes, which is not useful in a scripting context.
  * @tparam T Subclasses need to provide their type [all the way] up to ReferenceType.
  */
-template <typename T> struct ReferenceType {
+template <typename T> struct[[= as::Mixin]] ReferenceType {
     virtual ~ReferenceType() noexcept = default;
 
     /**

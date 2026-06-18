@@ -132,7 +132,12 @@ struct ClassInformation {
  * GetClassHierarchy().
  *
  * If a class member has the DoNotRegister annotation attached to it, it will be entirely excluded from the result.
- * @tparam C The reflection of the class you wish to traverse.
+ *
+ * If a base class has the Mixin annotation attached to it, derived classes will inherit all of their members, but the
+ * derived classes will not treat the Mixin as a base class, and the Mixin class will not be included as a separate
+ * entry if recursion is enabled. This includes any base classes of the Mixin class itself. They will only be treated as
+ * actual base classes if they are accessed via a non-Mixin context in the hierarchy.
+ * @tparam C The reflection of the class you wish to traverse. It is forbidden for Mixin to be attached to C.
  * @param recurse By default, only the given class is traversed. If true is given, however, each separate base class
  *        will also be traversed in the same manner.
  * @return C's information will be stored in the first element of the span always. Further elements will be added

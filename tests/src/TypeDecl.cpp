@@ -322,6 +322,37 @@ STATIC_ASSERT_EQ(std::meta::display_string_of(myDerivedRecursiveResults[4].membe
 static_assert(!myDerivedRecursiveResults[4].members[0].inherited);
 // clang-format on
 
+struct One {
+    void oneMethod() {}
+};
+
+struct[[= as::Mixin]] Two : One {
+    void twoMethod() {}
+};
+
+struct Three : Two {
+    void threeMethod() {}
+};
+
+// Static assertion fails: Mixin classes cannot be given directly.
+// static constexpr auto threeRecursiveResults = as::GetClassHierarchy<^^Two>();
+
+static constexpr auto threeRecursiveResults = as::GetClassHierarchy<^^Three>(true);
+
+static_assert(threeRecursiveResults.size() == 1);
+
+static_assert(threeRecursiveResults[0].type == ^^Three);
+static_assert(threeRecursiveResults[0].bases.size() == 0);
+static_assert(threeRecursiveResults[0].members.size() == 3);
+// clang-format off
+STATIC_ASSERT_EQ(std::meta::display_string_of(threeRecursiveResults[0].members[0].member), "void Three::threeMethod()"sv);
+STATIC_ASSERT_EQ(std::meta::display_string_of(threeRecursiveResults[0].members[1].member), "void Two::twoMethod()"sv);
+STATIC_ASSERT_EQ(std::meta::display_string_of(threeRecursiveResults[0].members[2].member), "void One::oneMethod()"sv);
+static_assert(!threeRecursiveResults[0].members[0].inherited);
+static_assert(threeRecursiveResults[0].members[1].inherited);
+static_assert(threeRecursiveResults[0].members[2].inherited);
+// clang-format on
+
 static AS_NAMESPACE_QUALIFIER asIScriptObject* objectHandle[[= as::Interface(^^MyDerived)]];
 static AS_NAMESPACE_QUALIFIER asIScriptObject* const constObjectHandle[[= as::Interface(^^MyDerived)]] = nullptr;
 

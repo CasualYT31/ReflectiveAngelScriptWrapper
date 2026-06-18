@@ -248,7 +248,7 @@ template <std::meta::info M> consteval std::string GetUniqueSignatureOfMember() 
 
 template <std::meta::info C>
 consteval bool FindMembersOf(
-    detail::ClassInformation& info, std::vector<std::meta::info>& visited, bool inherited = false
+    detail::ClassInformation& info, std::vector<std::meta::info>& visited, bool inherited = false, bool mixin = false
 ) {
     if constexpr (HasAnnotation<C, decltype(DoNotRegister)>()) { return false; }
 
@@ -277,7 +277,11 @@ consteval bool FindMembersOf(
     template for (constexpr auto b :
                   std::define_static_array(std::meta::bases_of(C, std::meta::access_context::current()))) {
         constexpr auto bType = std::meta::type_of(b);
-        if (FindMembersOf<bType>(info, visited, true)) { info.bases.push_back(bType); }
+        constexpr auto isMixin = HasAnnotation<bType, decltype(Mixin)>();
+        const auto mixinModeEnabled = mixin || isMixin;
+        if (FindMembersOf<bType>(info, visited, true, mixinModeEnabled)) {
+            if (!mixinModeEnabled) { info.bases.push_back(bType); }
+        }
     }
 
     return true;
@@ -302,7 +306,9 @@ consteval void FindMembersRecursiveOf(
         template for (constexpr auto b :
                       std::define_static_array(std::meta::bases_of(C, std::meta::access_context::current()))) {
             constexpr auto bType = std::meta::type_of(b);
-            FindMembersRecursiveOf<bType>(classes, visited, recurse);
+            if constexpr (!HasAnnotation<bType, decltype(Mixin)>()) {
+                FindMembersRecursiveOf<bType>(classes, visited, recurse);
+            }
         }
     }
 }
@@ -321,6 +327,10 @@ template <typename T, bool C> constexpr std::string_view GetRefType() {
 }
 
 template <std::meta::info C> consteval StructuralSpan<const ClassInformation> GetClassHierarchy(const bool recurse) {
+    static_assert(
+        !HasAnnotation<C, decltype(Mixin)>(), "you cannot provide Mixin classes to GetClassHierarchy() directly"
+    );
+
     std::vector<detail::ClassInformation> ret;
     std::vector<std::meta::info> visited;
     detail::FindMembersRecursiveOf<C>(ret, visited, recurse);
