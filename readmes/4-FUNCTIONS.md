@@ -47,12 +47,18 @@ pEngine->RegisterGlobalFunction(
 // Non-static class method:
 
 struct MyStruct {
-    bool isTrue(bool const& a) const {
+    bool isTrue[[=as::AuxLabel("MyLabel")]](bool const& a) const {
         return a;
     }
 } myStructInstance;
 
-engine.RegisterGlobalFunction<^^MyStruct::isTrue>(&myStructInstance);
+// First, you need to add the auxiliary object to the wrapper separately:
+engine.AddAuxiliaryObject("MyLabel", &myStructInstance);
+// The wrapper will keep an internal map of labels -> auxiliary pointers.
+
+// Then, you can register the method as a global function (not forgetting to
+// assign an AuxiliaryLabel annotation to the function, as shown above):
+engine.RegisterGlobalFunction<^^MyStruct::isTrue>();
 
 // The above is equivalent to:
 pEngine->RegisterGlobalFunction(

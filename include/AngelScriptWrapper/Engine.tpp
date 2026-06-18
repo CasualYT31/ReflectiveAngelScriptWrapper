@@ -3,6 +3,42 @@
 #include <aswrappedcall.h>
 
 namespace as {
+namespace detail {
+inline void AddAuxiliaryObjects(AuxiliaryMap& map) {}
+
+template <typename... Ts>
+void AddAuxiliaryObjects(AuxiliaryMap& map, AuxiliaryKeyIn k, AuxiliaryPtr const v, Ts... kvs) {
+    assert(!map.contains(k) && "auxiliary map already has an entry for this key");
+    map[k] = v;
+    AddAuxiliaryObjects(map, kvs...);
+}
+
+template <std::meta::info I> AuxiliaryPtr FindAuxiliaryObject(AuxiliaryMap const& map, const bool expected) {
+    constexpr auto label = ExtractAnnotation<I, AuxiliaryLabel>();
+
+    if (label) {
+        const auto labelStr = std::string(label->to);
+        if (map.contains(labelStr)) {
+            assert(expected && "function was given an auxiliary label when it was not expected to");
+            return map.at(labelStr);
+        }
+    }
+
+    assert(!expected && "function was not given an auxiliary label when it was expected to");
+    return nullptr;
+}
+} // namespace detail
+
+template <EngineOptions Opts> void Engine<Opts>::AddAuxiliaryObject(AuxiliaryKeyIn k, AuxiliaryPtr const v) {
+    detail::AddAuxiliaryObjects(m_auxMap, k, v);
+}
+
+template <EngineOptions Opts>
+template <typename... Ts>
+void Engine<Opts>::AddAuxiliaryObjects(AuxiliaryKeyIn k, AuxiliaryPtr const v, Ts... kvs) {
+    detail::AddAuxiliaryObjects(m_auxMap, k, v, kvs...);
+}
+
 template <EngineOptions Opts>
 template <std::meta::info V, typename T>
     requires(!IsConst<T>)
@@ -37,9 +73,9 @@ int Engine<Opts>::RegisterGlobalProperty(OwnedObject<T> const& value) {
     return Ptr()->RegisterGlobalProperty(name.c_str(), value.Ptr());
 }
 
-template <EngineOptions Opts> template <std::meta::info F> int Engine<Opts>::RegisterGlobalFunction(void* auxiliary) {
+template <EngineOptions Opts> template <std::meta::info F> int Engine<Opts>::RegisterGlobalFunction() {
     AS_NAMESPACE_QUALIFIER asDWORD cc;
-    return RegisterGlobalFunction<F>(cc, auxiliary);
+    return RegisterGlobalFunction<F>(cc);
 }
 
 namespace detail {
@@ -96,16 +132,20 @@ template <std::meta::info F, EngineOptions Opts, bool RC = false> Func GetFuncDe
 
 template <EngineOptions Opts>
 template <std::meta::info F>
-int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary) {
+int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut) {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
 
     auto funcDetails = detail::GetFuncDetails<F, Opts, true>();
 
+    bool expectAux = false;
     if (funcDetails.callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL
         || funcDetails.callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJFIRST
         || funcDetails.callConv == AS_NAMESPACE_QUALIFIER asCALL_THISCALL_OBJLAST) {
         funcDetails.callConv = AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL;
+        expectAux = true;
     }
+
+    const auto auxiliary = detail::FindAuxiliaryObject<F>(m_auxMap, expectAux);
 
     return Ptr()->RegisterGlobalFunction(
         funcDetails.decl.data(), funcDetails.addr, callConvOut = funcDetails.callConv, auxiliary

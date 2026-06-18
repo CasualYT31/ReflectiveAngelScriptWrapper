@@ -48,6 +48,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/OwnedObject.cpp"
     "src/SharedObject.cpp"
     "src/engine/EngineConstruction.cpp"
+    "src/engine/EngineAuxiliaryMap.cpp"
     "src/engine/EngineGlobalProperties.cpp"
     "src/engine/EngineGlobalFunctions.cpp"
     "src/engine/EngineFuncdefs.cpp"

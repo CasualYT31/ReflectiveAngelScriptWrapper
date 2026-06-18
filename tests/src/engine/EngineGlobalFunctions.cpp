@@ -20,7 +20,7 @@ inline double add2(const double a, const double b) {
 }
 
 struct Global {
-    inline int add(const int a, const int b) {
+    inline int add[[= as::AuxLabel("AuxLabel")]](const int a, const int b) {
         return a + b;
     }
 
@@ -28,7 +28,7 @@ struct Global {
         return a + b;
     }
 
-    inline const double add2(const double a, const double b) const {
+    inline const double add2[[= as::AuxLabel("AuxLabel")]](const double a, const double b) const {
         return a - b;
     }
 
@@ -56,7 +56,8 @@ TEST(AngelScriptEngineGlobalFunctions, SimpleMethod) {
     Global obj;
 
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
-    ASSERT_GE(engine.RegisterGlobalFunction<^^Global::add>(callConv, &obj), 0);
+    engine.AddAuxiliaryObject("AuxLabel", &obj);
+    ASSERT_GE(engine.RegisterGlobalFunction<^^Global::add>(callConv), 0);
     ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL);
 
     int result = 0;
@@ -85,7 +86,8 @@ TEST(AngelScriptEngineGlobalFunctions, SimpleMethodOverload) {
 
     constexpr auto intendedAdd = as::FindOverload<^^Global, const double, true, const double, const double>("add2");
     AS_NAMESPACE_QUALIFIER asDWORD callConv = -1;
-    ASSERT_GE(engine.RegisterGlobalFunction<intendedAdd>(callConv, &obj), 0);
+    engine.AddAuxiliaryObject("AuxLabel", &obj);
+    ASSERT_GE(engine.RegisterGlobalFunction<intendedAdd>(callConv), 0);
     ASSERT_EQ(callConv, AS_NAMESPACE_QUALIFIER asCALL_THISCALL_ASGLOBAL);
 
     double result = 0;

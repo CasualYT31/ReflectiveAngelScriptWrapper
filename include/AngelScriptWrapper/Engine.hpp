@@ -10,12 +10,34 @@
 #include <AngelScriptWrapper/Object.hpp>
 #include <AngelScriptWrapper/OwnedObject.hpp>
 #include <AngelScriptWrapper/SharedObject.hpp>
+#include <assert.h>
 #include <memory>
 #include <meta>
 #include <typeindex>
+#include <unordered_map>
 #include <unordered_set>
 
 namespace as {
+/**
+ * The type that represents auxiliary labels at runtime.
+ */
+using AuxiliaryKey = std::string;
+
+/**
+ * In parameter form of AuxiliaryKey.
+ */
+using AuxiliaryKeyIn = AuxiliaryKey const&;
+
+/**
+ * Generic pointer to an auxiliary object.
+ */
+using AuxiliaryPtr = void*;
+
+/**
+ * Maps auxiliary labels to auxiliary pointers.
+ */
+using AuxiliaryMap = std::unordered_map<AuxiliaryKey, AuxiliaryPtr>;
+
 struct EngineOptions {
     /**
      * Set this to true if you want all global properties to be const-qualified by default.
@@ -92,6 +114,56 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
         return m_engine && *m_engine;
     }
 
+    // MARK: Auxiliary Map
+
+    /**
+     * Replace the auxiliary object map.
+     * @param newMap The new map.
+     */
+    inline void SetAuxiliaryMap(AuxiliaryMap const& newMap) {
+        m_auxMap = newMap;
+    }
+
+    /**
+     * Adds an auxiliary object to the wrapper's map.
+     * If a global function or object behaviour or method requires an auxiliary pointer, you are to configure one using
+     * this method or one of its equivalents. First, you give the pointer to the object, along with a unique label,
+     * before trying to register the thing that requires said pointer. Then, you use AuxLabel() to attach an
+     * AuxiliaryLabel annotation to the function that will be registered. The label in the annotation must match the one
+     * given to this method. The relevant registration method will then pull the auxiliary pointer from the map and add
+     * it to the underlying AngelScript engine registration call.
+     * @warning This method asserts that an auxiliary object with the given label wasn't already added.
+     * @param k The auxiliary label to give to the object.
+     * @param v A pointer to the auxiliary object.
+     */
+    void AddAuxiliaryObject(AuxiliaryKeyIn k, AuxiliaryPtr const v);
+
+    /**
+     * Variant of AddAuxiliaryObject that lets you add multiple objects.
+     * @tparam Ts The types of the rest of the label-pointer pairs, if any.
+     * @param k The auxiliary key to give to the first object.
+     * @param v A pointer to the first auxiliary object.
+     * @param kvs The rest of the label-pointer pairs, if any.
+     */
+    template <typename... Ts> void AddAuxiliaryObjects(AuxiliaryKeyIn k, AuxiliaryPtr const v, Ts... kvs);
+
+    /**
+     * Gets the number of auxiliary objects that are currently in the wrapper's map.
+     * @return The number of auxiliary objects currently added.
+     */
+    inline std::size_t GetAuxiliaryObjectCount() const noexcept {
+        return m_auxMap.size();
+    }
+
+    /**
+     * Pulls a previously-added auxiliary object from the wrapper's map.
+     * @param k The label of the object to pull.
+     * @return The pointer to the auxiliary object.
+     */
+    inline AuxiliaryPtr GetAuxiliaryObject(AuxiliaryKeyIn k) const {
+        return m_auxMap.at(k);
+    }
+
     // MARK: Global Properties
 
     /**
@@ -138,23 +210,21 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
      * Registers a global function for use in the scripts within this engine.
      * Note that you aren't able to register overloads of functions directly. You will need to use FindOverload()
      * beforehand and use the return of that function.
+     *
+     * If you need to provide an auxiliary object, such as when registering a non-static class method, you will need to
+     * add it using AddAuxiliaryObject() beforehand, and then attach an AuxiliaryLabel annotation to the non-static
+     * class method with the same label you gave to the AddAuxiliaryObject() call.
      * @tparam F The reflection of the function to register as a global function in the application interface.
-     * @param auxiliary Passed directly to the asIScriptEngine::RegisterGlobalFunction() method. TODO: currently this is
-     *        only passed when using the THISCALL_ASGLOBAL call convention, not sure how this is used with the generic
-     *        call convention? https://www.angelcode.com/angelscript/sdk/docs/manual/doc_generic.html implies that
-     *        non-static class methods can't be used with the generic call convention, but then why is there a WRAP_MFN
-     *        macro? Is auxiliary supposed to be used like THISCALL_ASGLOBAL?
      * @return The result of the registration.
      * @sa Annotations.hpp
      */
-    template <std::meta::info F> int RegisterGlobalFunction(void* auxiliary = nullptr);
+    template <std::meta::info F> int RegisterGlobalFunction();
 
     /**
      * Version of RegisterGlobalFunction that writes the call convention used into an out reference.
      * Primarily used for testing.
      */
-    template <std::meta::info F>
-    int RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut, void* auxiliary = nullptr);
+    template <std::meta::info F> int RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callConvOut);
 
     // MARK: Funcdefs
 
@@ -234,6 +304,11 @@ private:
      * Becomes either Owned or Shared depending on how the Engine was constructed.
      */
     std::unique_ptr<Object<AS_NAMESPACE_QUALIFIER asIScriptEngine>> m_engine;
+
+    /**
+     * Maps auxiliary labels to auxiliary objects.
+     */
+    AuxiliaryMap m_auxMap;
 
     /**
      * Keeps track of which interfaces the wrapper's already registered.

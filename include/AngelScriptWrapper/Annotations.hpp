@@ -123,6 +123,27 @@ inline consteval Rename Name(std::string_view n) {
     return Rename{ std::define_static_string(n) };
 }
 
+// MARK: Auxiliary Objects
+
+/**
+ * Annotation attached to functions that require an auxiliary pointer.
+ * The pointer itself is runtime information, so it can't be attached to functions at compile time. Instead, we need to
+ * attach a compile time label to the function so that when the Engine wrapper encounters it, it can pull from its
+ * runtime-defined auxiliary object map, using said label as the key.
+ */
+struct AuxiliaryLabel {
+    const char* to;
+};
+
+/**
+ * Used to attach an AuxiliaryLabel annotation to a C++ function.
+ * @param label The auxiliary label to give to the C++ function.
+ * @return The annotation to attach to the C++ function.
+ */
+inline consteval AuxiliaryLabel AuxLabel(std::string_view label) {
+    return AuxiliaryLabel{ std::define_static_string(label) };
+}
+
 // MARK: SubTypes
 
 /**
