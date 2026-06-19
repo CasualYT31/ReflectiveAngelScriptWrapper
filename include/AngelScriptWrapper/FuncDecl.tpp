@@ -292,7 +292,8 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
     }
 
     // Name.
-    decl += " " + std::string(as::GetIdentifierOf<F>()) + "(";
+    const auto identifierOf = std::string(as::GetIdentifierOf<F>());
+    decl += " " + identifierOf + "(";
 
     // Parameter list.
     static constexpr auto ParamList = std::define_static_array(std::meta::parameters_of(F));
@@ -349,6 +350,18 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
 
     // Is this a const method?
     if constexpr (!RC && std::meta::is_const(F)) { decl += " const"; }
+
+    // Is this a property accessor?
+    constexpr auto IsProperty = HasAnnotation<F, decltype(PropertyAccessor)>();
+    if constexpr (IsProperty) {
+        const auto prefix = identifierOf.substr(0, 4);
+        if (prefix == "get_" || prefix == "set_") {
+            decl += " property";
+        } else {
+            throw("a property accessor must be prepended with get_ or set_");
+        }
+    }
+
     return std::define_static_string(decl);
 }
 

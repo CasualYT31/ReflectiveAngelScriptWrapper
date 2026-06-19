@@ -209,7 +209,7 @@ template <typename T, std::meta::info I> consteval std::string_view GetTypeDecl(
     }
 }
 
-struct ClassInformation {
+struct NonStructuralClassInformation {
     std::meta::info type;
 
     std::vector<std::meta::info> bases;
@@ -248,7 +248,10 @@ template <std::meta::info M> consteval std::string GetUniqueSignatureOfMember() 
 
 template <std::meta::info C>
 consteval bool FindMembersOf(
-    detail::ClassInformation& info, std::vector<std::meta::info>& visited, bool inherited = false, bool mixin = false
+    detail::NonStructuralClassInformation& info,
+    std::vector<std::meta::info>& visited,
+    bool inherited = false,
+    bool mixin = false
 ) {
     if constexpr (HasAnnotation<C, decltype(DoNotRegister)>()) { return false; }
 
@@ -289,7 +292,9 @@ consteval bool FindMembersOf(
 
 template <std::meta::info C>
 consteval void FindMembersRecursiveOf(
-    std::vector<detail::ClassInformation>& classes, std::vector<std::meta::info>& visited, const bool recurse
+    std::vector<detail::NonStructuralClassInformation>& classes,
+    std::vector<std::meta::info>& visited,
+    const bool recurse
 ) {
     if constexpr (HasAnnotation<C, decltype(DoNotRegister)>()) { return; }
 
@@ -331,7 +336,7 @@ template <std::meta::info C> consteval StructuralSpan<const ClassInformation> Ge
         !HasAnnotation<C, decltype(Mixin)>(), "you cannot provide Mixin classes to GetClassHierarchy() directly"
     );
 
-    std::vector<detail::ClassInformation> ret;
+    std::vector<detail::NonStructuralClassInformation> ret;
     std::vector<std::meta::info> visited;
     detail::FindMembersRecursiveOf<C>(ret, visited, recurse);
 

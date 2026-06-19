@@ -343,6 +343,16 @@ enum class GenericCallConvType {
     WrapObjLast,
 };
 
+// MARK: Property Accessors
+
+/**
+ * Annotation attached to functions that are to be property accessors.
+ * The identifier of the function must be prepended with get_ or set_ according to which type of accessor you wish to
+ * declare.
+ */
+inline constexpr struct {
+} PropertyAccessor{};
+
 // MARK: Funcdefs
 
 /**

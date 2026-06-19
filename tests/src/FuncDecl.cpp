@@ -237,3 +237,26 @@ STATIC_ASSERT_EQ(
     as::GetFuncDecl<^^variableParameterTypeSurroundedByParameters>(),
     "void variableParameterTypeSurroundedByParameters(int32, ?&out, const int32&in)"
 );
+
+struct PropertyAccessors {
+    inline int get_prop[[= as::PropertyAccessor]]() const {
+        return 6;
+    }
+
+    inline void set_prop[[= as::PropertyAccessor]](int newVal) {}
+
+    inline int get_indexedProp[[= as::PropertyAccessor]](unsigned int idx) const {
+        return 6;
+    }
+
+    inline void set_indexedProp[[= as::PropertyAccessor]](unsigned int idx, int newVal) {}
+};
+
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^PropertyAccessors::get_prop>(), "int32 get_prop() const property");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^PropertyAccessors::set_prop>(), "void set_prop(int32) property");
+STATIC_ASSERT_EQ(
+    as::GetFuncDecl<^^PropertyAccessors::get_indexedProp>(), "int32 get_indexedProp(uint32) const property"
+);
+STATIC_ASSERT_EQ(
+    as::GetFuncDecl<^^PropertyAccessors::set_indexedProp>(), "void set_indexedProp(uint32, int32) property"
+);
