@@ -150,13 +150,13 @@ Like with [const global properties](03-PROPERTIES.md#const-global-properties-by-
 The generic call convention is a particularly tricky case as the usual way you write functions that follow it makes it impossible to generate a declaration using traditional means. It is therefore impossible to avoid having to write the declaration for these functions:
 
 ```cpp
-void generic[[as::Generic("int myGenericFunction(array<string>@, int64)")]](asIScriptGeneric* g);
+void generic[[=as::Generic("int myGenericFunction(array<string>@, int64)")]](asIScriptGeneric* g);
 ```
 
 However, with the help of the autowrapper add on, it is possible for you to write most functions as normal whilst using the generic call convention _and_ letting the library generate the declaration for you!
 
 ```cpp
-int myGenericFunction[[as::Generic()]](CScriptArray* arr[[=as::subtype::String]], std::int64_t b);
+int myGenericFunction[[=as::Generic()]](CScriptArray* arr[[=as::subtype::String]], std::int64_t b);
 ```
 
 This is what happens behind the scenes when you set the default call convention to generic. However, if you write the function with the special `void(asIScriptGeneric*)` signature, then you will **always** have to use the `as::Generic()` function to attach a `GenericWithDecl` annotation that contains the function declaration to register with, even if the default call convention is set to generic.
@@ -170,7 +170,7 @@ constexpr EngineOptions opts = { .AutoHandleDefault = true };
 
 int myGenericFunction(CScriptArray* arr[[=as::subtype::String]], std::int64_t);
 
-void generic[[as::Generic<^^myGenericFunction, opts.AutoHandleDefault>()]](asIScriptGeneric* g);
+void generic[[=as::Generic<^^myGenericFunction, opts.AutoHandleDefault>()]](asIScriptGeneric* g);
 
 // This will then register the function with the name "myGenericFunction":
 engine.RegisterGlobalFunction<^^generic>();

@@ -226,12 +226,10 @@ engine.RegisterInterface<^^InterfaceC>();
 // ... is the same as ...
 
 pEngine->RegisterInterface("InterfaceC");
-pEngine->RegisterInterfaceMethod("InterfaceC", "void methodA()");
-pEngine->RegisterInterfaceMethod("InterfaceC", "void methodB()");
 pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
 ```
 
-Notice that this also excludes all bases interfaces. But base interfaces that aren't annotated with `DoNotRegister` can still be registered separately.
+Notice that this also excludes all base interfaces of the excluded interface. But base interfaces that aren't annotated with `DoNotRegister` can still be registered separately.
 
 You can also exclude individual methods from registration:
 
