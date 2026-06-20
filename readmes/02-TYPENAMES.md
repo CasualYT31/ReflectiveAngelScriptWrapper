@@ -19,7 +19,7 @@ static_assert(as::TypeDecl<MyCustomType> == "MyCustomType");
 
 ### Template Types
 
-Template classes require explicit specialization of `TypeName`. This is because they do not have identifiers like regular classes. Also remember that AngelScript template classes are not the same as C++ template classes: each specialization of your C++ template class will be a completely separate class when registered with the application interface, so you cannot use [the `Rename` annotation](/readmes/6-TYPES.md).
+Template classes require explicit specialization of `TypeName`. This is because they do not have identifiers like regular classes. Also remember that AngelScript template classes are not the same as C++ template classes: each specialization of your C++ template class will be a completely separate class when registered with the application interface, so you cannot use [the `Rename` annotation](/readmes/06-REFERENCE-TYPES.md).
 
 Here is a simple example of how you might specialize `TypeName` for a template class:
 
@@ -78,9 +78,9 @@ Again, since the subtypes of template types are known only at runtime, you need 
 ---
 
 <div align="center">
-    <a href="1-WRAPPERS.md">◄ 1. Wrappers</a>
+    <a href="01-WRAPPERS.md">◄ 01. Wrappers</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="3-PROPERTIES.md">3. Properties ►</a>
+    <a href="03-PROPERTIES.md">03. Properties ►</a>
 </div>

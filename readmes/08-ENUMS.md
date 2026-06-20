@@ -49,9 +49,9 @@ pEngine->RegisterEnumValue("RenamedEnum", "Four", 60);
 ---
 
 <div align="center">
-    <a href="7-TYPEDEFS.md">◄ 7. Typedefs</a>
+    <a href="07-TYPEDEFS.md">◄ 07. Typedefs</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="9-INTERFACES.md">9. Interfaces ►</a>
+    <a href="09-INTERFACES.md">09. Interfaces ►</a>
 </div>

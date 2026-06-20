@@ -52,9 +52,9 @@ pEngine->RegisterGlobalFunction(
 ---
 
 <div align="center">
-    <a href="4-FUNCTIONS.md">◄ 4. Functions</a>
+    <a href="04-FUNCTIONS.md">◄ 04. Functions</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="6-TYPES.md">6. Types ►</a>
+    <a href="06-REFERENCE-TYPES.md">06. Reference Types ►</a>
 </div>

@@ -70,9 +70,9 @@ pEngine->RegisterGlobalProperty("float nonConstCounter", &nonConstCounter);
 ---
 
 <div align="center">
-    <a href="2-TYPENAMES.md">◄ 2. Typenames</a>
+    <a href="02-TYPENAMES.md">◄ 02. Typenames</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="4-FUNCTIONS.md">4. Functions ►</a>
+    <a href="04-FUNCTIONS.md">04. Functions ►</a>
 </div>

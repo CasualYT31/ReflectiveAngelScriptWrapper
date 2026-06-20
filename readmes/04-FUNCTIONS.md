@@ -143,7 +143,7 @@ void cdecl[[=as::ObjFirst]](MyObj* o, MyObj* o) {}
 void cdecl[[=as::ObjLast]](MyObj* o, MyObj* o) {}
 ```
 
-Like with [const global properties](3-PROPERTIES.md#const-global-properties-by-default), you can set a `CallConventionDefault` to make it something other than CDecl if you'd prefer. It can be set to one of `asCALL_CDECL`, `asCALL_STDCALL`, or `asCALL_GENERIC`. There exists an `as::CDecl` annotation for the case where your default is StdCall but some of your functions use CDecl.
+Like with [const global properties](03-PROPERTIES.md#const-global-properties-by-default), you can set a `CallConventionDefault` to make it something other than CDecl if you'd prefer. It can be set to one of `asCALL_CDECL`, `asCALL_STDCALL`, or `asCALL_GENERIC`. There exists an `as::CDecl` annotation for the case where your default is StdCall but some of your functions use CDecl.
 
 ### Generic Call Convention
 
@@ -180,7 +180,7 @@ Note that you can also pass in the `AutoHandleDefault` and `RC` parameters used 
 
 ## `GetFuncDecl()`
 
-The mechanism behind function declaration generation can be found in this template function. Here are tables describing how it converts C++ parameters to AngelScript equivalents. Keep in mind that C++ types are by default values types: they must be annotated with [`RefType`](6-TYPES.md#reftype-annotation) to be considered reference types.
+The mechanism behind function declaration generation can be found in this template function. Here are tables describing how it converts C++ parameters to AngelScript equivalents. Keep in mind that C++ types are by default values types: they must be annotated with [`RefType`](06-REFERENCE-TYPES.md#reftype-annotation) to be considered reference types.
 
 ### Value Types
 
@@ -193,7 +193,7 @@ By const reference | `int const&` | `const int32&in` |
 By pointer | `int*` | `int32&out` | Value types cannot be passed as `&inout`.
 By pointer to const | `int const*` | `const int32&in` | Const pointers (i.e. `int* const`) don't change the type used.
 
-Return types that are value types are converted into their corresponding AngelScript declaration using regular [`TypeOf()`](2-TYPENAMES.md#typeof) logic, where the function's reflection object is given as the template argument.
+Return types that are value types are converted into their corresponding AngelScript declaration using regular [`TypeOf()`](02-TYPENAMES.md#typeof) logic, where the function's reflection object is given as the template argument.
 
 ### Reference Types
 
@@ -247,9 +247,9 @@ These are "supported," although since they both require the generic call convent
 ---
 
 <div align="center">
-    <a href="3-PROPERTIES.md">◄ 3. Properties</a>
+    <a href="03-PROPERTIES.md">◄ 03. Properties</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="5-FUNCDEFS.md">5. Funcdefs ►</a>
+    <a href="05-FUNCDEFS.md">05. Funcdefs ►</a>
 </div>

@@ -298,7 +298,8 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
 
     /**
      * Registers a C++ type for use in the scripts within this engine.
-     * Please read [the documentation on types](/readmes/6-TYPES.md) for more information.
+     * Please read the documentation on [reference types](/readmes/06-REFERENCE-TYPES.md) and
+     * [value types](/readmes/10-VALUE-TYPES.md) for more information.
      * @tparam T A reflection of the type to register.
      * @tparam R Whether or not to recursively register each base type separately, too. If so, casting operators will be
      *         registered on each class in the hierarchy to establish their relationships. If a casting operator has

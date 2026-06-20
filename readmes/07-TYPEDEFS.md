@@ -41,11 +41,11 @@ The `decl` parameter that is given to the underlying `RegisterTypedef()` call wi
 ---
 
 <div align="center">
-    <a href="6-TYPES.md">◄ 6. Types</a>
+    <a href="06-REFERENCE-TYPES.md">◄ 06. Reference Types</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
-    <a href="8-ENUMS.md">8. Enums ►</a>
+    <a href="08-ENUMS.md">08. Enums ►</a>
 </div>
 
 [^1]: Reminder that [AngelScript only supports registering typedefs for primitive types](https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#addb24466769dc52be96c7e37d5305245).

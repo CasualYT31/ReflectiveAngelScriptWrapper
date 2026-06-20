@@ -313,8 +313,9 @@ You cannot register mixin interfaces directly.
 ---
 
 <div align="center">
-    <a href="8-ENUMS.md">◄ 8. Enums</a>
+    <a href="08-ENUMS.md">◄ 08. Enums</a>
     &emsp;&emsp;
     <a href="/README.md#table-of-contents">Back to Contents</a>
     &emsp;&emsp;
+    <a href="10-VALUE-TYPES.md">10. Value Types ►</a>
 </div>
