@@ -102,6 +102,11 @@ struct ClassInformation {
     const StructuralSpan<const std::meta::info> bases;
 
     /**
+     * The known derived classes, both direct and indirect, of type, if any.
+     */
+    const StructuralSpan<const std::meta::info> derivatives;
+
+    /**
      * The members of type.
      * Check the documentation on GetClassHierarchy() to see which members will be
      */
@@ -126,6 +131,10 @@ struct ClassInformation {
  *
  * This function does not distinguish between different versions of overridden members (this includes fields, so don't
  * override those!): it will simply return the first version found. It does, however, include all function overloads.
+ *
+ * Note that no derived classes will be recorded for C's entry, as there is no way for the function to know which
+ * classes have derived from a given class. We can know the derived classes of each base class, though, at least those
+ * within the hierarchy from C, so these will be recorded in separate entries if recurse is true.
  *
  * If a class has the DoNotRegister annotation attached to it, it will be entirely excluded from the result, along with
  * all of its base classes. Base classes could still be included in the result of a different call to

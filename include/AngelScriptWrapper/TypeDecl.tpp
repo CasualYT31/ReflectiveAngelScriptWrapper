@@ -214,6 +214,8 @@ struct NonStructuralClassInformation {
 
     std::vector<std::meta::info> bases;
 
+    std::vector<std::meta::info> derivatives;
+
     std::vector<ClassMember> members;
 
     std::vector<std::string> memberIdentifiers;
@@ -294,9 +296,26 @@ template <std::meta::info C>
 consteval void FindMembersRecursiveOf(
     std::vector<detail::NonStructuralClassInformation>& classes,
     std::vector<std::meta::info>& visited,
-    const bool recurse
+    const bool recurse,
+    std::vector<std::meta::info>& subclasses
 ) {
     if constexpr (HasAnnotation<C, decltype(DoNotRegister)>()) { return; }
+
+    if (!subclasses.empty()) {
+        // Always add to the derivatives list, even if we've already visited C,
+        // as there could be multiple derivatives of C.
+        for (auto& cls : classes) {
+            if (cls.type == C) {
+                for (const auto& subclass : subclasses) {
+                    if (std::find(cls.derivatives.begin(), cls.derivatives.end(), subclass) == cls.derivatives.end()) {
+                        cls.derivatives.push_back(subclass);
+                    }
+                }
+                break;
+            }
+        }
+        // If this loop does not add the derivative to the list, we'll add it later.
+    }
 
     for (auto v : visited) {
         if (v == C) { return; }
@@ -304,6 +323,8 @@ consteval void FindMembersRecursiveOf(
     visited.push_back(C);
 
     classes.emplace_back(C);
+    for (const auto& subclass : subclasses) { classes.back().derivatives.push_back(subclass); }
+
     std::vector<std::meta::info> visitedInner;
     detail::FindMembersOf<C>(classes.back(), visitedInner);
 
@@ -312,7 +333,9 @@ consteval void FindMembersRecursiveOf(
                       std::define_static_array(std::meta::bases_of(C, std::meta::access_context::current()))) {
             constexpr auto bType = std::meta::type_of(b);
             if constexpr (!HasAnnotation<bType, decltype(Mixin)>()) {
-                FindMembersRecursiveOf<bType>(classes, visited, recurse);
+                subclasses.push_back(C);
+                FindMembersRecursiveOf<bType>(classes, visited, recurse, subclasses);
+                subclasses.pop_back();
             }
         }
     }
@@ -338,11 +361,17 @@ template <std::meta::info C> consteval StructuralSpan<const ClassInformation> Ge
 
     std::vector<detail::NonStructuralClassInformation> ret;
     std::vector<std::meta::info> visited;
-    detail::FindMembersRecursiveOf<C>(ret, visited, recurse);
+    std::vector<std::meta::info> subclasses;
+    detail::FindMembersRecursiveOf<C>(ret, visited, recurse, subclasses);
 
     std::vector<ClassInformation> staticRet;
     for (const auto r : ret) {
-        staticRet.emplace_back(r.type, std::define_static_array(r.bases), std::define_static_array(r.members));
+        staticRet.emplace_back(
+            r.type,
+            std::define_static_array(r.bases),
+            std::define_static_array(r.derivatives),
+            std::define_static_array(r.members)
+        );
     }
     return std::define_static_array(staticRet);
 }
