@@ -296,7 +296,27 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
 
     // MARK: Object Types
 
-    // template <std::meta::info T> int RegisterObjectType();
+    /**
+     * Registers a C++ type for use in the scripts within this engine.
+     * Please read [the documentation on types](/readmes/6-TYPES.md) for more information.
+     * @tparam T A reflection of the type to register.
+     * @tparam R Whether or not to recursively register each base type separately, too. If so, casting operators will be
+     *         registered on each class in the hierarchy to establish their relationships. If a casting operator has
+     *         already been registered, it will be skipped for you. This goes for types in general, too.
+     * @return The type ID of T on success, or the first error code encountered on failure.
+     */
+    template <std::meta::info T, bool R = true> int RegisterObjectType();
+
+    /**
+     * Figures out if this wrapper has already been used to register the given type.
+     * This method will only return true if the RegisterObjectType() template method has been used to register the given
+     * type. If the type has been registered directly via Ptr(), then this method will always return false.
+     * @tparam T The type to query.
+     * @return True if the type has already been registered using RegisterObjectType(), false if not.
+     */
+    template <typename T> inline bool HasRegisteredObjectType() {
+        return m_types.contains(std::type_index(typeid(T)));
+    }
 
 private:
     /**
@@ -315,6 +335,20 @@ private:
      * This is used to stop the wrapper from trying to register the same interface more than once.
      */
     std::unordered_set<std::type_index> m_interfaces;
+
+    /**
+     * Keeps track of which types the wrapper's already registered.
+     * This is used to stop the wrapper from trying to register the same type more than once. However, it does not stop
+     * new casting operators from being registered for existing types.
+     */
+    std::unordered_set<std::type_index> m_types;
+
+    /**
+     * Keeps track of which casting operators have been registered for which object types.
+     * This is used to prevent asALREADY_REGISTERED errors when recursively registering two or more classes that inherit
+     * from the same base class/es.
+     */
+    std::unordered_map<std::string, std::unordered_set<std::string>> m_castingOperators;
 };
 } // namespace as
 

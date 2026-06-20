@@ -161,8 +161,8 @@ int Engine<Opts>::RegisterGlobalFunction(AS_NAMESPACE_QUALIFIER asDWORD& callCon
 
     return Ptr()->RegisterGlobalFunction(
         funcDetails.decl.data(), funcDetails.addr, callConvOut = funcDetails.callConv, auxiliary
-        );
-    }
+    );
+}
 
 template <EngineOptions Opts> template <std::meta::info F> int Engine<Opts>::RegisterFuncdef() {
     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
@@ -220,170 +220,353 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
     return r;
 }
 
-/* Prerequisites TODO list:
-1. Have ObjFirst or ObjLast default engine setting.
-*/
-
 /* Reference types TODO list:
-1. Factory function, default and custom.
-2. Factory functions with auxiliary objects.
-3. List factory functions (see point 3 under value types).
-4. AddRef and Release behaviours, including asOBJ_NOCOUNT.
-5. Support scoped reference types that only have Release behaviour. ScopedReferenceType.hpp.
+[x] 1. Factory function, default and custom.
+[x] 2. Factory functions with auxiliary objects.
+[ ] 3. List factory functions (see point 3 under value types).
+[x] 4. AddRef and Release behaviours, including asOBJ_NOCOUNT.
+[ ] 5. Support scoped reference types that only have Release behaviour. ScopedReferenceType.hpp.
     a. https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_scoped_type.html
        These types have their own weird @ and &in/&out behaviour... Might need to make this a special type like
        as::RefType.
-6. Support asOBJ_NOHANDLE. No factory, addref or release behaviours.
-7. Support inheritance. Automatically add opCast and opImplCast methods. Make it work across multiple levels of the
+[x] 6. Support asOBJ_NOHANDLE. No factory, addref or release behaviours.
+[x] 7. Support inheritance. Automatically add opCast and opImplCast methods. Make it work across multiple levels of the
    hierarchy.
-8. Support weak refs.
+[ ] 8. Support weak refs.
 */
 
 /* Value types TODO list:
-1. Tell the difference between a POD type and a non-POD type.
-2. Figure out how constructors and destructors will work (similarly to factory functions probably).
-3. Figure out how list constructors will work (want to minimize manually writing out the pattern as much as possible).
-4. Use asGetTypeTraits().
-5. asOBJ_APP_CLASS_MORE_CONSTRUCTORS.
-6. asOBJ_APP_CLASS_ALLINTS.
-7. asOBJ_APP_CLASS_ALLFLOATS.
-8. asOBJ_APP_CLASS_ALIGN8. How can I tell if a class may require 8byte alignment??
-9. asOBJ_APP_CLASS_UNION. How would I even register a class that uses unions?
+[ ] 1. Tell the difference between a POD type and a non-POD type.
+[ ] 2. Figure out how constructors and destructors will work (similarly to factory functions probably).
+[ ] 3. Figure out how list constructors will work (want to minimize manually writing out the pattern as much as
+       possible).
+[ ] 4. Use asGetTypeTraits().
+[ ] 5. asOBJ_APP_CLASS_MORE_CONSTRUCTORS.
+[ ] 6. asOBJ_APP_CLASS_ALLINTS.
+[ ] 7. asOBJ_APP_CLASS_ALLFLOATS.
+[ ] 8. asOBJ_APP_CLASS_ALIGN8. How can I tell if a class may require 8byte alignment??
+[ ] 9. asOBJ_APP_CLASS_UNION. How would I even register a class that uses unions?
 */
 
 /* Operators TODO list:
-1. Create a mapping from display_string_of() to AngelScript op method names.
-2. Support both static and non-static operators so long as they are within the class's scope.
-3. Do we want to ignore special member functions?
-4. Refer to Claude notes below on getting the correct method pointer.
+[ ] 1. Create a mapping from display_string_of() to AngelScript op method names.
+[ ] 2. Support both static and non-static operators so long as they are within the class's scope.
+[ ] 3. Do we want to ignore special member functions?
 */
 
 /* Methods TODO list:
-1. Ignore non-public, static, and pure virtual methods, along with constructors and destructors.
-2. Do we support composite members? Inclination is to ignore this for now, but it might be useful.
-3. Detect property accessors, i.e. get_XYZ and set_XYZ methods, and append "property" to the declaration.
+[x] 1. Ignore non-public, static, and pure virtual methods, along with constructors and destructors.
+[ ] 2. Do we support composite members? Inclination is to ignore this for now, but it might be useful.
+[x] 3. Detect property accessors, i.e. get_XYZ and set_XYZ methods, and append "property" to the declaration.
 */
 
 /* Properties TODO list:
-1. Public properties only.
-2. Supporting pointer properties. They require special & syntax, regardless of ref or value type?
-3. Ignore composite members.
+[x] 1. Public properties only.
+[x] 2. Supporting pointer properties. They require special & syntax, regardless of ref or value type?
+[ ] 3. Ignore composite members for now.
 */
 
 /* Garbage-collected types TODO list:
-1. Implement GarbageCollectedReferenceType.hpp ...
-2. ... and GarbageCollectedValueType.hpp abstract classes.
-3. Detect presence of garbage collection-related methods/functions and apply asOBJ_GC flag, etc.
+[ ] 1. Implement GarbageCollectedReferenceType.hpp ...
+[ ] 2. ... and GarbageCollectedValueType.hpp abstract classes.
+[ ] 3. Detect presence of garbage collection-related methods/functions and apply asOBJ_GC flag, etc.
 */
 
 /* Template types TODO list:
-1. Factory (ref) and constructor (value) hidden parameter: map asITypeInfo* to int&in.
-2. Support 1 for list factories/constructors, too.
-3. if_handle_then_const.
-4. asBEHAVE_TEMPLATE_CALLBACK behaviour.
-5. Template specializations.
+[ ] 1. Factory (ref) and constructor (value) hidden parameter: map asITypeInfo* to int&in.
+[ ] 2. Support 1 for list factories/constructors, too.
+[ ] 3. if_handle_then_const.
+[ ] 4. asBEHAVE_TEMPLATE_CALLBACK behaviour.
+[ ] 5. Template specializations.
 */
 
 /* Scoped funcdefs TODO list:
-1. Support scoped funcdefs, i.e. if the given function declaration is within a class, scope it to that class:
+[ ] 1. Support scoped funcdefs, i.e. if the given function declaration is within a class, scope it to that class:
    https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#a03c1a2cc23ae4b742c927f3472a1a4f7.
-2. Support scoped funcdefs for template types.
+[ ] 2. Support scoped funcdefs for template types.
 */
 
-/* Claude on getting member pointers & offsets in relation to e.g. MyDerived:
-This is a tricky one because the reflection system gives you members as they were originally declared — an inherited
-method's reflection will always refer to the base class it was declared in, so splicing it directly always gives you the
-base class pointer.
+namespace detail {
+using EnginePtr = AS_NAMESPACE_QUALIFIER asIScriptEngine* const;
 
-The key insight is that you don't actually need the address relative to the derived class for methods — what AngelScript
-needs is a method pointer that works correctly when called on the derived class, and a base class method pointer already
-satisfies that via normal C++ virtual dispatch and implicit pointer conversion. So `&[:BaseClass::MyInheritedMethod:]`
-cast to a `BaseClass` method pointer, then registered against `GivenClass`, should work correctly.
+struct OrganizedClassInformation : ClassInformation {
+    const StructuralSpan<const ClassMember> factoryBehaviours;
 
-However if you do need the derived class pointer explicitly — for example for non-virtual methods where AngelScript
-needs the correct `this` pointer adjustment — the approach is to use the type from `GetClassHierarchy` to form the cast
-explicitly:
+    const StructuralSpan<const ClassMember> addRefBehaviours;
 
-```cpp
-consteval auto MemberPtrFor(std::meta::info givenClass, std::meta::info member) {
-    // If the member is declared in givenClass, splice directly
-    if (std::meta::parent_of(member) == givenClass)
-        return &[: member :];
+    const StructuralSpan<const ClassMember> releaseBehaviours;
 
-    // Otherwise cast the base class pointer to the given class
-    // by forming the correct pointer-to-member type
-    using GivenType = [: givenClass :];
-    using RetType   = [: std::meta::return_type_of(member) :];
-    return static_cast<RetType (GivenType::*)(
-        [: std::meta::type_of(p) :] ... [: std::meta::parameters_of(member) :]
-    )>(&[: member :]);
+    const StructuralSpan<const ClassMember> methods;
+
+    const StructuralSpan<const ClassMember> properties;
+};
+
+template <OrganizedClassInformation T> int RegisterObjectType(EnginePtr engine, std::string_view const& typeName) {
+    using type = [:T.type:];
+    constexpr auto typeIsRef = IsRefType<type>();
+    constexpr auto typeSize = typeIsRef ? 0 : sizeof(type);
+
+    AS_NAMESPACE_QUALIFIER asQWORD flags =
+        typeIsRef ? AS_NAMESPACE_QUALIFIER asOBJ_REF : AS_NAMESPACE_QUALIFIER asOBJ_VALUE;
+
+    if constexpr (typeIsRef && T.addRefBehaviours.empty() && T.releaseBehaviours.empty()) {
+        if constexpr (T.factoryBehaviours.empty()) {
+            flags |= AS_NAMESPACE_QUALIFIER asOBJ_NOHANDLE;
+        } else {
+            flags |= AS_NAMESPACE_QUALIFIER asOBJ_NOCOUNT;
+        }
+    }
+
+    return engine->RegisterObjectType(
+        typeName.data(), typeSize, static_cast<AS_NAMESPACE_QUALIFIER asEObjTypeFlags>(flags)
+    );
 }
-```
 
-The cast is safe because `GivenClass` inherits from `BaseClass`, so a pointer-to-member of `BaseClass` is implicitly
-convertible to a pointer-to-member of `GivenClass` — this is the contravariant pointer-to-member conversion rule in C++,
-and it's exactly what AngelScript needs to call the method on a `GivenClass` instance.
+template <std::meta::info F, EngineOptions Opts>
+int RegisterObjectBehaviour(
+    EnginePtr engine,
+    std::string_view const& typeName,
+    const AS_NAMESPACE_QUALIFIER asEBehaviours behaviourCode,
+    AuxiliaryMap const& auxMap
+) {
+    const auto funcDetails = detail::GetFuncDetails<F, Opts, true>();
 
-For **data members** (properties) rather than methods, `offsetof` or `std::meta::offset_of` is the right tool — it gives
-you the byte offset of the member relative to any class in the hierarchy, and AngelScript's property registration
-typically takes an offset rather than a pointer anyway:
+    void* const aux = detail::FindAuxiliaryObject<F>(auxMap, funcDetails.auxObj);
 
-```cpp
-consteval std::size_t OffsetOf(std::meta::info givenClass, std::meta::info member) {
-    return std::meta::offset_of(member); // offset is absolute, works regardless of which class declared it
+    return engine->RegisterObjectBehaviour(
+        typeName.data(), behaviourCode, funcDetails.decl.data(), funcDetails.addr, funcDetails.callConv, aux
+    );
 }
-```
 
-So the short answer is: for methods, use the contravariant pointer-to-member cast; for properties, use `offset_of` which
-is already class-agnostic.
-*/
+template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectFactoryFunction(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
+    constexpr auto ds = std::meta::display_string_of(F);
+    static_assert(
+        std::meta::is_static_member(F), std::string(ds) + " was marked as a factory function, but it is non-static"
+    );
+    static_assert(
+        std::meta::return_type_of(F) == ^^T*,
+        std::string(ds) + " was marked as a factory function, but it does not return a pointer to "
+            + std::string(typeName)
+    );
 
-// template <std::meta::info T> int Engine::RegisterObjectType() {
-//     if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
-//     using type = [:T:];
-//     const auto typeName = TypeName<type>.c_str();
-//     const auto typeIsRef = IsRefType<T>();
-//     const auto typeHasFactory = typeIsRef && HasFactoryFunction<type>;
-//     const auto typeIsRefCounted = typeIsRef && IsReferenceCounted<type>;
-//     const auto typeSize = typeIsRef ? 0 : sizeof(type);
-//     auto flags = typeIsRef ? AS_NAMESPACE_QUALIFIER asOBJ_REF : AS_NAMESPACE_QUALIFIER asOBJ_VALUE;
-//     // We can apply the asOBJ_NOCOUNT flag automatically if the AddRef and Release behaviours are not implemented.
-//     // This approach does force you to implement the behaviours as AddRef and Release member functions.
-//     if (typeIsRef && !typeIsRefCounted) { flags |= AS_NAMESPACE_QUALIFIER asOBJ_NOCOUNT; }
-//     auto r = Ptr()->RegisterObjectType(typeName, typeSize, flags);
-//     if (r < 0) { return r; }
+    return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY, aux);
+}
 
-// // Register Factory behaviour.
-// if (typeHasFactory) {
-//     r = Ptr()->RegisterObjectBehaviour(
-//         typeName,
-//         AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY,
-//         as::GetFuncDecl<^^type::Factory>(),
-//         AS_NAMESPACE_QUALIFIER asFUNCTION(type::Factory),
-//         // TODO: replace with updated function.
-//         GetFuncCallConv<^^type::Factory>()
-//     );
-//     if (r < 0) { return r; }
-// }
+template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectAddRefFunction(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
+    return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF, aux);
+}
 
-// // Register AddRef and Release behaviours.
-// if (typeIsRefCounted) {
-//     r = Ptr()->RegisterObjectBehaviour(
-//         typeName,
-//         AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF,
-//         "void f()",
-//         AS_NAMESPACE_QUALIFIER asMETHOD(type, AddRef),
-//         AS_NAMESPACE_QUALIFIER asCALL_THISCALL
-//     );
-//     if (r < 0) { return r; }
-//     r = Ptr()->RegisterObjectBehaviour(
-//         typeName,
-//         AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE,
-//         "void f()",
-//         AS_NAMESPACE_QUALIFIER asMETHOD(type, Release),
-//         AS_NAMESPACE_QUALIFIER asCALL_THISCALL
-//     );
-//     if (r < 0) { return r; }
-// }
-// }
+template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectReleaseFunction(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
+    return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE, aux);
+}
+
+template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectMethod(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
+    const auto funcDetails = detail::GetFuncDetails<F, Opts>();
+
+    if (funcDetails.callConv == AS_NAMESPACE_QUALIFIER asCALL_CDECL
+        || funcDetails.callConv == AS_NAMESPACE_QUALIFIER asCALL_STDCALL) {
+        // A static method was given that didn't explicitly request OBJFIRST or OBJLAST,
+        // do not register it.
+        return 0;
+    }
+
+    return engine->RegisterObjectMethod(
+        typeName.data(), funcDetails.decl.data(), funcDetails.addr, funcDetails.callConv
+    );
+}
+
+template <std::meta::info P, EngineOptions Opts, typename T>
+int RegisterObjectProperty(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
+    using PType = [:std::meta::type_of(P):];
+    constexpr auto identifierOf = std::meta::identifier_of(P);
+
+    std::string decl;
+    if constexpr (IsPointer<PType>) {
+        constexpr auto typeOf = detail::OverrideTypeOf<std::remove_pointer_t<PType>, P>;
+        decl = std::string(typeOf) + " &" + std::string(identifierOf);
+    } else {
+        constexpr auto typeOf = TypeOf<P>;
+        decl = std::string(typeOf) + " " + std::string(identifierOf);
+    }
+
+    return engine->RegisterObjectProperty(typeName.data(), decl.c_str(), std::meta::offset_of(P).bytes);
+}
+
+template <ClassInformation I> OrganizedClassInformation consteval OrganizedClassHierarchy() {
+    std::vector<ClassMember> factoryBehaviours;
+    std::vector<ClassMember> addRefBehaviours;
+    std::vector<ClassMember> releaseBehaviours;
+    std::vector<ClassMember> methods;
+    std::vector<ClassMember> properties;
+
+    static constexpr auto members = I.members;
+    template for (constexpr auto m : members) {
+        if constexpr (std::meta::is_function(m.member)) {
+            if constexpr (!m.inherited) {
+                // Some behaviours cannot be inherited, check for these first and ignore them if they are found in
+                // base classes.
+                if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY>()) {
+                    factoryBehaviours.push_back(m);
+                    continue;
+                }
+            }
+            if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF>()) {
+                addRefBehaviours.push_back(m);
+            } else if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE>()) {
+                releaseBehaviours.push_back(m);
+            } else {
+                methods.push_back(m);
+            }
+        } else if constexpr (std::meta::is_nonstatic_data_member(m.member)) {
+            properties.push_back(m);
+        } // else ignore member.
+    }
+
+    return OrganizedClassInformation{
+        ClassInformation{ I },
+        std::define_static_array(factoryBehaviours),
+        std::define_static_array(addRefBehaviours),
+        std::define_static_array(releaseBehaviours),
+        std::define_static_array(methods),
+        std::define_static_array(properties),
+    };
+}
+
+// Adapted from https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_class_hierarchy.html.
+template <class From, class To> To* RefCast(From* from) {
+    // If the handle already is a null handle, then just return the null handle.
+    // Otherwise, try to dynamically cast the pointer to the wanted type.
+    // The operator will be registered with the auto handle, so the AddRef will be handled for us.
+    return dynamic_cast<To*>(from);
+}
+} // namespace detail
+
+#define AS_DETAIL_REGISTER_MEMBERS(span, func)                                                                         \
+    {                                                                                                                  \
+        static constexpr auto members = organizedC.span;                                                               \
+        template for (constexpr auto m : members) {                                                                    \
+            if (const auto r = func<m.member, Opts, type>(Ptr(), className, m_auxMap); r < 0) { return r; }            \
+        }                                                                                                              \
+    }
+
+template <EngineOptions Opts> template <std::meta::info T, bool R> int Engine<Opts>::RegisterObjectType() {
+    if (!HasEngine()) { return AS_NAMESPACE_QUALIFIER asINVALID_ARG; }
+    static constexpr auto classHierarchy = GetClassHierarchy<T>(R);
+    int typeId = -1;
+
+    template for (constexpr auto c : classHierarchy) {
+        using type = [:c.type:];
+        if (HasRegisteredObjectType<type>()) { continue; }
+
+        // 1. Organize the class hierarchy so we know ahead of time which behaviors the type will have.
+        constexpr auto className = TypeName<type>;
+        static constexpr auto organizedC = detail::OrganizedClassHierarchy<c>();
+
+        // 2. Register the type.
+        if (const auto r = detail::RegisterObjectType<organizedC>(Ptr(), className); r < 0) {
+            return r;
+        } else if (typeId < 0) {
+            typeId = r;
+        }
+        m_types.insert(std::type_index(typeid(type)));
+
+        // 3. Register properties, members and behaviours.
+        AS_DETAIL_REGISTER_MEMBERS(addRefBehaviours, detail::RegisterObjectAddRefFunction);
+        AS_DETAIL_REGISTER_MEMBERS(releaseBehaviours, detail::RegisterObjectReleaseFunction);
+        // It is important to register AddRef and Release behaviours before Factory behaviours.
+        // E.g. you may wish to register a copy factory that accepts a handle to your ref type.
+        AS_DETAIL_REGISTER_MEMBERS(factoryBehaviours, detail::RegisterObjectFactoryFunction);
+        AS_DETAIL_REGISTER_MEMBERS(methods, detail::RegisterObjectMethod);
+        AS_DETAIL_REGISTER_MEMBERS(properties, detail::RegisterObjectProperty);
+    }
+
+    // Register class relationships separately as all base and derived types have been registered by now.
+    // We still carry out this process for types that have already been registered. But don't bother with
+    // this process at all if recursion is turned off, as we won't necessarily have the base types to cast to.
+    if constexpr (R) {
+        template for (constexpr auto c : classHierarchy) {
+            using type = [:c.type:];
+            constexpr auto className = TypeName<type>;
+            const auto classNameStr = std::string(className);
+
+            static constexpr auto bases = c.bases;
+            template for (constexpr auto b : bases) {
+                using baseType = [:b:];
+                constexpr auto baseClassName = TypeName<baseType>;
+
+                const auto implCastDecl = std::string(baseClassName) + "@+ opImplCast()";
+
+                if (m_castingOperators[classNameStr].contains(implCastDecl)) {
+                    continue;
+                } else {
+                    m_castingOperators[classNameStr].insert(implCastDecl);
+                }
+
+                const auto constImplCastDecl = "const " + implCastDecl + " const";
+
+                if (const auto r = Ptr()->RegisterObjectMethod(
+                        className.data(),
+                        implCastDecl.c_str(),
+                        AS_NAMESPACE_QUALIFIER asFUNCTION((detail::RefCast<type, baseType>)),
+                        AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST
+                    );
+                    r < 0) {
+                    return r;
+                }
+                if (const auto r = Ptr()->RegisterObjectMethod(
+                        className.data(),
+                        constImplCastDecl.c_str(),
+                        AS_NAMESPACE_QUALIFIER asFUNCTION((detail::RefCast<type, baseType>)),
+                        AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST
+                    );
+                    r < 0) {
+                    return r;
+                }
+            }
+
+            static constexpr auto derivatives = c.derivatives;
+            template for (constexpr auto d : derivatives) {
+                using derivedType = [:d:];
+                constexpr auto derivedClassName = TypeName<derivedType>;
+
+                const auto castDecl = std::string(derivedClassName) + "@+ opCast()";
+
+                if (m_castingOperators[classNameStr].contains(castDecl)) {
+                    continue;
+                } else {
+                    m_castingOperators[classNameStr].insert(castDecl);
+                }
+
+                const auto constCastDecl = "const " + castDecl + " const";
+
+                if (const auto r = Ptr()->RegisterObjectMethod(
+                        className.data(),
+                        castDecl.c_str(),
+                        AS_NAMESPACE_QUALIFIER asFUNCTION((detail::RefCast<type, derivedType>)),
+                        AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST
+                    );
+                    r < 0) {
+                    return r;
+                }
+                if (const auto r = Ptr()->RegisterObjectMethod(
+                        className.data(),
+                        constCastDecl.c_str(),
+                        AS_NAMESPACE_QUALIFIER asFUNCTION((detail::RefCast<type, derivedType>)),
+                        AS_NAMESPACE_QUALIFIER asCALL_CDECL_OBJLAST
+                    );
+                    r < 0) {
+                    return r;
+                }
+            }
+        }
+    }
+
+    return typeId;
+}
+
+#undef AS_DETAIL_REGISTER_MEMBERS
 } // namespace as

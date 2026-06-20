@@ -20,14 +20,14 @@ template <typename T> struct[[= as::Mixin]] ReferenceType {
     /**
      * Increments the reference counter.
      */
-    inline void AddRef() const noexcept {
+    inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
         AS_NAMESPACE_QUALIFIER asAtomicInc(m_referenceCounter);
     }
 
     /**
      * Decrements the reference counter, deleting this once the reference counter hits 0.
      */
-    inline void Release() const noexcept {
+    inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
         if (AS_NAMESPACE_QUALIFIER asAtomicDec(m_referenceCounter) <= 0) { delete static_cast<const T*>(this); }
     }
 
@@ -49,11 +49,5 @@ private:
      * The reference counter.
      */
     mutable int m_referenceCounter = 1;
-};
-
-template <typename T> struct ReferenceTypeWithDefaultFactory : public ReferenceType<T> {
-    static inline T* Factory() {
-        return new T();
-    }
 };
 } // namespace as

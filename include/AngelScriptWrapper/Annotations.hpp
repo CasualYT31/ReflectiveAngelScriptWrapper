@@ -395,6 +395,30 @@ struct Interface {
      */
     const std::meta::info interface;
 };
+
+// MARK: Behaviours
+
+/**
+ * Annotation attached to a non-static or static method to tell RegisterObjectType() that it is intended to be
+ * registered with the stored behaviour.
+ */
+struct Behaviour {
+    /**
+     * The asEBehaviours code to register the method with.
+     */
+    const AS_NAMESPACE_QUALIFIER asEBehaviours code;
+};
+
+/**
+ * Tests a function to see if it has been marked with the given behaviour code.
+ * @tparam F The function to test.
+ * @tparam C The behaviour code to search for.
+ * @return True if the function has been marked with the given behaviour code, false otherwise.
+ */
+template <std::meta::info F, AS_NAMESPACE_QUALIFIER asEBehaviours C> inline constexpr bool IsBehaviour() {
+    constexpr auto behaviour = ExtractAnnotation<F, Behaviour>();
+    return behaviour && behaviour->code == C;
+}
 } // namespace as
 
 #include <AngelScriptWrapper/Annotations.tpp>

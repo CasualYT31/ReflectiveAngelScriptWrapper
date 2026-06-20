@@ -9,7 +9,11 @@
 #include <AngelScriptWrapper/TypeDecl.hpp>
 
 namespace as {
-struct[[= as::RefType]] TestRefType : public ReferenceTypeWithDefaultFactory<TestRefType> {
+struct[[= as::RefType]] TestRefType : public ReferenceType<TestRefType> {
+    static inline TestRefType* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
+        return new TestRefType();
+    }
+
     /**
      * Register TestRefType with an unwrapped AngelScript engine.
      * @param engine The engine to register the type with.
