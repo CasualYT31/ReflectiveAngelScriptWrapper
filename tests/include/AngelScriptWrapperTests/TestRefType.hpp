@@ -9,7 +9,9 @@
 #include <AngelScriptWrapper/TypeDecl.hpp>
 
 namespace as {
-struct[[= as::RefType]] TestRefType : public ReferenceType<TestRefType> {
+struct[[= as::RefType]] TestRefType : public ReferenceType {
+    virtual ~TestRefType() noexcept = default;
+
     static inline TestRefType* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new TestRefType();
     }

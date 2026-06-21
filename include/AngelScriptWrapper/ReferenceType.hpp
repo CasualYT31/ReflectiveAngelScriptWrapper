@@ -10,11 +10,12 @@
 namespace as {
 /**
  * Base class containing standard reference counting logic.
- * This class makes more sense as a mixin, as otherwise every one of your reference types will have individual
- * ReferenceType base classes, which is not useful in a scripting context.
- * @tparam T Subclasses need to provide their type [all the way] up to ReferenceType.
  */
-template <typename T> struct[[= as::Mixin]] ReferenceType {
+struct[[= as::Mixin]] ReferenceType {
+    /**
+     * Don't forget that if you intend to introduce a base class of your own that inherits from ReferenceType, you
+     * @b must make its destructor virtual.
+     */
     virtual ~ReferenceType() noexcept = default;
 
     /**
@@ -28,7 +29,7 @@ template <typename T> struct[[= as::Mixin]] ReferenceType {
      * Decrements the reference counter, deleting this once the reference counter hits 0.
      */
     inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
-        if (AS_NAMESPACE_QUALIFIER asAtomicDec(m_referenceCounter) <= 0) { delete static_cast<const T*>(this); }
+        if (AS_NAMESPACE_QUALIFIER asAtomicDec(m_referenceCounter) <= 0) { delete this; }
     }
 
     /**

@@ -20,7 +20,7 @@ TEST(AngelScriptEngineReferenceTypes, BasicType) {
     EXPECT_EQ(typeId, expectedTypeId);
 
     EXPECT_TRUE(engine.HasRegisteredObjectType<as::TestRefType>());
-    EXPECT_FALSE(engine.HasRegisteredObjectType<as::ReferenceType<as::TestRefType>>());
+    EXPECT_FALSE(engine.HasRegisteredObjectType<as::ReferenceType>());
 
     ASSERT_GE(engine.RegisterGlobalFunction<^^finalRefCountIncrease>(), 0);
 
@@ -62,8 +62,10 @@ TEST(AngelScriptEngineReferenceTypes, BasicType) {
     EXPECT_EQ(res, 5);
 }
 
-struct[[= as::RefType]] TypeWithCustomFactory : public as::ReferenceType<TypeWithCustomFactory> {
+struct[[= as::RefType]] TypeWithCustomFactory : public as::ReferenceType {
     TypeWithCustomFactory(int number) : m_number(number) {}
+
+    virtual ~TypeWithCustomFactory() noexcept = default;
 
     static inline TypeWithCustomFactory* CustomFactory[
         [ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]](int number) {
@@ -106,8 +108,10 @@ struct FactoryHelper {
     int num;
 };
 
-struct[[= as::RefType]] TypeWithAuxiliaryLastFactory : public as::ReferenceType<TypeWithAuxiliaryLastFactory> {
+struct[[= as::RefType]] TypeWithAuxiliaryLastFactory : public as::ReferenceType {
     TypeWithAuxiliaryLastFactory(int number) : m_number(number) {}
+
+    virtual ~TypeWithAuxiliaryLastFactory() noexcept = default;
 
     static inline TypeWithAuxiliaryLastFactory* CustomFactory[[
         = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY),
@@ -149,8 +153,10 @@ TEST(AngelScriptEngineReferenceTypes, BasicTypeWithAuxiliaryLastFactory) {
     EXPECT_EQ(ret, 5);
 }
 
-struct[[= as::RefType]] TypeWithAuxiliaryFirstFactory : public as::ReferenceType<TypeWithAuxiliaryFirstFactory> {
+struct[[= as::RefType]] TypeWithAuxiliaryFirstFactory : public as::ReferenceType {
     TypeWithAuxiliaryFirstFactory(int number) : m_number(number) {}
+
+    virtual ~TypeWithAuxiliaryFirstFactory() noexcept = default;
 
     static inline TypeWithAuxiliaryFirstFactory* CustomFactory[[
         = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY),
@@ -573,7 +579,9 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchiesAreNotRegisteredIfRecurs
     EXPECT_FALSE(engine.HasRegisteredObjectType<as::TestRefType>());
 }
 
-struct[[= as::RefType]] TopLeft : as::ReferenceType<TopLeft> {
+struct[[= as::RefType]] TopLeft : as::ReferenceType {
+    virtual ~TopLeft() noexcept = default;
+
     static inline TopLeft* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new TopLeft();
     }
@@ -583,7 +591,9 @@ struct[[= as::RefType]] TopLeft : as::ReferenceType<TopLeft> {
     }
 };
 
-struct[[= as::RefType]] TopRight : as::ReferenceType<TopRight> {
+struct[[= as::RefType]] TopRight : as::ReferenceType {
+    virtual ~TopRight() noexcept = default;
+
     static inline TopRight* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new TopRight();
     }
@@ -594,6 +604,8 @@ struct[[= as::RefType]] TopRight : as::ReferenceType<TopRight> {
 };
 
 struct[[= as::RefType]] MiddleLeft : virtual TopLeft {
+    virtual ~MiddleLeft() noexcept = default;
+
     static inline MiddleLeft* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new MiddleLeft();
     }
@@ -604,6 +616,8 @@ struct[[= as::RefType]] MiddleLeft : virtual TopLeft {
 };
 
 struct[[= as::RefType]] Middle : virtual TopLeft, virtual TopRight {
+    virtual ~Middle() noexcept = default;
+
     static inline Middle* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new Middle();
     }
@@ -614,6 +628,8 @@ struct[[= as::RefType]] Middle : virtual TopLeft, virtual TopRight {
 };
 
 struct[[= as::RefType]] MiddleRight : virtual TopRight {
+    virtual ~MiddleRight() noexcept = default;
+
     static inline MiddleRight* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new MiddleRight();
     }
@@ -624,6 +640,8 @@ struct[[= as::RefType]] MiddleRight : virtual TopRight {
 };
 
 struct[[= as::RefType]] BottomLeft : MiddleLeft, Middle {
+    virtual ~BottomLeft() noexcept = default;
+
     static inline BottomLeft* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new BottomLeft();
     }
@@ -634,6 +652,8 @@ struct[[= as::RefType]] BottomLeft : MiddleLeft, Middle {
 };
 
 struct[[= as::RefType]] BottomRight : Middle, MiddleRight {
+    virtual ~BottomRight() noexcept = default;
+
     static inline BottomRight* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new BottomRight();
     }
