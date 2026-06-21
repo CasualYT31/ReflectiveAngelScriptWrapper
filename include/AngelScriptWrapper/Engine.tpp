@@ -255,7 +255,7 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
 */
 
 /* Methods TODO list:
-[x] 1. Ignore non-public, static, and pure virtual methods, along with constructors and destructors.
+[x] 1. Ignore non-public methods, along with constructors and destructors.
 [ ] 2. Do we support composite members? Inclination is to ignore this for now, but it might be useful.
 [x] 3. Detect property accessors, i.e. get_XYZ and set_XYZ methods, and append "property" to the declaration.
 */

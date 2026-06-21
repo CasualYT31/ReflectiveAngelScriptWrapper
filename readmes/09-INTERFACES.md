@@ -80,7 +80,7 @@ pEngine->RegisterInterfaceMethod("InterfaceC", "void methodC()");
 ```
 
 > [!NOTE]
-> It is not currently possible in AngelScript to define the relationships between these different interfaces. E.g. you cannot implicitly or explicitly cast an object handle to a type C that implements InterfaceC, to a handle to a type that implements InterfaceA.
+> It is not currently possible in AngelScript to define the relationships between these different interfaces. E.g. you cannot implicitly or explicitly cast an object handle to a type C that implements InterfaceC, to a handle to a type that implements InterfaceA. If you require this, it would be more beneficial to register your C++ interfaces as [uninstantiable reference types](/readmes/06-REFERENCE-TYPES.md) as the wrapper library is able to generate casting operators for you in that case.
 
 ### Multiple Inheritance
 
