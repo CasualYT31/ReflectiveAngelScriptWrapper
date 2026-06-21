@@ -132,7 +132,15 @@ inline consteval Rename Name(std::string_view n) {
  * runtime-defined auxiliary object map, using said label as the key.
  */
 struct AuxiliaryLabel {
-    const char* to;
+    const char* const to;
+
+    /**
+     * Implicitly converts AuxiliaryLabel to std::string at runtime so you can give it directly to AddAuxiliaryObject().
+     */
+    inline operator std::string() const {
+        static const auto converted = std::string(to);
+        return converted;
+    }
 };
 
 /**

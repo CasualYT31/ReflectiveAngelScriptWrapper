@@ -104,6 +104,8 @@ TEST(AngelScriptEngineReferenceTypes, BasicTypeWithCustomFactory) {
     EXPECT_EQ(ret, 5);
 }
 
+constexpr auto AuxFactory = as::AuxLabel("AuxFactory");
+
 struct FactoryHelper {
     int num;
 };
@@ -113,12 +115,10 @@ struct[[= as::RefType]] TypeWithAuxiliaryLastFactory : public as::ReferenceType 
 
     virtual ~TypeWithAuxiliaryLastFactory() noexcept = default;
 
-    static inline TypeWithAuxiliaryLastFactory* CustomFactory[[
-        = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY),
-        = as::NonAuto,
-        = as::ObjLast,
-        = as::AuxLabel("AuxFactory")
-    ]](int ignored[[= as::DefVal("0")]], FactoryHelper* const helper) {
+    static inline TypeWithAuxiliaryLastFactory* CustomFactory[
+        [ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto, = as::ObjLast, = AuxFactory ]](
+        int ignored[[= as::DefVal("0")]], FactoryHelper* const helper
+    ) {
         return new TypeWithAuxiliaryLastFactory(helper->num);
     }
 
@@ -136,7 +136,7 @@ TEST(AngelScriptEngineReferenceTypes, BasicTypeWithAuxiliaryLastFactory) {
 
     auto helper = FactoryHelper(5);
 
-    engine.AddAuxiliaryObject("AuxFactory", &helper);
+    engine.AddAuxiliaryObject(AuxFactory, &helper);
 
     const auto typeId = engine.RegisterObjectType<^^TypeWithAuxiliaryLastFactory>();
 
@@ -158,12 +158,10 @@ struct[[= as::RefType]] TypeWithAuxiliaryFirstFactory : public as::ReferenceType
 
     virtual ~TypeWithAuxiliaryFirstFactory() noexcept = default;
 
-    static inline TypeWithAuxiliaryFirstFactory* CustomFactory[[
-        = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY),
-        = as::NonAuto,
-        = as::ObjFirst,
-        = as::AuxLabel("AuxFactory")
-    ]](FactoryHelper* const helper, int ignored[[= as::DefVal("0")]]) {
+    static inline TypeWithAuxiliaryFirstFactory* CustomFactory[
+        [ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto, = as::ObjFirst, = AuxFactory ]](
+        FactoryHelper* const helper, int ignored[[= as::DefVal("0")]]
+    ) {
         return new TypeWithAuxiliaryFirstFactory(helper->num);
     }
 
@@ -181,7 +179,7 @@ TEST(AngelScriptEngineReferenceTypes, BasicTypeWithAuxiliaryFirstFactory) {
 
     auto helper = FactoryHelper(5);
 
-    engine.AddAuxiliaryObject("AuxFactory", &helper);
+    engine.AddAuxiliaryObject(AuxFactory, &helper);
 
     const auto typeId = engine.RegisterObjectType<^^TypeWithAuxiliaryFirstFactory>();
 
