@@ -51,7 +51,7 @@ Likewise, there are two ways you can create an `Engine` wrapper/helper object:
 // Either keep the scripting engine entirely encapsulated...
 as::Engine engine;
 // ...with the occasional access when required for advanced operations.
-engine.engine()->GarbageCollect();
+engine.Ptr()->GarbageCollect();
 // The wrapper will release the scripting engine when it's destructed.
 
 // Or create the scripting engine yourself...
