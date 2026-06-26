@@ -13,6 +13,35 @@ namespace as {
  */
 struct[[= as::Mixin]] ReferenceType {
     /**
+     * Copies of a reference type will have their reference counter start at 1.
+     * Explicitly writing the copy constructor like this prevents the default one from copying the reference counter
+     * from the given object.
+     */
+    inline ReferenceType(ReferenceType const&) {}
+
+    /**
+     * Move construction has the same logic as copy construction.
+     */
+    inline ReferenceType(ReferenceType&&) {}
+
+    /**
+     * Think of copy assignment as replacing the contents of the object with another.
+     * We should copy everything EXCEPT the reference counter, since the object given, and this object, are separate.
+     */
+    inline ReferenceType& operator=(ReferenceType const&) {
+        return *this;
+    }
+
+    /**
+     * Move assignment has the same logic as copy assignment.
+     * This operator must not be responsible for decreasing the reference counter of the given object, since it
+     * technically still has a reference held on it after the call. Let it decrease naturally via RAII.
+     */
+    inline ReferenceType& operator=(ReferenceType&&) {
+        return *this;
+    }
+
+    /**
      * Don't forget that if you intend to introduce a base class of your own that inherits from ReferenceType, you
      * @b must make its destructor virtual.
      */

@@ -24,6 +24,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${angelscript_SOURCE_DIR}/add_on/scriptarray/
     ${angelscript_SOURCE_DIR}/add_on/scripthelper/
     ${angelscript_SOURCE_DIR}/add_on/scriptstdstring/
+    ${angelscript_SOURCE_DIR}/add_on/weakref/
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -43,6 +44,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     ${angelscript_SOURCE_DIR}/add_on/scriptarray/scriptarray.cpp
     ${angelscript_SOURCE_DIR}/add_on/scripthelper/scripthelper.cpp
     ${angelscript_SOURCE_DIR}/add_on/scriptstdstring/scriptstdstring.cpp
+    ${angelscript_SOURCE_DIR}/add_on/weakref/weakref.cpp
 
     # Unit tests:
     "src/OwnedObject.cpp"

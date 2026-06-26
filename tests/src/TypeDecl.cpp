@@ -37,6 +37,8 @@ STATIC_ASSERT_EQ(as::TypeName<as::ScriptTestObject**>, "ScriptTestObject@");
 STATIC_ASSERT_EQ(as::TypeName<const as::ScriptTestObject*>, "const ScriptTestObject@");
 STATIC_ASSERT_EQ(as::TypeName<const as::ScriptTestObject* const>, "const ScriptTestObject@ const");
 
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER asILockableSharedBool>, "int");
+STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER asILockableSharedBool*>, "int&");
 STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CDateTime>, "datetime");
 STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER Complex>, "complex");
 STATIC_ASSERT_EQ(as::TypeName<AS_NAMESPACE_QUALIFIER CScriptAny>, "any");

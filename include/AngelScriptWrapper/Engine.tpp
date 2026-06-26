@@ -232,7 +232,7 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
 [x] 6. Support asOBJ_NOHANDLE. No factory, addref or release behaviours.
 [x] 7. Support inheritance. Automatically add opCast and opImplCast methods. Make it work across multiple levels of the
    hierarchy.
-[ ] 8. Support weak refs.
+[x] 8. Support weak refs.
 */
 
 /* Value types TODO list:
@@ -295,6 +295,8 @@ struct OrganizedClassInformation : ClassInformation {
     const StructuralSpan<const ClassMember> addRefBehaviours;
 
     const StructuralSpan<const ClassMember> releaseBehaviours;
+
+    const StructuralSpan<const ClassMember> getWeakrefFlagBehaviours;
 
     const StructuralSpan<const ClassMember> methods;
 
@@ -364,6 +366,11 @@ int RegisterObjectReleaseFunction(EnginePtr engine, std::string_view const& type
 }
 
 template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectGetWeakrefFlagFunction(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
+    return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_GET_WEAKREF_FLAG, aux);
+}
+
+template <std::meta::info F, EngineOptions Opts, typename T>
 int RegisterObjectMethod(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const& aux) {
     const auto funcDetails = detail::GetFuncDetails<F, Opts>();
 
@@ -400,6 +407,7 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
     std::vector<ClassMember> factoryBehaviours;
     std::vector<ClassMember> addRefBehaviours;
     std::vector<ClassMember> releaseBehaviours;
+    std::vector<ClassMember> getWeakrefFlagBehaviours;
     std::vector<ClassMember> methods;
     std::vector<ClassMember> properties;
 
@@ -418,6 +426,8 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
                 addRefBehaviours.push_back(m);
             } else if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE>()) {
                 releaseBehaviours.push_back(m);
+            } else if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_GET_WEAKREF_FLAG>()) {
+                getWeakrefFlagBehaviours.push_back(m);
             } else {
                 methods.push_back(m);
             }
@@ -431,6 +441,7 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
         std::define_static_array(factoryBehaviours),
         std::define_static_array(addRefBehaviours),
         std::define_static_array(releaseBehaviours),
+        std::define_static_array(getWeakrefFlagBehaviours),
         std::define_static_array(methods),
         std::define_static_array(properties),
     };
@@ -477,6 +488,7 @@ template <EngineOptions Opts> template <std::meta::info T, bool R> int Engine<Op
         // 3. Register properties, members and behaviours.
         AS_DETAIL_REGISTER_MEMBERS(addRefBehaviours, detail::RegisterObjectAddRefFunction);
         AS_DETAIL_REGISTER_MEMBERS(releaseBehaviours, detail::RegisterObjectReleaseFunction);
+        AS_DETAIL_REGISTER_MEMBERS(getWeakrefFlagBehaviours, detail::RegisterObjectGetWeakrefFlagFunction);
         // It is important to register AddRef and Release behaviours before Factory behaviours.
         // E.g. you may wish to register a copy factory that accepts a handle to your ref type.
         AS_DETAIL_REGISTER_MEMBERS(factoryBehaviours, detail::RegisterObjectFactoryFunction);

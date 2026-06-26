@@ -1,9 +1,11 @@
 #include <AngelScriptWrapper/Engine.hpp>
+#include <AngelScriptWrapper/WeakReferenceType.hpp>
 #include <AngelScriptWrapperTests/ScriptDebugging.hpp>
 #include <AngelScriptWrapperTests/TestRefType.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <scripthelper.h>
+#include <weakref.h>
 
 using namespace testing;
 
@@ -720,4 +722,388 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeMultipleInheritance) {
         0
     );
     EXPECT_EQ(ret, 5);
+}
+
+template <typename T> struct[[= as::RefType]] CopyableType : public T {
+    static inline CopyableType<T>* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]](
+    ) {
+        return new CopyableType<T>();
+    }
+
+    static inline CopyableType<T>* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]](
+        CopyableType<T> const& cpy, bool copyAssignment[[= as::DefVal("false")]] = false
+    ) {
+        if (copyAssignment) {
+            auto newObj = new CopyableType<T>();
+            *newObj = cpy;
+            ++newObj->number;
+            return newObj;
+        } else {
+            return new CopyableType<T>(cpy);
+        }
+    }
+
+    int number = 0;
+};
+
+namespace as {
+// This specialization assumes that you won't register more than one specialization of CopyableType in a single test.
+template <typename T> constexpr std::string_view TypeName<CopyableType<T>> = "CopyableType";
+} // namespace as
+
+TEST(AngelScriptEngineReferenceTypes, CopyConstructionAndAssignment) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    ASSERT_GE(engine.RegisterObjectType<^^CopyableType<as::TestRefType>>(), 0);
+
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    ASSERT_TRUE(mod);
+
+    ASSERT_GE(
+        mod->AddScriptSection("test.as", R"(
+        int incRef(const CopyableType@ const original, const bool copyType) {
+            CopyableType copy(original, copyType);
+
+            if (original.RefCount() != 2) {
+                return 2;
+            }
+            if (copy.RefCount() != 1) {
+                return 3;
+            }
+            if (copy.number != (copyType ? 11 : 10)) {
+                return 4;
+            }
+            return 0;
+        }
+
+        int main(const bool copyType) {
+            CopyableType original;
+            original.number = 10;
+            if (original.RefCount() != 1) {
+                return 1;
+            }
+
+            return incRef(original, copyType);
+        }
+    )"),
+        0
+    );
+
+    ASSERT_GE(mod->Build(), 0);
+
+    AS_NAMESPACE_QUALIFIER asIScriptContext* ctx = engine.Ptr()->CreateContext();
+    ASSERT_TRUE(ctx);
+
+    AS_NAMESPACE_QUALIFIER asIScriptFunction* func = mod->GetFunctionByDecl("int main(const bool)");
+    ASSERT_TRUE(func);
+
+    ASSERT_GE(ctx->Prepare(func), 0);
+
+    ASSERT_GE(ctx->SetArgByte(0, 0), 0);
+
+    ASSERT_EQ(ctx->Execute(), AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED);
+
+    auto res = static_cast<int>(ctx->GetReturnDWord());
+    EXPECT_EQ(res, 0);
+
+    ASSERT_GE(ctx->Prepare(func), 0);
+
+    ASSERT_GE(ctx->SetArgByte(0, 255), 0);
+
+    ASSERT_EQ(ctx->Execute(), AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED);
+
+    res = static_cast<int>(ctx->GetReturnDWord());
+    EXPECT_EQ(res, 0);
+}
+
+TEST(AngelScriptEngineReferenceTypes, MoveConstructionAndAssignment) {
+    CopyableType<as::TestRefType> one;
+    EXPECT_EQ(one.RefCount(), 1);
+
+    {
+        CopyableType<as::TestRefType> two;
+        two.number = 10;
+        EXPECT_EQ(two.RefCount(), 1);
+
+        EXPECT_EQ(one.number, 0);
+        one = std::move(two);
+        EXPECT_EQ(one.number, 10);
+        EXPECT_EQ(one.RefCount(), 1);
+        EXPECT_EQ(two.RefCount(), 1);
+    }
+
+    EXPECT_EQ(one.RefCount(), 1);
+    CopyableType<as::TestRefType> two(std::move(one));
+    EXPECT_EQ(two.RefCount(), 1);
+    EXPECT_EQ(two.number, 10);
+    EXPECT_EQ(one.RefCount(), 1);
+}
+
+struct[[= as::RefType]] Global {
+    void storeGlobalCopy(CopyableType<as::TestRefType>* handle[[= as::Auto]]) {
+        copyWithSharedObj = handle;
+    }
+
+    void moveIntoGlobal(CopyableType<as::TestRefType>* handle) {
+        copyWithOwnedObj = handle;
+    }
+
+    as::SharedObject<CopyableType<as::TestRefType>> copyWithSharedObj[[= as::DoNotRegister]];
+
+    as::OwnedObject<CopyableType<as::TestRefType>> copyWithOwnedObj[[= as::DoNotRegister]];
+};
+
+TEST(AngelScriptEngineReferenceTypes, ReferenceTypeObjectWrapperInteraction) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    ASSERT_GE(engine.RegisterObjectType<^^CopyableType<as::TestRefType>>(), 0);
+    ASSERT_GE(engine.RegisterObjectType<^^Global>(), 0);
+
+    Global glob;
+    ASSERT_GE(engine.RegisterGlobalProperty<^^glob>(&glob), 0);
+
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "CopyableType myObj; myObj.number = 5; glob.storeGlobalCopy(myObj);"
+        ),
+        0
+    );
+
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "CopyableType myObj; myObj.number = 15; glob.moveIntoGlobal(myObj);"
+        ),
+        0
+    );
+
+    ASSERT_TRUE(glob.copyWithSharedObj);
+    ASSERT_TRUE(glob.copyWithOwnedObj);
+
+    EXPECT_EQ(glob.copyWithSharedObj->number, 5);
+    EXPECT_EQ(glob.copyWithSharedObj->RefCount(), 1);
+
+    EXPECT_EQ(glob.copyWithOwnedObj->number, 15);
+    EXPECT_EQ(glob.copyWithOwnedObj->RefCount(), 1);
+}
+
+struct[[= as::RefType]] TestWeakRefType : public as::WeakReferenceType {
+    static inline TestWeakRefType* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]](
+    ) {
+        return new TestWeakRefType();
+    }
+
+    inline void nonConstOperation() {}
+};
+
+TEST(AngelScriptEngineReferenceTypes, WeakReferenceTypesInScripts) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    std::vector<std::string> messages;
+    ASSERT_GE(as::SetMessageCallback(engine, &messages), 0);
+
+    AS_NAMESPACE_QUALIFIER RegisterScriptWeakRef(engine.Ptr());
+
+    ASSERT_GE(engine.RegisterObjectType<^^as::TestRefType>(), 0);
+    ASSERT_GE(engine.RegisterObjectType<^^TestWeakRefType>(), 0);
+
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    ASSERT_TRUE(mod);
+
+    ASSERT_GE(
+        mod->AddScriptSection("test.as", R"(
+        weakref<TestWeakRefType> weakCopy;
+
+        int weakRefAssignment() {
+            TestWeakRefType obj;
+            @weakCopy = obj;
+
+            if (obj.RefCount() != 1) {
+                return 2;
+            }
+            if (weakCopy.get().RefCount() != 2) {
+                return 3;
+            }
+            if (weakCopy.get() !is obj) {
+                return 4;
+            }
+            return 0;
+        }
+
+        int main() {
+            const auto res = weakRefAssignment();
+
+            if (res != 0) {
+                return res;
+            }
+
+            return weakCopy.get() is null ? 0 : 1;
+        }
+    )"),
+        0
+    );
+
+    ASSERT_GE(mod->Build(), 0);
+
+    AS_NAMESPACE_QUALIFIER asIScriptContext* ctx = engine.Ptr()->CreateContext();
+    ASSERT_TRUE(ctx);
+
+    AS_NAMESPACE_QUALIFIER asIScriptFunction* func = mod->GetFunctionByDecl("int main()");
+    ASSERT_TRUE(func);
+
+    ASSERT_GE(ctx->Prepare(func), 0);
+
+    ASSERT_EQ(ctx->Execute(), AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED);
+
+    auto res = static_cast<int>(ctx->GetReturnDWord());
+    EXPECT_EQ(res, 0);
+
+    ASSERT_LT(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "weakref<TestRefType> illegalWeakref;"), 0);
+    EXPECT_THAT(
+        messages,
+        ElementsAre(
+            "The subtype doesn't support weak references",
+            "Attempting to instantiate invalid template type 'weakref<TestRefType>'"
+        )
+    );
+}
+
+struct[[= as::RefType]] WeakrefContainer : public as::ReferenceType {
+    static AS_NAMESPACE_QUALIFIER asITypeInfo* subTypeInfo;
+
+    static inline WeakrefContainer* Factory[
+        [ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
+        return new WeakrefContainer();
+    }
+
+    inline WeakrefContainer() : weakRef(subTypeInfo) {}
+
+    AS_NAMESPACE_QUALIFIER CScriptWeakRef weakRef[[= as::SubTypeList<const TestWeakRefType>()]];
+};
+
+AS_NAMESPACE_QUALIFIER asITypeInfo* WeakrefContainer::subTypeInfo = nullptr;
+
+TEST(AngelScriptEngineReferenceTypes, WeakReferenceTypesInApplicationInterface) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+    AS_NAMESPACE_QUALIFIER RegisterScriptWeakRef(engine.Ptr());
+
+    ASSERT_GE(engine.RegisterObjectType<^^TestWeakRefType>(), 0);
+
+    WeakrefContainer::subTypeInfo = engine.Ptr()->GetTypeInfoByDecl("weakref<const TestWeakRefType>");
+    ASSERT_TRUE(WeakrefContainer::subTypeInfo);
+
+    ASSERT_GE(engine.RegisterObjectType<^^WeakrefContainer>(), 0);
+
+    AS_NAMESPACE_QUALIFIER asIScriptModule* mod =
+        engine.Ptr()->GetModule("test", AS_NAMESPACE_QUALIFIER asGM_ALWAYS_CREATE);
+    ASSERT_TRUE(mod);
+
+    ASSERT_GE(
+        mod->AddScriptSection("test.as", R"(
+        WeakrefContainer weakCopy;
+
+        int weakRefAssignment() {
+            const TestWeakRefType obj;
+            @weakCopy.weakRef = obj;
+
+            if (obj.RefCount() != 1) {
+                return 2;
+            }
+            if (weakCopy.weakRef.get().RefCount() != 2) {
+                return 3;
+            }
+            if (weakCopy.weakRef.get() !is obj) {
+                return 4;
+            }
+            return 0;
+        }
+
+        int main() {
+            const auto res = weakRefAssignment();
+
+            if (res != 0) {
+                return res;
+            }
+
+            return weakCopy.weakRef.get() is null ? 0 : 1;
+        }
+    )"),
+        0
+    );
+
+    ASSERT_GE(mod->Build(), 0);
+
+    AS_NAMESPACE_QUALIFIER asIScriptContext* ctx = engine.Ptr()->CreateContext();
+    ASSERT_TRUE(ctx);
+
+    AS_NAMESPACE_QUALIFIER asIScriptFunction* func = mod->GetFunctionByDecl("int main()");
+    ASSERT_TRUE(func);
+
+    ASSERT_GE(ctx->Prepare(func), 0);
+
+    ASSERT_EQ(ctx->Execute(), AS_NAMESPACE_QUALIFIER asEXECUTION_FINISHED);
+
+    auto res = static_cast<int>(ctx->GetReturnDWord());
+    EXPECT_EQ(res, 0);
+}
+
+TEST(AngelScriptEngineReferenceTypes, CopyConstructionAndAssignmentWeakReferences) {
+    CopyableType<TestWeakRefType> one;
+    one.number = 5;
+    one.AddRef();
+    one.GetWeakRefFlag()->Set(true);
+
+    CopyableType<TestWeakRefType> two(one);
+    ++two.number;
+
+    CopyableType<TestWeakRefType> three;
+    three.number = 3;
+    three.AddRef();
+    three.AddRef();
+    three.GetWeakRefFlag()->Set(true);
+    three = two;
+    three.number -= 10;
+
+    EXPECT_EQ(one.number, 5);
+    EXPECT_EQ(two.number, 6);
+    EXPECT_EQ(three.number, -4);
+    EXPECT_EQ(one.RefCount(), 2);
+    EXPECT_EQ(two.RefCount(), 1);
+    EXPECT_EQ(three.RefCount(), 3);
+    EXPECT_TRUE(one.GetWeakRefFlag()->Get());
+    EXPECT_FALSE(two.GetWeakRefFlag()->Get());
+    EXPECT_TRUE(three.GetWeakRefFlag()->Get());
+}
+
+TEST(AngelScriptEngineReferenceTypes, MoveConstructionAndAssignmentWeakReferences) {
+    CopyableType<TestWeakRefType> one;
+    one.number = 5;
+    one.AddRef();
+    one.GetWeakRefFlag()->Set(true);
+
+    CopyableType<TestWeakRefType> two(std::move(one));
+    ++two.number;
+
+    CopyableType<TestWeakRefType> three;
+    three.number = 3;
+    three.AddRef();
+    three.AddRef();
+    three.GetWeakRefFlag()->Set(true);
+    three = std::move(two);
+    three.number -= 10;
+
+    EXPECT_EQ(one.number, 5);
+    EXPECT_EQ(two.number, 6);
+    EXPECT_EQ(three.number, -4);
+    EXPECT_EQ(one.RefCount(), 2);
+    EXPECT_EQ(two.RefCount(), 1);
+    EXPECT_EQ(three.RefCount(), 3);
+    EXPECT_TRUE(one.GetWeakRefFlag()->Get());
+    EXPECT_FALSE(two.GetWeakRefFlag()->Get());
+    EXPECT_TRUE(three.GetWeakRefFlag()->Get());
 }

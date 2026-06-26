@@ -56,6 +56,8 @@ template <> inline constexpr std::string_view TypeName<double> = "double";
 
 template <> inline constexpr std::string_view TypeName<std::string> = "string";
 
+template <> inline constexpr std::string_view TypeName<AS_NAMESPACE_QUALIFIER asILockableSharedBool> = "int";
+
 template <> inline constexpr std::string_view TypeName<AS_NAMESPACE_QUALIFIER CDateTime> = "datetime";
 
 template <> inline constexpr std::string_view TypeName<AS_NAMESPACE_QUALIFIER Complex> = "complex";
@@ -78,8 +80,8 @@ template <> inline constexpr std::string_view TypeName<AS_NAMESPACE_QUALIFIER CS
 
 template <> inline constexpr std::string_view TypeName<AS_NAMESPACE_QUALIFIER CScriptSocket> = "socket";
 
-// Note that const_weakref is not supported.
-// Can't you just do weakref<const T> anyway?
+// Note that const_weakref is not supported. Seems like you can just do weakref<const T> anyway?
+// TODO: I should probably clarify this with Andreas at some point.
 template <> inline constexpr std::string_view TypeName<AS_NAMESPACE_QUALIFIER CScriptWeakRef> = "weakref";
 
 // It's important to handle these specializations in this order:
