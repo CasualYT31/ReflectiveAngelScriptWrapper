@@ -403,6 +403,153 @@ int RegisterObjectProperty(EnginePtr engine, std::string_view const& typeName, A
     return engine->RegisterObjectProperty(typeName.data(), decl.c_str(), std::meta::offset_of(P).bytes);
 }
 
+/* Operator overloading notes
+
+opNeg
+T operator-()
+
+opCom
+T operator~()
+
+opPreInc
+T& operator++()
+
+opPreDec
+T& operator--()
+
+opPostInc
+T operator++(int)
+
+opPostDev
+T operator--(int)
+
+opEquals
+bool operator==(any)
+The is operator should be used if a handle is given.
+
+opCmp
+bool operator<(any)
+bool operator<=(any)
+bool operator>(any)
+bool operator>=(any)
+bool operator<=>(any)
+We will need to generate some kind of wrapper for this?
+T > any? +ive
+T == any? 0
+T < any? -ive
+
+opAssign
+T& operator=(any)
+
+opAddAssign
+T& operator+=(any)
+
+opSubAssign
+T& operator-=(any)
+
+opMulAssign
+T& operator*=(any)
+
+opDivAssign
+T& operator/=(any)
+
+opModAssign
+T& operator%=(any)
+
+opPowAssign
+Has no C++ equivalent...
+Will need to write it as T& operatorPowAssign(any)?
+
+opAndAssign
+T& operator&=(any)
+
+opOrAssign
+T& operator|=(any)
+
+opXorAssign
+T& operator^=(any)
+
+opShlAssign
+T& operator<<=(any)
+
+opShrAssign
+T& operator>>(any)
+
+opUShrAssign
+T& operator>>(unsigned)
+
+opAdd
+T operator+(any)
+
+opAdd_r
+static T operator+[[=as::ObjLast]](any, T const&)
+OR
+static T operator+[[=as::ObjFirst]](T const&, any)
+
+opSub
+T operator-(any)
+
+opMul
+T operator*(any)
+
+opDiv
+T operator/(any)
+
+opMod
+T operator%(any)
+
+opPow
+Has no C++ equivalent...
+Will need to write it as T operatorPow(any)?
+
+opAnd
+T operator&(any)
+
+opOr
+T operator|(any)
+
+opXor
+T operator^(any)
+
+opShl
+T operator<<(any)
+
+opShr
+T operator>>(any)
+
+opUShr
+T operator>>(unsigned)
+
+opIndex
+any operator[](...)
+
+opCall
+any operator()(...)
+
+opConv
+explicit operator U()
+
+opImplConv
+operator U()
+
+opForBegin
+Has no standard C++ equivalent...
+Will need to write it as int/T* operatorForBegin()?
+
+opForEnd
+Has no standard C++ equivalent...
+Will need to write it as bool operatorForEnd(int/T*)?
+
+opForNext
+Has no standard C++ equivalent...
+Will need to write it as int/T* operatorForNext(int/T*)?
+
+opForValueX
+Has no standard C++ equivalent...
+Will need to write it as any operatorForValue[X](int/T*)?
+
+*/
+
 template <ClassInformation I> OrganizedClassInformation consteval OrganizedClassHierarchy() {
     std::vector<ClassMember> factoryBehaviours;
     std::vector<ClassMember> addRefBehaviours;
