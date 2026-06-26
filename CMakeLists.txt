@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.14)
 include(FetchContent)
 project(ReflectiveAngelScriptWrapper)
 
-set(CMAKE_CXX_FLAGS "-std=c++26 -freflection")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++26 -freflection")
 
 # Autowrapper must be on as we have special handling for the generic call convention that relies on it.
 # option(${PROJECT_NAME}_AUTOWRAPPER_ADD_ON "Include the autowrapper add on" OFF)

@@ -4,7 +4,7 @@ include(FetchContent)
 include(GoogleTest)
 project(ReflectiveAngelScriptWrapperTests)
 
-set(CMAKE_CXX_FLAGS "-std=c++26 -freflection")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++26 -freflection")
 
 # GoogleTest.
 FetchContent_Declare(googletest
