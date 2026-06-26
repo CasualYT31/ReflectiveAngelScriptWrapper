@@ -43,6 +43,7 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
         - [Factories](/readmes/06-REFERENCE-TYPES.md#factories)
             - [Factories With Auxiliary Objects](/readmes/06-REFERENCE-TYPES.md#factories-with-auxiliary-objects)
         - [AddRef, Release and `as::ReferenceType`](/readmes/06-REFERENCE-TYPES.md#addref-release-and-asreferencetype)
+            - [`as::WeakReferenceType`](/readmes/06-REFERENCE-TYPES.md#asweakreferencetype)
     - [Naming Your Type](/readmes/06-REFERENCE-TYPES.md#naming-your-type)
     - [Methods](/readmes/06-REFERENCE-TYPES.md#methods)
     - [Properties](/readmes/06-REFERENCE-TYPES.md#properties)
@@ -79,4 +80,5 @@ You will need to separately build GCC 16.1.0 and install it at the root of this 
 2. Execute `./build.sh`. This will configure and build the AngelScript wrapper library.
     - You can execute `./build.sh -c` if you need to perform a clean configure and build.
     - You can execute `./build.sh -t` to build and run the tests as well as the library.
+    - You can execute `./build.sh -d` to build and run the tests as well as the library, with debugging symbols turned on, and then open the tests with GDB.
     - Note the use of a pre-built version of GCC that supports C++26 features like reflection. It must live in a `gcc-16.1.0` folder at the root of the repository.

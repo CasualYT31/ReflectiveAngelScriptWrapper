@@ -166,6 +166,10 @@ pEngine->RegisterObjectBehaviour(
 
 If you don't wish to use reference counting, then you can just avoid inheriting from `ReferenceType`.
 
+#### `as::WeakReferenceType`
+
+To allow weak references to be held on your reference type, you must instead inherit from `as::WeakReferenceType`. In addition to `ADDREF` and `RELEASE` behaviours, this base class also implements the `GET_WEAKREF_FLAG` behaviour. You will then need to include the `weakref` add on as normal. Don't forget that `CScriptWeakRef` objects in your code must be attached with a `SubTypes` annotation like any other AngelScript template type, at least if that object touches the application interface in any way.
+
 ## Naming Your Type
 
 By default, the identifier of your class is used as the name of your type in AngelScript. If you wish to change it you will need to either [specialize `TypeName`](/readmes/02-TYPENAMES.md#typename) or use the `as::Name()` function to attach an `as::Rename` annotation to the type.
