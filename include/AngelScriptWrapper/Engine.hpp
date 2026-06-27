@@ -319,6 +319,33 @@ template <EngineOptions Opts = EngineOptions{}> struct Engine {
         return m_types.contains(std::type_index(typeid(T)));
     }
 
+    /**
+     * You will need to inform the engine wrapper about POD value types that have been registered externally, otherwise
+     * POD type checking will not work correctly.
+     * You can use this method to add said types to the internal POD value type list. For example, after registering the
+     * CDateTime or Complex add on types, you must invoke Engine<Opts>::AddPodType<CDateTime>() or
+     * Engine<Opts>::AddPodType<Complex>() respectively.
+     *
+     * POD type checking will break if you pass a type that isn't a POD value type!
+     *
+     * You do not need to call this method for POD value types you register via RegisterObjectType().
+     * @tparam T The type to add.
+     */
+    template <typename T> inline void AddPodType() {
+        m_podTypes.insert(std::type_index(typeid(T)));
+    }
+
+    /**
+     * Checks if a type registered via this engine wrapper is a POD value type.
+     * @tparam T The type to check.
+     * @return True if the given type was either registered by the wrapper as a POD value type, or was previously added
+     *         to the list of known POD value types via a call to AddPodType().
+     * @sa AddPodType()
+     */
+    template <typename T> inline bool IsPodType() {
+        return m_podTypes.contains(std::type_index(typeid(T)));
+    }
+
 private:
     /**
      * Points to the AngelScript engine instance this wrapper interfaces with.
@@ -350,6 +377,19 @@ private:
      * from the same base class/es.
      */
     std::unordered_map<std::string, std::unordered_set<std::string>> m_castingOperators;
+
+    /**
+     * Keeps track of the POD value types that the wrapper knows of.
+     * Is prepopulated with the primitive types AngelScript supports.
+     */
+    std::unordered_set<std::type_index> m_podTypes = {
+        std::type_index(typeid(bool)),          std::type_index(typeid(std::int8_t)),
+        std::type_index(typeid(std::uint8_t)),  std::type_index(typeid(std::int16_t)),
+        std::type_index(typeid(std::uint16_t)), std::type_index(typeid(std::int32_t)),
+        std::type_index(typeid(std::uint32_t)), std::type_index(typeid(std::int64_t)),
+        std::type_index(typeid(std::uint64_t)), std::type_index(typeid(float)),
+        std::type_index(typeid(double)),
+    };
 };
 } // namespace as
 

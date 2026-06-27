@@ -21,8 +21,12 @@ add_executable(${PROJECT_NAME})
 target_include_directories(${PROJECT_NAME} PRIVATE
     "${PROJECT_SOURCE_DIR}/include"
     ${ReflectiveAngelScriptWrapper_INCLUDE_DIRS}
+    ${angelscript_SOURCE_DIR}/add_on/datetime/
     ${angelscript_SOURCE_DIR}/add_on/scriptarray/
+    ${angelscript_SOURCE_DIR}/add_on/scriptdictionary/
+    ${angelscript_SOURCE_DIR}/add_on/scripthandle/
     ${angelscript_SOURCE_DIR}/add_on/scripthelper/
+    ${angelscript_SOURCE_DIR}/add_on/scriptmath/
     ${angelscript_SOURCE_DIR}/add_on/scriptstdstring/
     ${angelscript_SOURCE_DIR}/add_on/weakref/
 )
@@ -41,8 +45,13 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/FuncDecl.cpp"
 
     # AngelScript add ons used during testing:
+    ${angelscript_SOURCE_DIR}/add_on/datetime/datetime.cpp
     ${angelscript_SOURCE_DIR}/add_on/scriptarray/scriptarray.cpp
+    ${angelscript_SOURCE_DIR}/add_on/scriptdictionary/scriptdictionary.cpp
+    ${angelscript_SOURCE_DIR}/add_on/scripthandle/scripthandle.cpp
     ${angelscript_SOURCE_DIR}/add_on/scripthelper/scripthelper.cpp
+    ${angelscript_SOURCE_DIR}/add_on/scriptmath/scriptmath.cpp
+    ${angelscript_SOURCE_DIR}/add_on/scriptmath/scriptmathcomplex.cpp
     ${angelscript_SOURCE_DIR}/add_on/scriptstdstring/scriptstdstring.cpp
     ${angelscript_SOURCE_DIR}/add_on/weakref/weakref.cpp
 
@@ -58,6 +67,7 @@ target_sources(${PROJECT_NAME} PRIVATE
     "src/engine/EngineEnums.cpp"
     "src/engine/EngineInterfaces.cpp"
     "src/engine/EngineReferenceTypes.cpp"
+    "src/engine/EngineValueTypes.cpp"
 )
 
 # https://cmake.org/cmake/help/latest/module/GoogleTest.html

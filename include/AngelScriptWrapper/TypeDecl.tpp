@@ -377,4 +377,52 @@ template <std::meta::info C> consteval StructuralSpan<const ClassInformation> Ge
     }
     return std::define_static_array(staticRet);
 }
+
+template <std::meta::info T> bool IsAngelScriptPodType(std::unordered_set<std::type_index> const& podTypes) {
+    using Type = [:T:];
+    if constexpr (IsRefType<Type>() || !std::meta::is_standard_layout_type(T)) {
+        return false;
+    } else {
+        static constexpr auto members =
+            std::define_static_array(std::meta::nonstatic_data_members_of(T, std::meta::access_context::unchecked()));
+        template for (constexpr auto m : members) {
+            constexpr auto mType = std::meta::type_of(m);
+            using M = [:mType:];
+
+            // For future reference: without handling unions first, it seems like one of the subsequent operations
+            // (minus the struct checking) causes an ICE within GCC 16.1.0:
+            // g++-16.1.0: internal compiler error: Segmentation fault signal terminated program cc1plus
+            // Segmentation fault (core dumped)
+            // gmake[3]: *** [tests/CMakeFiles/ReflectiveAngelScriptWrapperTests.dir/build.make:202:
+            // tests/CMakeFiles/ReflectiveAngelScriptWrapperTests.dir/src/engine/EngineValueTypes.cpp.o] Error 139
+            // gmake[2]: *** [CMakeFiles/Makefile2:227: tests/CMakeFiles/ReflectiveAngelScriptWrapperTests.dir/all]
+            // Error 2 gmake[1]: *** [CMakeFiles/Makefile2:234:
+            // tests/CMakeFiles/ReflectiveAngelScriptWrapperTests.dir/rule] Error 2 gmake: *** [Makefile:195:
+            // ReflectiveAngelScriptWrapperTests] Error 2 Couldn't seem to find any existing report on this specific use
+            // of anonymous union reflections, so if I have time, I should try to replicate with as little code as
+            // possible. Specifically, I found that T = ^^AngelScript::CScriptDictValue was causing this.
+
+            if constexpr (std::meta::is_union_type(mType)) {
+                if (!IsAngelScriptPodType<mType>(podTypes)) { return false; }
+            } else if constexpr (std::meta::is_pointer_type(mType) || std::meta::is_lvalue_reference_type(mType)
+                                 || std::meta::is_rvalue_reference_type(mType)) {
+                return false;
+            } else if constexpr (std::meta::is_class_type(mType) && std::meta::parent_of(mType) == T) {
+                // This is an instance of a nested struct. If the nested struct is POD, then T could still be POD.
+                if (!IsAngelScriptPodType<mType>(podTypes)) { return false; }
+            } else {
+                if (!podTypes.contains(std::type_index(typeid(M)))) { return false; }
+            }
+        }
+
+        static constexpr auto bases =
+            std::define_static_array(std::meta::bases_of(T, std::meta::access_context::unchecked()));
+        template for (constexpr auto b : bases) {
+            constexpr auto bType = std::meta::type_of(b);
+            if (!IsAngelScriptPodType<bType>(podTypes)) { return false; }
+        }
+
+        return true;
+    }
+}
 } // namespace as

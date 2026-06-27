@@ -14,6 +14,8 @@
 #include <ranges>
 #include <string>
 #include <type_traits>
+#include <typeindex>
+#include <unordered_set>
 
 namespace as {
 /**
@@ -154,6 +156,16 @@ struct ClassInformation {
  */
 template <std::meta::info C>
 consteval StructuralSpan<const ClassInformation> GetClassHierarchy(const bool recurse = false);
+
+/**
+ * Determines whether a type is a POD value type in AngelScript.
+ * @tparam T The type to check.
+ * @param podTypes A [running] list of known POD types to check fields against. Used to prevent having to scan types
+ *        recursively. Instances of nested unions and structs are still searched through recursively, even if they are
+ *        given in this list.
+ * @return True if the type can be registered as a POD value type, false otherwise.
+ */
+template <std::meta::info T> bool IsAngelScriptPodType(std::unordered_set<std::type_index> const& podTypes);
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>

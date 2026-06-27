@@ -303,7 +303,8 @@ struct OrganizedClassInformation : ClassInformation {
     const StructuralSpan<const ClassMember> properties;
 };
 
-template <OrganizedClassInformation T> int RegisterObjectType(EnginePtr engine, std::string_view const& typeName) {
+template <OrganizedClassInformation T>
+int RegisterObjectType(EnginePtr engine, std::string_view const& typeName, const bool isPodType) {
     using type = [:T.type:];
     constexpr auto typeIsRef = IsRefType<type>();
     constexpr auto typeSize = typeIsRef ? 0 : sizeof(type);
@@ -318,6 +319,7 @@ template <OrganizedClassInformation T> int RegisterObjectType(EnginePtr engine, 
             flags |= AS_NAMESPACE_QUALIFIER asOBJ_NOCOUNT;
         }
     }
+    if (isPodType) { flags |= AS_NAMESPACE_QUALIFIER asOBJ_POD; }
 
     return engine->RegisterObjectType(
         typeName.data(), typeSize, static_cast<AS_NAMESPACE_QUALIFIER asEObjTypeFlags>(flags)
@@ -623,14 +625,16 @@ template <EngineOptions Opts> template <std::meta::info T, bool R> int Engine<Op
         // 1. Organize the class hierarchy so we know ahead of time which behaviors the type will have.
         constexpr auto className = TypeName<type>;
         static constexpr auto organizedC = detail::OrganizedClassHierarchy<c>();
+        const auto isPod = as::IsAngelScriptPodType<c.type>(m_podTypes);
 
         // 2. Register the type.
-        if (const auto r = detail::RegisterObjectType<organizedC>(Ptr(), className); r < 0) {
+        if (const auto r = detail::RegisterObjectType<organizedC>(Ptr(), className, isPod); r < 0) {
             return r;
         } else if (typeId < 0) {
             typeId = r;
         }
         m_types.insert(std::type_index(typeid(type)));
+        if (isPod) { AddPodType<type>(); }
 
         // 3. Register properties, members and behaviours.
         AS_DETAIL_REGISTER_MEMBERS(addRefBehaviours, detail::RegisterObjectAddRefFunction);
