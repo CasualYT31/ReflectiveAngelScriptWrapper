@@ -166,6 +166,14 @@ consteval StructuralSpan<const ClassInformation> GetClassHierarchy(const bool re
  * @return True if the type can be registered as a POD value type, false otherwise.
  */
 template <std::meta::info T> bool IsAngelScriptPodType(std::unordered_set<std::type_index> const& podTypes);
+
+/**
+ * Determines what value type traits a given class has, assuming it's a value type.
+ * @tparam T The type to check.
+ * @return The value type flags, or 0 if the either couldn't be deduced, or if the given type is configured to be a
+ *         reference type.
+ */
+template <std::meta::info T> consteval AS_NAMESPACE_QUALIFIER asEObjTypeFlags GetValueTypeTraits();
 } // namespace as
 
 #include <AngelScriptWrapper/TypeDecl.tpp>

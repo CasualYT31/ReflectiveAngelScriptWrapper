@@ -425,4 +425,148 @@ template <std::meta::info T> bool IsAngelScriptPodType(std::unordered_set<std::t
         return true;
     }
 }
+
+namespace detail {
+// Determine traits of a type for registration of value types
+// Copy of asGetTypeTraits() that's also constexpr. Remove this once https://github.com/anjo76/angelscript/pull/74 ends
+// up in a released version.
+template <typename T> constexpr AS_NAMESPACE_QUALIFIER asUINT asGetTypeTraits() {
+#if defined(_MSC_VER) || defined(_LIBCPP_TYPE_TRAITS) || (__GNUC__ >= 5)                                               \
+    || (defined(__clang__) && !defined(CLANG_PRE_STANDARD))
+    // MSVC, XCode/Clang, and gnuc 5+
+    // C++11 compliant code
+    bool hasConstructor = std::is_default_constructible<T>::value && !std::is_trivially_default_constructible<T>::value;
+    bool hasDestructor = std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value;
+    bool hasAssignmentOperator = std::is_copy_assignable<T>::value && !std::is_trivially_copy_assignable<T>::value;
+    bool hasCopyConstructor = std::is_copy_constructible<T>::value && !std::is_trivially_copy_constructible<T>::value;
+#elif (defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 8)))                                  \
+    || (defined(__clang__) && defined(CLANG_PRE_STANDARD))
+    // gnuc 4.8 is using a mix of C++11 standard and pre-standard templates
+    bool hasConstructor = std::is_default_constructible<T>::value && !std::has_trivial_default_constructor<T>::value;
+    bool hasDestructor = std::is_destructible<T>::value && !std::is_trivially_destructible<T>::value;
+    bool hasAssignmentOperator = std::is_copy_assignable<T>::value && !std::has_trivial_copy_assign<T>::value;
+    bool hasCopyConstructor = std::is_copy_constructible<T>::value && !std::has_trivial_copy_constructor<T>::value;
+#else
+    // All other compilers and versions are assumed to use non C++11 compliant code until proven otherwise
+    // Not fully C++11 compliant. The has_trivial checks were used while the standard was still
+    // being elaborated, but were then removed in favor of the above is_trivially checks
+    // http://stackoverflow.com/questions/12702103/writing-code-that-works-when-has-trivial-destructor-is-defined-instead-of-is
+    // https://github.com/mozart/mozart2/issues/51
+    bool hasConstructor = std::is_default_constructible<T>::value && !std::has_trivial_default_constructor<T>::value;
+    bool hasDestructor = std::is_destructible<T>::value && !std::has_trivial_destructor<T>::value;
+    bool hasAssignmentOperator = std::is_copy_assignable<T>::value && !std::has_trivial_copy_assign<T>::value;
+    bool hasCopyConstructor = std::is_copy_constructible<T>::value && !std::has_trivial_copy_constructor<T>::value;
+#endif
+    bool isFloat = std::is_floating_point<T>::value;
+    bool isPrimitive = std::is_integral<T>::value || std::is_pointer<T>::value || std::is_enum<T>::value;
+    bool isClass = std::is_class<T>::value;
+    bool isArray = std::is_array<T>::value;
+
+    if (isFloat) return asOBJ_APP_FLOAT;
+    if (isPrimitive) return asOBJ_APP_PRIMITIVE;
+
+    if (isClass) {
+        asDWORD flags = asOBJ_APP_CLASS;
+        if (hasConstructor) flags |= asOBJ_APP_CLASS_CONSTRUCTOR;
+        if (hasDestructor) flags |= asOBJ_APP_CLASS_DESTRUCTOR;
+        if (hasAssignmentOperator) flags |= asOBJ_APP_CLASS_ASSIGNMENT;
+        if (hasCopyConstructor) flags |= asOBJ_APP_CLASS_COPY_CONSTRUCTOR;
+        return flags;
+    }
+
+    if (isArray) return asOBJ_APP_ARRAY;
+
+    // Unknown type traits
+    return 0;
+}
+
+struct ValueTypeTraitsInfo {
+    bool allInts = true;
+
+    bool allFloats = true;
+
+    bool empty = false;
+
+    AS_NAMESPACE_QUALIFIER asUINT flags = 0;
+};
+
+template <std::meta::info T, bool ConstructorCheck = true> consteval ValueTypeTraitsInfo GetValueTypeTraitsInfo() {
+    ValueTypeTraitsInfo info;
+
+    static constexpr auto members =
+        std::define_static_array(std::meta::members_of(T, std::meta::access_context::unchecked()));
+
+    bool checkedOneNonStaticDataMember = false;
+
+    template for (constexpr auto m : members) {
+        if constexpr (ConstructorCheck && std::meta::is_constructor(m) && !std::meta::is_default_constructor(m)
+                      && !std::meta::is_copy_constructor(m) && !std::meta::is_move_constructor(m)) {
+            info.flags |= AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_MORE_CONSTRUCTORS;
+        }
+
+        if constexpr (!std::meta::is_static_member(m) && !std::meta::is_function(m) && !std::meta::is_constructor(m)
+                      && !std::meta::is_destructor(m) && !std::meta::is_type(m) && !std::meta::is_template(m)) {
+            constexpr auto mType = std::meta::type_of(m);
+
+            if constexpr (std::meta::is_union_type(mType)) {
+                constexpr auto recursiveInfo = GetValueTypeTraitsInfo<mType, false>();
+                if (!recursiveInfo.allInts) { info.allInts = false; }
+                if (!recursiveInfo.allFloats) { info.allFloats = false; }
+                info.flags |= recursiveInfo.flags | AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_UNION;
+                continue;
+            }
+            // CDateTime technically only has an int within its chrono time_point, but it's not registered with this
+            // flag, so I don't think those ALLINTS and ALLFLOATS flags work recursively.
+            // } else if constexpr (std::meta::is_class_type(mType)) {
+            //     constexpr auto recursiveInfo = GetValueTypeTraitsInfo<mType, false>();
+            //     if (!recursiveInfo.allInts) { info.allInts = false; }
+            //     if (!recursiveInfo.allFloats) { info.allFloats = false; }
+            //     info.flags |= recursiveInfo.flags;
+            //     if constexpr (std::meta::alignment_of(m) >= 8) {
+            //         info.flags |= AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8;
+            //     }
+            //     continue;
+            // }
+
+            if constexpr (std::meta::alignment_of(m) >= 8) {
+                info.flags |= AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8;
+            }
+
+            if constexpr (!std::meta::is_floating_point_type(mType)) { info.allFloats = false; }
+
+            if constexpr (!std::meta::is_pointer_type(mType) && !std::meta::is_integral_type(mType)) {
+                info.allInts = false;
+            }
+
+            checkedOneNonStaticDataMember = true;
+        }
+    }
+
+    if (!checkedOneNonStaticDataMember) {
+        info.allInts = false;
+        info.allFloats = false;
+    }
+
+    return info;
+}
+} // namespace detail
+
+template <std::meta::info T> consteval AS_NAMESPACE_QUALIFIER asEObjTypeFlags GetValueTypeTraits() {
+    using Type = [:T:];
+
+    if constexpr (IsRefType<Type>()) {
+        return static_cast<AS_NAMESPACE_QUALIFIER asEObjTypeFlags>(0);
+    } else {
+        AS_NAMESPACE_QUALIFIER asUINT flags = detail::asGetTypeTraits<Type>();
+
+        // Now inform type traits that can't be informed from asGetTypeTraits():
+        const auto info = detail::GetValueTypeTraitsInfo<T>();
+
+        flags |= info.flags;
+        if (info.allInts) { flags |= AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLINTS; }
+        if (info.allFloats) { flags |= AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLFLOATS; }
+
+        return static_cast<AS_NAMESPACE_QUALIFIER asEObjTypeFlags>(flags);
+    }
+}
 } // namespace as

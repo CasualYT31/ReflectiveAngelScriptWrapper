@@ -236,20 +236,23 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
 */
 
 /* Value types TODO list:
-[ ] 1. Tell the difference between a POD type and a non-POD type.
+[x] 1. Tell the difference between a POD type and a non-POD type.
 [ ] 2. Figure out how constructors and destructors will work (similarly to factory functions probably).
 [ ] 3. Figure out how list constructors will work (want to minimize manually writing out the pattern as much as
        possible).
-[ ] 4. Use asGetTypeTraits().
-[ ] 5. asOBJ_APP_CLASS_MORE_CONSTRUCTORS.
-[ ] 6. asOBJ_APP_CLASS_ALLINTS.
-[ ] 7. asOBJ_APP_CLASS_ALLFLOATS.
-[ ] 8. asOBJ_APP_CLASS_ALIGN8. How can I tell if a class may require 8byte alignment??
-[ ] 9. asOBJ_APP_CLASS_UNION. How would I even register a class that uses unions?
+[x] 4. Use asGetTypeTraits().
+[x] 5. asOBJ_APP_CLASS_MORE_CONSTRUCTORS.
+[x] 6. asOBJ_APP_CLASS_ALLINTS.
+[x] 7. asOBJ_APP_CLASS_ALLFLOATS.
+[x] 8. asOBJ_APP_CLASS_ALIGN8.
+[x] 9. asOBJ_APP_CLASS_UNION.
 */
 
 /* Operators TODO list:
 [ ] 1. Create a mapping from display_string_of() to AngelScript op method names.
+       This might not be required: I found
+https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2996r12.html#meta.reflection.operators-operator-representations
+       which seems to do something like this for me.
 [ ] 2. Support both static and non-static operators so long as they are within the class's scope.
 [ ] 3. Do we want to ignore special member functions?
 */
@@ -309,8 +312,9 @@ int RegisterObjectType(EnginePtr engine, std::string_view const& typeName, const
     constexpr auto typeIsRef = IsRefType<type>();
     constexpr auto typeSize = typeIsRef ? 0 : sizeof(type);
 
-    AS_NAMESPACE_QUALIFIER asQWORD flags =
-        typeIsRef ? AS_NAMESPACE_QUALIFIER asOBJ_REF : AS_NAMESPACE_QUALIFIER asOBJ_VALUE;
+    AS_NAMESPACE_QUALIFIER asQWORD flags = typeIsRef
+                                               ? AS_NAMESPACE_QUALIFIER asOBJ_REF
+                                               : AS_NAMESPACE_QUALIFIER asOBJ_VALUE | GetValueTypeTraits<T.type>();
 
     if constexpr (typeIsRef && T.addRefBehaviours.empty() && T.releaseBehaviours.empty()) {
         if constexpr (T.factoryBehaviours.empty()) {
@@ -577,6 +581,8 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
                 releaseBehaviours.push_back(m);
             } else if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_GET_WEAKREF_FLAG>()) {
                 getWeakrefFlagBehaviours.push_back(m);
+            } else if constexpr (std::meta::is_operator_function(m.member)) {
+                // static_assert(false, std::meta::display_string_of(m.member));
             } else {
                 methods.push_back(m);
             }

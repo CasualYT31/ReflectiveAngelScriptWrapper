@@ -378,3 +378,163 @@ STATIC_ASSERT_EQ(as::TypeOf<^^constObjectHandle>, "MyDerived@ const");
 STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptObject* COMMA ^^objectHandle>, "MyDerived@");
 STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptObject* const COMMA ^^constObjectHandle>, "MyDerived@ const");
 // clang-format on
+
+namespace traits {
+struct Empty {};
+
+struct Def {
+    Def() = default;
+};
+
+struct Def2 {
+    Def2() {};
+};
+
+struct NonDef {
+    NonDef(int) {};
+};
+
+struct IgnoreStaticInts {
+    static int h;
+};
+
+int IgnoreStaticInts::h = 0;
+
+struct IgnoreStaticFloats {
+    static float h;
+};
+
+float IgnoreStaticFloats::h = 0.0f;
+
+struct IgnoreStaticAlign8 {
+    static double h;
+};
+
+double IgnoreStaticAlign8::h = 0.0;
+
+struct IgnoreStaticUnions {
+    static union U {
+        int a;
+        int b;
+    } h;
+};
+
+IgnoreStaticUnions::U IgnoreStaticUnions::h = { 0 };
+
+struct IgnoreStaticStructs {
+    static struct U {
+        int a;
+        int b;
+    } h;
+};
+
+IgnoreStaticStructs::U IgnoreStaticStructs::h = { 0, 0 };
+
+struct Unions {
+    union U {
+        int a, b;
+    };
+
+    union V {
+        float c, d;
+    };
+};
+
+struct Align8 {
+    double a;
+    int b;
+};
+
+struct Vi {
+    int x, y, z;
+};
+
+struct Vf {
+    float x, y, z;
+};
+
+struct Vd {
+    double x, y, z;
+};
+
+struct VoidPtr {
+    void* p;
+    std::string* anyP;
+};
+
+struct E {
+    union {
+        float x, s;
+    };
+
+    union {
+        float y, t;
+    };
+};
+
+struct S {
+    struct {
+        float x, y, z;
+    } a;
+
+    struct {
+        double x, y, z;
+    } b;
+};
+
+struct IgnoreMethods {
+    inline IgnoreMethods operator+(IgnoreMethods const&) {
+        return *this;
+    }
+
+    inline void method() {}
+
+    template <typename T> inline T func(T i) {
+        return i;
+    }
+
+private:
+    int a;
+};
+
+template <typename T> struct NestedTemplateStruct {
+    template <typename U> struct Inner {
+        U a, b, c;
+    };
+
+    Inner<T> a;
+};
+
+struct[[= as::RefType]] MyRefType {};
+} // namespace traits
+
+#define STATIC_ASSERT_TRAITS(t, f)                                                                                     \
+    static_assert(as::GetValueTypeTraits<^^t>() == AS_NAMESPACE_QUALIFIER as::detail::asGetTypeTraits<t>() | f);
+
+// clang-format off
+STATIC_ASSERT_TRAITS(traits::Empty, 0);
+STATIC_ASSERT_TRAITS(traits::Def, 0);
+STATIC_ASSERT_TRAITS(traits::Def2, 0);
+STATIC_ASSERT_TRAITS(traits::NonDef, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_MORE_CONSTRUCTORS);
+STATIC_ASSERT_TRAITS(traits::IgnoreStaticInts, 0);
+STATIC_ASSERT_TRAITS(traits::IgnoreStaticFloats, 0);
+STATIC_ASSERT_TRAITS(traits::IgnoreStaticAlign8, 0);
+STATIC_ASSERT_TRAITS(traits::IgnoreStaticUnions, 0);
+STATIC_ASSERT_TRAITS(traits::IgnoreStaticStructs, 0);
+STATIC_ASSERT_TRAITS(traits::Unions, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_UNION);
+STATIC_ASSERT_TRAITS(traits::Align8, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8);
+STATIC_ASSERT_TRAITS(traits::Vi, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLINTS);
+STATIC_ASSERT_TRAITS(traits::Vf, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLFLOATS);
+STATIC_ASSERT_TRAITS(traits::Vd, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLFLOATS | AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8);
+STATIC_ASSERT_TRAITS(traits::VoidPtr, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLINTS);
+STATIC_ASSERT_TRAITS(traits::E, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLFLOATS | AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_UNION);
+STATIC_ASSERT_TRAITS(traits::S, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8);
+STATIC_ASSERT_TRAITS(traits::IgnoreMethods, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALLINTS);
+STATIC_ASSERT_TRAITS(traits::NestedTemplateStruct<std::uint64_t>, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8);
+STATIC_ASSERT_TRAITS(traits::NestedTemplateStruct<float>, 0);
+STATIC_ASSERT_TRAITS(traits::NestedTemplateStruct<bool>, 0);
+STATIC_ASSERT_TRAITS(traits::NestedTemplateStruct<std::string>, AS_NAMESPACE_QUALIFIER asOBJ_APP_CLASS_ALIGN8);
+static_assert(as::GetValueTypeTraits<^^traits::MyRefType>() == 0);
+// clang-format on
+
+#undef STATIC_ASSERT_TRAITS
