@@ -123,8 +123,8 @@ static AS_NAMESPACE_QUALIFIER asIScriptFunction* const constFuncdefHandle[[= as:
 STATIC_ASSERT_EQ(as::TypeOf<^^funcdefHandle>, "myFuncDef@");
 STATIC_ASSERT_EQ(as::TypeOf<^^constFuncdefHandle>, "myFuncDef@ const");
 // clang-format off
-STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptFunction* COMMA ^^funcdefHandle>, "myFuncDef@");
-STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptFunction* const COMMA ^^constFuncdefHandle>, "myFuncDef@ const");
+STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptFunction*, ^^funcdefHandle>), "myFuncDef@");
+STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptFunction* const, ^^constFuncdefHandle>), "myFuncDef@ const");
 // clang-format on
 
 struct IgnoredBase {
@@ -375,8 +375,8 @@ static AS_NAMESPACE_QUALIFIER asIScriptObject* const constObjectHandle[[= as::In
 STATIC_ASSERT_EQ(as::TypeOf<^^objectHandle>, "MyDerived@");
 STATIC_ASSERT_EQ(as::TypeOf<^^constObjectHandle>, "MyDerived@ const");
 // clang-format off
-STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptObject* COMMA ^^objectHandle>, "MyDerived@");
-STATIC_ASSERT_EQ(as::detail::OverrideTypeOf<asIScriptObject* const COMMA ^^constObjectHandle>, "MyDerived@ const");
+STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptObject*, ^^objectHandle>), "MyDerived@");
+STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptObject* const, ^^constObjectHandle>), "MyDerived@ const");
 // clang-format on
 
 namespace traits {

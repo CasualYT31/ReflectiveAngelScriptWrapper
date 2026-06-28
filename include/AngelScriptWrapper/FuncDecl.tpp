@@ -287,8 +287,9 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
         // Reference types use parameter logic:
         decl += std::string(detail::GetFuncTypeDecl<F, AutoHandleDefault>());
     } else {
-        // Value types use regular TypeOf logic:
+        // Value types use a combination of regular TypeOf logic and special ref logic:
         decl += std::string(TypeOf<F>);
+        if constexpr (IsReference<RetType>) { decl += "&"; }
     }
 
     // Name.

@@ -202,7 +202,7 @@ AS_NAMESPACE_QUALIFIER CScriptArray* complex2[[ = as::subtype::String, = as::Non
 }
 
 STATIC_ASSERT_EQ(
-    as::GetFuncDecl<^^complex2 COMMA true>(),
+    (as::GetFuncDecl<^^complex2, true>()),
     "array<string>@ complex2(const array<array<float>>@+, array<string>&, array<int32>@)"
 )
 
@@ -218,12 +218,22 @@ struct A {
     inline void func() const {}
 
     inline void func2(AS_NAMESPACE_QUALIFIER CScriptArray*) const {}
+
+    inline A& func3() {
+        return *this;
+    }
+
+    inline A func4() {
+        return *this;
+    }
 };
 
 STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func>(), "void func() const");
-STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func COMMA false COMMA true>(), "void func()");
-STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA false COMMA true>(), "void func2(array@)");
-STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func2 COMMA true COMMA true>(), "void func2(array@+)");
+STATIC_ASSERT_EQ((as::GetFuncDecl<^^A::func, false, true>()), "void func()");
+STATIC_ASSERT_EQ((as::GetFuncDecl<^^A::func2, false, true>()), "void func2(array@)");
+STATIC_ASSERT_EQ((as::GetFuncDecl<^^A::func2, true, true>()), "void func2(array@+)");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func3>(), "A& func3()");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^A::func4>(), "A func4()");
 
 inline void variableParameterTypeOut(void* o, int typeId) {}
 

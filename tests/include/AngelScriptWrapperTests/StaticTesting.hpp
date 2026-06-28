@@ -5,5 +5,4 @@
 
 #pragma once
 
-#define COMMA ,
 #define STATIC_ASSERT_EQ(a, b) static_assert(a == b, a);

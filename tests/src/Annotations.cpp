@@ -28,20 +28,20 @@ static_assert(!as::IsGlobalConstQualified<^^a4, true>());
 
 inline void f[[= as::Name("func")]](int p) {}
 
-static_assert(as::GetAnnotations<^^f COMMA as::Rename>().size() == 1);
-static_assert(std::string_view(as::ExtractAnnotation<^^f COMMA as::Rename>()->to) == "func");
-static_assert(as::HasAnnotation<^^f COMMA as::Rename>());
+static_assert(as::GetAnnotations<^^f, as::Rename>().size() == 1);
+static_assert(std::string_view(as::ExtractAnnotation<^^f, as::Rename>()->to) == "func");
+static_assert(as::HasAnnotation<^^f, as::Rename>());
 // clang-format off
-static_assert(as::GetAnnotations<^^f COMMA ^^as::Rename>().size() == 1);
-static_assert(std::string_view(as::ExtractAnnotation<^^f COMMA ^^as::Rename>()->to) == "func");
-static_assert(as::HasAnnotation<^^f COMMA ^^as::Rename>());
+static_assert(as::GetAnnotations<^^f, ^^as::Rename>().size() == 1);
+static_assert(std::string_view(as::ExtractAnnotation<^^f, ^^as::Rename>()->to) == "func");
+static_assert(as::HasAnnotation<^^f, ^^as::Rename>());
 // clang-format on
 
-static_assert(as::GetAnnotations<^^f COMMA as::SubTypes>().size() == 0);
-static_assert(!as::HasAnnotation<^^f COMMA as::SubTypes>());
+static_assert(as::GetAnnotations<^^f, as::SubTypes>().size() == 0);
+static_assert(!as::HasAnnotation<^^f, as::SubTypes>());
 // clang-format off
-static_assert(as::GetAnnotations<^^f COMMA ^^as::SubTypes>().size() == 0);
-static_assert(!as::HasAnnotation<^^f COMMA ^^as::SubTypes>());
+static_assert(as::GetAnnotations<^^f, ^^as::SubTypes>().size() == 0);
+static_assert(!as::HasAnnotation<^^f, ^^as::SubTypes>());
 // clang-format on
 
 static_assert(as::AtLeastOneOf<>());
