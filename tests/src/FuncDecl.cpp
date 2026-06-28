@@ -270,3 +270,21 @@ STATIC_ASSERT_EQ(
 STATIC_ASSERT_EQ(
     as::GetFuncDecl<^^PropertyAccessors::set_indexedProp>(), "void set_indexedProp(uint32, int32) property"
 );
+
+struct BaseType {};
+
+struct[[= as::Name("RenamedBaseType")]] BaseType2 {};
+
+struct BaseType3 {};
+
+namespace as {
+template <> inline constexpr std::string_view TypeName<BaseType3> = "FinalType";
+}
+
+void myFuncdef1[[= as::Scope(^^BaseType)]](int, int);
+void myFuncdef2[[= as::Scope(^^BaseType2)]](int, int);
+void myFuncdef3[[= as::Scope(^^BaseType3)]](int, int);
+
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^myFuncdef1>(), "void BaseType::myFuncdef1(int32, int32)");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^myFuncdef2>(), "void RenamedBaseType::myFuncdef2(int32, int32)");
+STATIC_ASSERT_EQ(as::GetFuncDecl<^^myFuncdef3>(), "void FinalType::myFuncdef3(int32, int32)");

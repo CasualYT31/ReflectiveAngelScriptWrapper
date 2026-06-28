@@ -37,6 +37,7 @@ This wrapper does not aim to put AngelScript in a black box: you can directly ac
 5. [Funcdefs](/readmes/05-FUNCDEFS.md)
     - [`Engine::RegisterFuncdef()`](/readmes/05-FUNCDEFS.md#engineregisterfuncdef)
     - [`asIScriptFunction` Pointers and the `Funcdef` Annotation](/readmes/05-FUNCDEFS.md#asiscriptfunction-pointers-and-the-funcdef-annotation)
+    - [Scoped Funcdefs](/readmes/05-FUNCDEFS.md#scoped-funcdefs)
 6. [Reference Types](/readmes/06-REFERENCE-TYPES.md)
     - [`RefType` Annotation](/readmes/06-REFERENCE-TYPES.md#reftype-annotation)
     - [Basic Behaviors](/readmes/06-REFERENCE-TYPES.md#basic-behaviors)

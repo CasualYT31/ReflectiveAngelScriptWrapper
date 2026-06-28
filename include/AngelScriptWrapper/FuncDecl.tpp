@@ -291,10 +291,20 @@ template <std::meta::info F, bool AutoHandleDefault, bool RC> constexpr std::str
         decl += std::string(TypeOf<F>);
         if constexpr (IsReference<RetType>) { decl += "&"; }
     }
+    decl += " ";
+
+    // Scope (for funcdefs).
+    constexpr auto scope = ExtractAnnotation<F, Scope>();
+    if constexpr (scope) {
+        using ScopeType = [:scope->parent:];
+        const auto scopeType = std::string(TypeName<ScopeType>);
+        decl += scopeType + "::";
+    } else {
+    }
 
     // Name.
     const auto identifierOf = std::string(as::GetIdentifierOf<F>());
-    decl += " " + identifierOf + "(";
+    decl += identifierOf + "(";
 
     // Parameter list.
     static constexpr auto ParamList = std::define_static_array(std::meta::parameters_of(F));

@@ -374,6 +374,14 @@ struct Funcdef {
     const std::meta::info funcdef;
 };
 
+/**
+ * Attached to function definitions intended to be funcdefs to tell the library to scope the funcdef to the given type.
+ * Note that you must register the type before registering a funcdef scoped to it.
+ */
+struct Scope {
+    const std::meta::info parent;
+};
+
 // MARK: Exclusions
 
 /**

@@ -163,8 +163,18 @@ template <std::meta::info T> constexpr bool IsFuncdefHandle() {
 template <std::meta::info T, std::meta::info I> consteval std::string_view GetFuncdef() {
     constexpr auto funcdef = ExtractAnnotation<I, Funcdef>();
     static_assert(funcdef, "asIScriptFunction* object or parameter was not given a Funcdef annotation");
+    constexpr auto scope = ExtractAnnotation<funcdef->funcdef, Scope>();
+
     std::string r = std::string(std::meta::identifier_of(funcdef->funcdef)) + "@";
+
     if constexpr (std::meta::is_const(T)) { r += " const"; }
+    if constexpr (scope) {
+        using ScopeType = [:scope->parent:];
+        const auto scopeType = std::string(TypeName<ScopeType>);
+        r = scopeType + "::" + r;
+    } else {
+    }
+
     return std::define_static_string(r);
 }
 

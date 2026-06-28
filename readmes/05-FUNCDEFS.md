@@ -49,6 +49,24 @@ pEngine->RegisterGlobalFunction(
 );
 ```
 
+## Scoped Funcdefs
+
+You can create scoped funcdefs by attached an `as::Scope` annotation to the C++ function declaration:
+
+```cpp
+struct MyAngelScriptType {};
+
+void MyFuncdef[[=as::Scope(^^MyAngelScriptType)]](float, CScriptArray* arr[[=as::subtype::String]]);
+
+engine.RegisterFuncdef<^^MyFuncdef>();
+
+// ... is equivalent to ...
+
+pEngine->RegisterFuncdef("void MyAngelScriptType::MyFuncdef(float, array<string>@)");
+```
+
+The AngelScript identifier of the type given to the `Scope` annotation will be prepended to the funcdef identifier. Remember to register the type before registering the scoped funcdef.
+
 ---
 
 <div align="center">

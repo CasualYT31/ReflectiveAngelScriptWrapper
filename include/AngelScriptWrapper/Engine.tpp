@@ -237,7 +237,7 @@ template <EngineOptions Opts> template <std::meta::info I, bool R> int Engine<Op
 
 /* Value types TODO list:
 [x] 1. Tell the difference between a POD type and a non-POD type.
-[ ] 2. Figure out how constructors and destructors will work (similarly to factory functions probably).
+[x] 2. Figure out how constructors and destructors will work (similarly to factory functions probably).
 [ ] 3. Figure out how list constructors will work (want to minimize manually writing out the pattern as much as
        possible).
 [x] 4. Use asGetTypeTraits().
@@ -281,12 +281,6 @@ https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p2996r12.html#meta.refl
 [ ] 3. if_handle_then_const.
 [ ] 4. asBEHAVE_TEMPLATE_CALLBACK behaviour.
 [ ] 5. Template specializations.
-*/
-
-/* Scoped funcdefs TODO list:
-[ ] 1. Support scoped funcdefs, i.e. if the given function declaration is within a class, scope it to that class:
-   https://www.angelcode.com/angelscript/sdk/docs/manual/classas_i_script_engine.html#a03c1a2cc23ae4b742c927f3472a1a4f7.
-[ ] 2. Support scoped funcdefs for template types.
 */
 
 namespace detail {

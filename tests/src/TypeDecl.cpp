@@ -127,6 +127,19 @@ STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptFunction*, ^^funcdefHandle
 STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptFunction* const, ^^constFuncdefHandle>), "myFuncDef@ const");
 // clang-format on
 
+void myScopedFuncDef[[= as::Scope(^^A)]]();
+
+static AS_NAMESPACE_QUALIFIER asIScriptFunction* scopedFuncdefHandle[[= as::Funcdef(^^myScopedFuncDef)]];
+static AS_NAMESPACE_QUALIFIER asIScriptFunction* const scopedConstFuncdefHandle[[= as::Funcdef(^^myScopedFuncDef)]] =
+    nullptr;
+
+STATIC_ASSERT_EQ(as::TypeOf<^^scopedFuncdefHandle>, "AClass::myScopedFuncDef@");
+STATIC_ASSERT_EQ(as::TypeOf<^^scopedConstFuncdefHandle>, "AClass::myScopedFuncDef@ const");
+// clang-format off
+STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptFunction*, ^^scopedFuncdefHandle>), "AClass::myScopedFuncDef@");
+STATIC_ASSERT_EQ((as::detail::OverrideTypeOf<asIScriptFunction* const, ^^scopedConstFuncdefHandle>), "AClass::myScopedFuncDef@ const");
+// clang-format on
+
 struct IgnoredBase {
     virtual void alsoIgnored() = 0;
 };
