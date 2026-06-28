@@ -3,11 +3,16 @@
 HELP=0
 CLEAN=0
 TEST=0
+DEBUG_SYMBOLS=1
 DEBUG=0
 DEBUG_RUN_IMMEDIATELY=0
 
 while [[ $# -gt 0 ]]; do
     case $1 in
+        -r|--release)
+            DEBUG_SYMBOLS=0
+            shift # past argument
+            ;;
         -h|--help)
             HELP=1
             shift # past argument
@@ -35,10 +40,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 if [ "$HELP" -eq "1" ]; then
-    echo "    -c | --clean        Delete build folder before re-configuring"
-    echo "    -t | --test         Build and run tests"
-    echo "    -d | --debug        Build and run tests in GDB"
-    echo "   -dr | --debug-run    Build and run tests in GDB, executing the tests immediately"
+    echo "    -r | --release        Exclude debug symbols from the build"
+    echo "    -c | --clean          Delete build folder before re-configuring"
+    echo "    -t | --test           Build and run tests"
+    echo "    -d | --debug          Build and run tests in GDB"
+    echo "   -dr | --debug-run      Build and run tests in GDB, executing the tests immediately"
     exit
 fi
 
@@ -56,7 +62,7 @@ GCC_BIN="$PWD/gcc-16.1.0/bin"
 GCC_LIB="$PWD/gcc-16.1.0/lib64"
 
 CXX_FLAGS=""
-if [ "$DEBUG" -eq "1" ]; then
+if [ "$DEBUG_SYMBOLS" -eq "1" ]; then
     CXX_FLAGS="-g"
 fi
 

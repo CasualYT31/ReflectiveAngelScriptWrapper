@@ -79,7 +79,8 @@ You will need to separately build GCC 16.1.0 and install it at the root of this 
 
 1. Execute `./set_up.sh`. This will install clang-format-18 (not required for the build).
 2. Execute `./build.sh`. This will configure and build the AngelScript wrapper library.
+    - You can execute `./build.sh -r` to remove debug symbols from the build.
     - You can execute `./build.sh -c` if you need to perform a clean configure and build.
     - You can execute `./build.sh -t` to build and run the tests as well as the library.
-    - You can execute `./build.sh -d` to build and run the tests as well as the library, with debugging symbols turned on, and then open the tests with GDB.
+    - You can execute `./build.sh -d` to build and run the tests (via GDB) as well as the library.
     - Note the use of a pre-built version of GCC that supports C++26 features like reflection. It must live in a `gcc-16.1.0` folder at the root of the repository.
