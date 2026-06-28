@@ -170,14 +170,9 @@ struct VectorCollection {
     }
 };
 
-struct NonPodType {
-    // TODO.
-};
-
 TEST(AngelScriptEngineValueTypes, PodTypes) {
     as::Engine engine;
     ASSERT_TRUE(engine.HasEngine());
-    as::SetMessageCallback(engine);
 
     ASSERT_GE(engine.RegisterObjectType<^^Vector>(), 0);
     ASSERT_GE(engine.RegisterObjectType<^^VectorCollection>(), 0);
@@ -210,6 +205,101 @@ TEST(AngelScriptEngineValueTypes, PodTypes) {
 
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "VectorCollection v; v.init(); return v.mult();", &res, 11),
+        0
+    );
+    EXPECT_DOUBLE_EQ(res, 22.848);
+}
+
+struct NonPodType {
+    inline NonPodType(const double val = 0.0) {
+        p = new double(val);
+    }
+
+    inline ~NonPodType() noexcept {
+        if (p) { delete p; }
+    }
+
+    static inline void Constructor[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_CONSTRUCT), = as::ObjFirst ]](
+        void* memory
+    ) {
+        new (memory) NonPodType();
+    }
+
+    static inline void Constructor[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_CONSTRUCT), = as::ObjFirst ]](
+        void* memory, const double val
+    ) {
+        new (memory) NonPodType(val);
+    }
+
+    static unsigned int destructorCallCount;
+
+    static inline void Destructor[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_DESTRUCT), = as::ObjFirst ]](
+        void* memory
+    ) {
+        static_cast<NonPodType*>(memory)->~NonPodType();
+        ++destructorCallCount;
+    }
+
+    NonPodType& opAssign(NonPodType const& o) {
+        if (o.p && p) {
+            *p = *o.p;
+        } else if (p) {
+            *p = 0.0;
+        }
+        return *this;
+    }
+
+    double* p;
+};
+
+unsigned int NonPodType::destructorCallCount = 0;
+
+NonPodType retByValue(NonPodType cpy, NonPodType const& i) {
+    NonPodType n(cpy.p ? *cpy.p : 0.0);
+
+    if ((cpy.p == i.p) && n.p) { *n.p = -1.0; }
+
+    return n;
+}
+
+void retByRef(NonPodType& o, NonPodType const& i) {
+    if (o.p && i.p) { *o.p = *i.p; }
+}
+
+TEST(AngelScriptEngineValueTypes, ConstructorsAndDestructor) {
+    as::Engine engine;
+    ASSERT_TRUE(engine.HasEngine());
+
+    ASSERT_GE(engine.RegisterObjectType<^^NonPodType>(), 0);
+    EXPECT_FALSE(engine.IsPodType<NonPodType>());
+
+    ASSERT_GE(engine.RegisterGlobalFunction<^^retByValue>(), 0);
+    ASSERT_GE(engine.RegisterGlobalFunction<^^retByRef>(), 0);
+
+    double res = 0.0;
+
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "NonPodType n; n.p = 268.335; return n.p;", &res, 11), 0
+    );
+    EXPECT_DOUBLE_EQ(res, 268.335);
+
+    ASSERT_GE(AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "NonPodType n(22.848); return n.p;", &res, 11), 0);
+    EXPECT_DOUBLE_EQ(res, 22.848);
+
+    EXPECT_EQ(NonPodType::destructorCallCount, 2);
+
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "NonPodType n(22.848); return retByValue(n, n).p;", &res, 11
+        ),
+        0
+    );
+    EXPECT_DOUBLE_EQ(res, 22.848);
+
+    ASSERT_GE(
+        AS_NAMESPACE_QUALIFIER ExecuteString(
+            engine.Ptr(), "NonPodType n(22.848), o; retByRef(o, n); return o.p;", &res, 11
+        ),
         0
     );
     EXPECT_DOUBLE_EQ(res, 22.848);

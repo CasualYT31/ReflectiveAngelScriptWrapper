@@ -301,6 +301,10 @@ struct OrganizedClassInformation : ClassInformation {
 
     const StructuralSpan<const ClassMember> getWeakrefFlagBehaviours;
 
+    const StructuralSpan<const ClassMember> constructorBehaviours;
+
+    const StructuralSpan<const ClassMember> destructorBehaviours;
+
     const StructuralSpan<const ClassMember> methods;
 
     const StructuralSpan<const ClassMember> properties;
@@ -327,6 +331,17 @@ int RegisterObjectType(EnginePtr engine, std::string_view const& typeName, const
 
     return engine->RegisterObjectType(
         typeName.data(), typeSize, static_cast<AS_NAMESPACE_QUALIFIER asEObjTypeFlags>(flags)
+    );
+}
+
+template <std::meta::info F, EngineOptions Opts>
+int RegisterObjectBehaviour(
+    EnginePtr engine, std::string_view const& typeName, const AS_NAMESPACE_QUALIFIER asEBehaviours behaviourCode
+) {
+    const auto funcDetails = detail::GetFuncDetails<F, Opts, true>();
+
+    return engine->RegisterObjectBehaviour(
+        typeName.data(), behaviourCode, funcDetails.decl.data(), funcDetails.addr, funcDetails.callConv
     );
 }
 
@@ -359,6 +374,26 @@ int RegisterObjectFactoryFunction(EnginePtr engine, std::string_view const& type
     );
 
     return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY, aux);
+}
+
+template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectConstructorFunction(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const&) {
+    constexpr auto ds = std::meta::display_string_of(F);
+    static_assert(
+        std::meta::is_static_member(F), std::string(ds) + " was marked as a constructor function, but it is non-static"
+    );
+
+    return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_CONSTRUCT);
+}
+
+template <std::meta::info F, EngineOptions Opts, typename T>
+int RegisterObjectDestructorFunction(EnginePtr engine, std::string_view const& typeName, AuxiliaryMap const&) {
+    constexpr auto ds = std::meta::display_string_of(F);
+    static_assert(
+        std::meta::is_static_member(F), std::string(ds) + " was marked as a destructor function, but it is non-static"
+    );
+
+    return RegisterObjectBehaviour<F, Opts>(engine, typeName, AS_NAMESPACE_QUALIFIER asBEHAVE_DESTRUCT);
 }
 
 template <std::meta::info F, EngineOptions Opts, typename T>
@@ -561,6 +596,8 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
     std::vector<ClassMember> addRefBehaviours;
     std::vector<ClassMember> releaseBehaviours;
     std::vector<ClassMember> getWeakrefFlagBehaviours;
+    std::vector<ClassMember> constructorBehaviours;
+    std::vector<ClassMember> destructorBehaviours;
     std::vector<ClassMember> methods;
     std::vector<ClassMember> properties;
 
@@ -572,6 +609,12 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
                 // base classes.
                 if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY>()) {
                     factoryBehaviours.push_back(m);
+                    continue;
+                } else if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_CONSTRUCT>()) {
+                    constructorBehaviours.push_back(m);
+                    continue;
+                } else if constexpr (IsBehaviour<m.member, AS_NAMESPACE_QUALIFIER asBEHAVE_DESTRUCT>()) {
+                    destructorBehaviours.push_back(m);
                     continue;
                 }
             }
@@ -597,6 +640,8 @@ template <ClassInformation I> OrganizedClassInformation consteval OrganizedClass
         std::define_static_array(addRefBehaviours),
         std::define_static_array(releaseBehaviours),
         std::define_static_array(getWeakrefFlagBehaviours),
+        std::define_static_array(constructorBehaviours),
+        std::define_static_array(destructorBehaviours),
         std::define_static_array(methods),
         std::define_static_array(properties),
     };
@@ -649,6 +694,8 @@ template <EngineOptions Opts> template <std::meta::info T, bool R> int Engine<Op
         // It is important to register AddRef and Release behaviours before Factory behaviours.
         // E.g. you may wish to register a copy factory that accepts a handle to your ref type.
         AS_DETAIL_REGISTER_MEMBERS(factoryBehaviours, detail::RegisterObjectFactoryFunction);
+        AS_DETAIL_REGISTER_MEMBERS(constructorBehaviours, detail::RegisterObjectConstructorFunction);
+        AS_DETAIL_REGISTER_MEMBERS(destructorBehaviours, detail::RegisterObjectDestructorFunction);
         AS_DETAIL_REGISTER_MEMBERS(methods, detail::RegisterObjectMethod);
         AS_DETAIL_REGISTER_MEMBERS(properties, detail::RegisterObjectProperty);
     }
