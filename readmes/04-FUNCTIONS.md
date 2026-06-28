@@ -193,7 +193,7 @@ By const reference | `int const&` | `const int32&in` |
 By pointer | `int*` | `int32&out` | Value types cannot be passed as `&inout`.
 By pointer to const | `int const*` | `const int32&in` | Const pointers (i.e. `int* const`) don't change the type used.
 
-Return types that are value types are converted into their corresponding AngelScript declaration using regular [`TypeOf()`](02-TYPENAMES.md#typeof) logic, where the function's reflection object is given as the template argument.
+Return types that are value types are converted into their corresponding AngelScript declaration using regular [`TypeOf()`](02-TYPENAMES.md#typeof) logic, where the function's reflection object is given as the template argument. However, if the function returns a value type by reference, then the `&` symbol will be appended to the function's return type in AngelScript.
 
 ### Reference Types
 
