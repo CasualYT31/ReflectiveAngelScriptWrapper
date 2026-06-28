@@ -50,14 +50,14 @@ struct[[= as::Mixin]] ReferenceType {
     /**
      * Increments the reference counter.
      */
-    inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
         AS_NAMESPACE_QUALIFIER asAtomicInc(m_referenceCounter);
     }
 
     /**
      * Decrements the reference counter, deleting this once the reference counter hits 0.
      */
-    inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
         if (AS_NAMESPACE_QUALIFIER asAtomicDec(m_referenceCounter) <= 0) { delete this; }
     }
 

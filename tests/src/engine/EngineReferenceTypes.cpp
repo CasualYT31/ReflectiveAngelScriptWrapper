@@ -579,11 +579,23 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchiesAreNotRegisteredIfRecurs
     EXPECT_FALSE(engine.HasRegisteredObjectType<as::TestRefType>());
 }
 
-struct[[= as::RefType]] TopLeft : as::ReferenceType {
+struct[[= as::RefType]] TopLeft : virtual as::ReferenceType {
     virtual ~TopLeft() noexcept = default;
 
     static inline TopLeft* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new TopLeft();
+    }
+
+    /**
+     * Reminder that AngelScript does not support virtual inheritance.
+     * As a workaround, you'll need to explicitly redefine any virtual methods yourself.
+     */
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
     }
 
     virtual int identity() const {
@@ -591,11 +603,19 @@ struct[[= as::RefType]] TopLeft : as::ReferenceType {
     }
 };
 
-struct[[= as::RefType]] TopRight : as::ReferenceType {
+struct[[= as::RefType]] TopRight : virtual as::ReferenceType {
     virtual ~TopRight() noexcept = default;
 
     static inline TopRight* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new TopRight();
+    }
+
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
     }
 
     virtual int identity() const {
@@ -610,6 +630,14 @@ struct[[= as::RefType]] MiddleLeft : virtual TopLeft {
         return new MiddleLeft();
     }
 
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
+    }
+
     virtual int identity() const override {
         return 2;
     }
@@ -620,6 +648,14 @@ struct[[= as::RefType]] Middle : virtual TopLeft, virtual TopRight {
 
     static inline Middle* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new Middle();
+    }
+
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
     }
 
     virtual int identity() const override {
@@ -634,6 +670,14 @@ struct[[= as::RefType]] MiddleRight : virtual TopRight {
         return new MiddleRight();
     }
 
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
+    }
+
     virtual int identity() const override {
         return 4;
     }
@@ -646,6 +690,14 @@ struct[[= as::RefType]] BottomLeft : MiddleLeft, Middle {
         return new BottomLeft();
     }
 
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
+    }
+
     int identity() const override final {
         return 5;
     }
@@ -656,6 +708,14 @@ struct[[= as::RefType]] BottomRight : Middle, MiddleRight {
 
     static inline BottomRight* Factory[[ = as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_FACTORY), = as::NonAuto ]]() {
         return new BottomRight();
+    }
+
+    virtual inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
+        as::ReferenceType::AddRef();
+    }
+
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        as::ReferenceType::Release();
     }
 
     int identity() const override final {

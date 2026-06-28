@@ -7,13 +7,14 @@
 
 #include <angelscript.h>
 #include <AngelScriptWrapper/OwnedObject.hpp>
+#include <AngelScriptWrapper/ReferenceType.hpp>
 
 namespace as {
 /**
  * Base class containing standard reference counting logic alongside weakref logic.
  * Implementation based on https://www.angelcode.com/angelscript/sdk/docs/manual/doc_adv_weakref.html.
  */
-struct[[= as::Mixin]] WeakReferenceType {
+struct[[= as::Mixin]] WeakReferenceType : public ReferenceType {
     /**
      * Copies of a weak reference type will have their reference counter start at 1, and their weak reference flag
      * uninitialized.
@@ -52,20 +53,12 @@ struct[[= as::Mixin]] WeakReferenceType {
     }
 
     /**
-     * Increments the reference counter.
-     */
-    inline void AddRef[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_ADDREF)]]() const noexcept {
-        AS_NAMESPACE_QUALIFIER asAtomicInc(m_referenceCounter);
-    }
-
-    /**
      * Decrements the reference counter, deleting this once the reference counter hits 0.
      * Also sets the weak reference flag to true is the reference counter hits 0.
      */
-    inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
-        if (m_referenceCounter == 1 && m_weakReferenceFlag) { m_weakReferenceFlag->Set(true); }
-
-        if (AS_NAMESPACE_QUALIFIER asAtomicDec(m_referenceCounter) <= 0) { delete this; }
+    virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
+        if (RefCount() == 1 && m_weakReferenceFlag) { m_weakReferenceFlag->Set(true); }
+        ReferenceType::Release();
     }
 
     /**
@@ -83,13 +76,6 @@ struct[[= as::Mixin]] WeakReferenceType {
         return m_weakReferenceFlag.Ptr();
     }
 
-    /**
-     * Returns the reference counter.
-     */
-    inline int RefCount() const noexcept {
-        return m_referenceCounter;
-    }
-
 protected:
     /**
      * WeakReferenceType can only be inherited from.
@@ -97,11 +83,6 @@ protected:
     WeakReferenceType() = default;
 
 private:
-    /**
-     * The reference counter.
-     */
-    mutable int m_referenceCounter = 1;
-
     /**
      * The weak reference flag used to track if the object has been destroyed.
      * The OwnedObject destructor will handle releasing the weak reference flag for us.
