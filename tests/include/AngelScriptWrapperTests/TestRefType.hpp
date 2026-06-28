@@ -63,8 +63,8 @@ struct[[= as::RefType]] TestRefType : public ReferenceType {
 
         if (const int r = engine->RegisterObjectMethod(
                 "TestRefType",
-                "int32 RefCount() const",
-                AS_NAMESPACE_QUALIFIER asMETHOD(TestRefType, RefCount),
+                "int32 GetRefCount() const",
+                AS_NAMESPACE_QUALIFIER asMETHOD(TestRefType, GetRefCount),
                 AS_NAMESPACE_QUALIFIER asCALL_THISCALL
             );
             r < 0) {

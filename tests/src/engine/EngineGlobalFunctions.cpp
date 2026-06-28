@@ -204,7 +204,7 @@ TEST(AngelScriptEngineGlobalFunctions, InRefAndPtrs) {
 }
 
 int const getRefCount_ref(as::TestRefType const& obj) {
-    return obj.RefCount();
+    return obj.GetRefCount();
 }
 
 TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByRef) {
@@ -219,7 +219,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByRef) {
     int count = 0;
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "TestRefType a; getRefCount_ref(a); return a.RefCount();", &count, 4
+            engine.Ptr(), "TestRefType a; getRefCount_ref(a); return a.GetRefCount();", &count, 4
         ),
         0
     );
@@ -228,7 +228,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByRef) {
 }
 
 int const getRefCount_ptr(as::TestRefType const* obj) {
-    return obj->RefCount();
+    return obj->GetRefCount();
 }
 
 TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByPtr) {
@@ -243,7 +243,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByPtr) {
     int count = 0;
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "TestRefType a; getRefCount_ptr(a); return a.RefCount();", &count, 4
+            engine.Ptr(), "TestRefType a; getRefCount_ptr(a); return a.GetRefCount();", &count, 4
         ),
         0
     );
@@ -252,7 +252,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByPtr) {
 }
 
 int const getRefCount_autoPtr(as::TestRefType* obj[[= as::Auto]]) {
-    return obj->RefCount();
+    return obj->GetRefCount();
 }
 
 TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByAutoPtr) {
@@ -267,7 +267,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeParamByAutoPtr) {
     int count = 0;
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "TestRefType a; getRefCount_autoPtr(a); return a.RefCount();", &count, 4
+            engine.Ptr(), "TestRefType a; getRefCount_autoPtr(a); return a.GetRefCount();", &count, 4
         ),
         0
     );
@@ -291,7 +291,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeReturn) {
     int count = 0;
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "TestRefType@ a = createObj(); return a.RefCount();", &count, 4
+            engine.Ptr(), "TestRefType@ a = createObj(); return a.GetRefCount();", &count, 4
         ),
         0
     );
@@ -312,7 +312,7 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeAutoReturn) {
     int count = 0;
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "TestRefType@ a = createObj(); return a.RefCount();", &count, 4
+            engine.Ptr(), "TestRefType@ a = createObj(); return a.GetRefCount();", &count, 4
         ),
         0
     );
@@ -336,7 +336,8 @@ TEST(AngelScriptEngineGlobalFunctions, RefTypeRefReturn) {
 
     int count = 0;
     ASSERT_GE(
-        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "TestRefType a; return retRef(a).RefCount();", &count, 4), 0
+        AS_NAMESPACE_QUALIFIER ExecuteString(engine.Ptr(), "TestRefType a; return retRef(a).GetRefCount();", &count, 4),
+        0
     );
     // Returning by reference also does not impact the reference counter:
     EXPECT_EQ(count, 1);

@@ -57,7 +57,7 @@ struct[[= as::Mixin]] WeakReferenceType : public ReferenceType {
      * Also sets the weak reference flag to true is the reference counter hits 0.
      */
     virtual inline void Release[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_RELEASE)]]() const noexcept {
-        if (RefCount() == 1 && m_weakReferenceFlag) { m_weakReferenceFlag->Set(true); }
+        if (GetRefCount() == 1 && m_weakReferenceFlag) { m_weakReferenceFlag->Set(true); }
         ReferenceType::Release();
     }
 

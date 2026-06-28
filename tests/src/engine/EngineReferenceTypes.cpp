@@ -10,7 +10,7 @@
 using namespace testing;
 
 int finalRefCountIncrease(const as::TestRefType* const obj) {
-    return obj->RefCount();
+    return obj->GetRefCount();
 }
 
 TEST(AngelScriptEngineReferenceTypes, BasicType) {
@@ -33,7 +33,7 @@ TEST(AngelScriptEngineReferenceTypes, BasicType) {
     ASSERT_GE(
         mod->AddScriptSection("test.as", R"(
             int refCountIncrease(TestRefType@ const obj) {
-                return obj.RefCount();
+                return obj.GetRefCount();
             }
 
             int refCountIncreaseTwice(TestRefType@ const obj) {
@@ -460,7 +460,7 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchies) {
     int ret = 0;
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "PropertiesChild obj; TestRefType@ casted = obj; return casted.RefCount();", &ret, 4
+            engine.Ptr(), "PropertiesChild obj; TestRefType@ casted = obj; return casted.GetRefCount();", &ret, 4
         ),
         0
     );
@@ -469,7 +469,7 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchies) {
     // Grandchild -> parent:
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "PropertiesChild obj; Properties@ casted = obj; return casted.RefCount();", &ret, 4
+            engine.Ptr(), "PropertiesChild obj; Properties@ casted = obj; return casted.GetRefCount();", &ret, 4
         ),
         0
     );
@@ -478,7 +478,7 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchies) {
     // Parent -> grandparent:
     ASSERT_GE(
         AS_NAMESPACE_QUALIFIER ExecuteString(
-            engine.Ptr(), "Properties obj; TestRefType@ casted = obj; return casted.RefCount();", &ret, 4
+            engine.Ptr(), "Properties obj; TestRefType@ casted = obj; return casted.GetRefCount();", &ret, 4
         ),
         0
     );
@@ -503,7 +503,7 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchies) {
             engine.Ptr(),
             "PropertiesChild obj; Properties@ casted = obj;"
             "PropertiesChild@ finalCasted = cast<PropertiesChild>(casted);"
-            "return finalCasted.RefCount();",
+            "return finalCasted.GetRefCount();",
             &ret,
             4
         ),
@@ -530,7 +530,7 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchies) {
             engine.Ptr(),
             "PropertiesChild obj; TestRefType@ casted = obj;"
             "PropertiesChild@ finalCasted = cast<PropertiesChild>(casted);"
-            "return finalCasted.RefCount();",
+            "return finalCasted.GetRefCount();",
             &ret,
             4
         ),
@@ -557,7 +557,7 @@ TEST(AngelScriptEngineReferenceTypes, RefTypeHierarchies) {
             engine.Ptr(),
             "Properties obj; TestRefType@ casted = obj;"
             "Properties@ finalCasted = cast<Properties>(casted);"
-            "return finalCasted.RefCount();",
+            "return finalCasted.GetRefCount();",
             &ret,
             4
         ),
@@ -826,10 +826,10 @@ TEST(AngelScriptEngineReferenceTypes, CopyConstructionAndAssignment) {
         int incRef(const CopyableType@ const original, const bool copyType) {
             CopyableType copy(original, copyType);
 
-            if (original.RefCount() != 2) {
+            if (original.GetRefCount() != 2) {
                 return 2;
             }
-            if (copy.RefCount() != 1) {
+            if (copy.GetRefCount() != 1) {
                 return 3;
             }
             if (copy.number != (copyType ? 11 : 10)) {
@@ -841,7 +841,7 @@ TEST(AngelScriptEngineReferenceTypes, CopyConstructionAndAssignment) {
         int main(const bool copyType) {
             CopyableType original;
             original.number = 10;
-            if (original.RefCount() != 1) {
+            if (original.GetRefCount() != 1) {
                 return 1;
             }
 
@@ -880,25 +880,25 @@ TEST(AngelScriptEngineReferenceTypes, CopyConstructionAndAssignment) {
 
 TEST(AngelScriptEngineReferenceTypes, MoveConstructionAndAssignment) {
     CopyableType<as::TestRefType> one;
-    EXPECT_EQ(one.RefCount(), 1);
+    EXPECT_EQ(one.GetRefCount(), 1);
 
     {
         CopyableType<as::TestRefType> two;
         two.number = 10;
-        EXPECT_EQ(two.RefCount(), 1);
+        EXPECT_EQ(two.GetRefCount(), 1);
 
         EXPECT_EQ(one.number, 0);
         one = std::move(two);
         EXPECT_EQ(one.number, 10);
-        EXPECT_EQ(one.RefCount(), 1);
-        EXPECT_EQ(two.RefCount(), 1);
+        EXPECT_EQ(one.GetRefCount(), 1);
+        EXPECT_EQ(two.GetRefCount(), 1);
     }
 
-    EXPECT_EQ(one.RefCount(), 1);
+    EXPECT_EQ(one.GetRefCount(), 1);
     CopyableType<as::TestRefType> two(std::move(one));
-    EXPECT_EQ(two.RefCount(), 1);
+    EXPECT_EQ(two.GetRefCount(), 1);
     EXPECT_EQ(two.number, 10);
-    EXPECT_EQ(one.RefCount(), 1);
+    EXPECT_EQ(one.GetRefCount(), 1);
 }
 
 struct[[= as::RefType]] Global {
@@ -943,10 +943,10 @@ TEST(AngelScriptEngineReferenceTypes, ReferenceTypeObjectWrapperInteraction) {
     ASSERT_TRUE(glob.copyWithOwnedObj);
 
     EXPECT_EQ(glob.copyWithSharedObj->number, 5);
-    EXPECT_EQ(glob.copyWithSharedObj->RefCount(), 1);
+    EXPECT_EQ(glob.copyWithSharedObj->GetRefCount(), 1);
 
     EXPECT_EQ(glob.copyWithOwnedObj->number, 15);
-    EXPECT_EQ(glob.copyWithOwnedObj->RefCount(), 1);
+    EXPECT_EQ(glob.copyWithOwnedObj->GetRefCount(), 1);
 }
 
 struct[[= as::RefType]] TestWeakRefType : public as::WeakReferenceType {
@@ -982,10 +982,10 @@ TEST(AngelScriptEngineReferenceTypes, WeakReferenceTypesInScripts) {
             TestWeakRefType obj;
             @weakCopy = obj;
 
-            if (obj.RefCount() != 1) {
+            if (obj.GetRefCount() != 1) {
                 return 2;
             }
-            if (weakCopy.get().RefCount() != 2) {
+            if (weakCopy.get().GetRefCount() != 2) {
                 return 3;
             }
             if (weakCopy.get() !is obj) {
@@ -1071,10 +1071,10 @@ TEST(AngelScriptEngineReferenceTypes, WeakReferenceTypesInApplicationInterface) 
             const TestWeakRefType obj;
             @weakCopy.weakRef = obj;
 
-            if (obj.RefCount() != 1) {
+            if (obj.GetRefCount() != 1) {
                 return 2;
             }
-            if (weakCopy.weakRef.get().RefCount() != 2) {
+            if (weakCopy.weakRef.get().GetRefCount() != 2) {
                 return 3;
             }
             if (weakCopy.weakRef.get() !is obj) {
@@ -1132,9 +1132,9 @@ TEST(AngelScriptEngineReferenceTypes, CopyConstructionAndAssignmentWeakReference
     EXPECT_EQ(one.number, 5);
     EXPECT_EQ(two.number, 6);
     EXPECT_EQ(three.number, -4);
-    EXPECT_EQ(one.RefCount(), 2);
-    EXPECT_EQ(two.RefCount(), 1);
-    EXPECT_EQ(three.RefCount(), 3);
+    EXPECT_EQ(one.GetRefCount(), 2);
+    EXPECT_EQ(two.GetRefCount(), 1);
+    EXPECT_EQ(three.GetRefCount(), 3);
     EXPECT_TRUE(one.GetWeakRefFlag()->Get());
     EXPECT_FALSE(two.GetWeakRefFlag()->Get());
     EXPECT_TRUE(three.GetWeakRefFlag()->Get());
@@ -1160,9 +1160,9 @@ TEST(AngelScriptEngineReferenceTypes, MoveConstructionAndAssignmentWeakReference
     EXPECT_EQ(one.number, 5);
     EXPECT_EQ(two.number, 6);
     EXPECT_EQ(three.number, -4);
-    EXPECT_EQ(one.RefCount(), 2);
-    EXPECT_EQ(two.RefCount(), 1);
-    EXPECT_EQ(three.RefCount(), 3);
+    EXPECT_EQ(one.GetRefCount(), 2);
+    EXPECT_EQ(two.GetRefCount(), 1);
+    EXPECT_EQ(three.GetRefCount(), 3);
     EXPECT_TRUE(one.GetWeakRefFlag()->Get());
     EXPECT_FALSE(two.GetWeakRefFlag()->Get());
     EXPECT_TRUE(three.GetWeakRefFlag()->Get());

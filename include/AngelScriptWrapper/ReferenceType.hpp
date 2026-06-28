@@ -64,7 +64,7 @@ struct[[= as::Mixin]] ReferenceType {
     /**
      * Returns the reference counter.
      */
-    inline int RefCount() const noexcept {
+    inline int GetRefCount[[= as::Behaviour(AS_NAMESPACE_QUALIFIER asBEHAVE_GETREFCOUNT)]]() const noexcept {
         return m_referenceCounter;
     }
 
